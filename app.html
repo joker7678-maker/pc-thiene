@@ -3,69 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - App Squadra</title>
+    <title>PC THIENE - APP COMMUNICATION</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { background-color: #020617; font-family: 'Inter', sans-serif; color: white; }
-        .btn-status { transition: all 0.2s; border-bottom: 4px solid rgba(0,0,0,0.3); }
+        .btn-status { transition: all 0.2s; border-bottom: 4px solid rgba(0,0,0,0.4); }
         .btn-status:active { transform: translateY(2px); border-bottom-width: 2px; }
         .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #2563eb; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #1e293b; transition: .4s; border-radius: 34px; border: 1px solid #334155; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #2563eb; border-color: #3b82f6; }
         input:checked + .slider:before { transform: translateX(22px); }
         .online-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
-        .is-online { background: #10b981; box-shadow: 0 0 8px #10b981; }
-        .is-offline { background: #ef4444; }
+        .is-online { background: #10b981; box-shadow: 0 0 10px #10b981; }
+        .is-offline { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+        .glass { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
     </style>
 </head>
 <body class="p-4 flex flex-col min-h-screen">
 
-    <header class="flex justify-between items-start mb-4">
+    <header class="flex justify-between items-center mb-6 border-b-2 border-blue-600 pb-4">
         <div class="flex flex-col">
-            <h1 class="text-xl font-black text-blue-500 uppercase tracking-tighter">PC THIENE</h1>
-            <p id="label-squadra" class="text-sm font-bold text-slate-400 font-mono">ID: ---</p>
+            <h1 class="text-xl font-black text-white uppercase leading-none tracking-tighter">
+                PROTEZIONE CIVILE<br>
+                <span class="text-blue-500 text-2xl">THIENE</span>
+            </h1>
+            <div class="flex items-center mt-1">
+                <span class="text-[9px] font-bold text-blue-400 uppercase tracking-[0.2em]">App Communication System</span>
+            </div>
         </div>
         <div class="flex flex-col items-end">
-            <div class="flex items-center bg-slate-800/50 px-2 py-1 rounded-full border border-slate-700">
+            <div class="glass px-3 py-1.5 rounded-lg flex items-center gap-2">
                 <span id="sala-dot" class="online-dot is-offline"></span>
-                <span id="sala-status" class="text-[9px] font-bold uppercase text-slate-400">Sala Offline</span>
+                <span id="sala-status" class="text-[10px] font-black uppercase text-slate-400">Sala Offline</span>
             </div>
+            <p id="label-squadra" class="text-[11px] font-bold text-slate-500 font-mono mt-1 uppercase">Unit: ---</p>
         </div>
     </header>
 
     <main class="flex-1 flex flex-col gap-4 max-w-md mx-auto w-full">
         
-        <div id="box-risposta" class="hidden animate-pulse">
-            <div class="bg-blue-600/20 border-2 border-blue-500 p-3 rounded-xl">
-                <p class="text-[10px] font-black uppercase text-blue-400 mb-1">Ultima risposta dalla Sala:</p>
-                <p id="testo-risposta" class="text-sm font-bold text-white"></p>
+        <div id="box-risposta" class="hidden transform transition-all">
+            <div class="bg-blue-600 border-l-4 border-white p-4 rounded-r-xl shadow-lg shadow-blue-900/40">
+                <p class="text-[10px] font-black uppercase text-blue-100 mb-1 tracking-widest">Messaggio Ricevuto dalla Sala:</p>
+                <p id="testo-risposta" class="text-md font-bold text-white leading-tight italic"></p>
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-2">
-            <button onclick="window.statoRapido('IN PARTENZA 🚚', 'Uscita')" class="btn-status bg-amber-500 p-4 rounded-xl font-black text-[11px] uppercase text-slate-900 text-center">🚚 Partenza</button>
-            <button onclick="window.statoRapido('SUL POSTO 🚨', 'Intervento')" class="btn-status bg-red-600 p-4 rounded-xl font-black text-[11px] uppercase text-center">🚨 Sul Posto</button>
-            <button onclick="window.statoRapido('OPERATIVI ⚡', 'In Corso')" class="btn-status bg-blue-600 p-4 rounded-xl font-black text-[11px] uppercase text-center">⚡ Operativi</button>
-            <button onclick="window.statoRapido('RIENTRO IN SEDE 🏠', 'Rientro')" class="btn-status bg-emerald-600 p-4 rounded-xl font-black text-[11px] uppercase text-center">🏠 Rientro</button>
+        <div class="grid grid-cols-2 gap-3">
+            <button onclick="window.statoRapido('IN PARTENZA 🚚', 'Uscita')" class="btn-status bg-amber-500 p-4 rounded-xl font-black text-xs uppercase text-slate-950 shadow-lg">🚚 Partenza</button>
+            <button onclick="window.statoRapido('SUL POSTO 🚨', 'Intervento')" class="btn-status bg-red-600 p-4 rounded-xl font-black text-xs uppercase text-white shadow-lg">🚨 Sul Posto</button>
+            <button onclick="window.statoRapido('OPERATIVI ⚡', 'In Corso')" class="btn-status bg-blue-600 p-4 rounded-xl font-black text-xs uppercase text-white shadow-lg">⚡ Operativi</button>
+            <button onclick="window.statoRapido('RIENTRO 🏠', 'Rientro')" class="btn-status bg-emerald-600 p-4 rounded-xl font-black text-xs uppercase text-white shadow-lg">🏠 Rientro</button>
         </div>
 
-        <div class="h-[1px] bg-slate-800 my-1"></div>
-
-        <div class="flex flex-col gap-1">
-            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Nota extra o messaggio</label>
+        <div class="flex flex-col gap-1 mt-2">
+            <label class="text-[10px] font-black text-slate-500 uppercase ml-1 tracking-widest">Comunicazione Libera</label>
             <textarea id="messaggio" rows="3" 
-                class="w-full p-3 bg-slate-800 border-2 border-slate-700 rounded-xl text-white font-bold focus:border-blue-500 outline-none resize-none" 
-                placeholder="Scrivi qui..."></textarea>
+                class="w-full p-4 bg-slate-900 border-2 border-slate-800 rounded-xl text-white font-bold focus:border-blue-500 outline-none resize-none shadow-inner" 
+                placeholder="Inserisci note o dettagli..."></textarea>
         </div>
 
-        <div class="flex items-center justify-between p-3 bg-slate-800/50 border border-slate-700 rounded-xl">
+        <div class="glass flex items-center justify-between p-4 rounded-xl">
             <div class="flex flex-col">
-                <span class="text-xs font-bold uppercase">Invia posizione GPS</span>
-                <span class="text-[9px] text-slate-500 uppercase">Privacy attiva</span>
+                <span class="text-xs font-black uppercase tracking-wide">Posizione GPS</span>
+                <span class="text-[9px] text-slate-500 font-bold">Invia coordinate alla sala</span>
             </div>
             <label class="switch">
                 <input type="checkbox" id="toggle-gps" checked>
@@ -74,10 +79,14 @@
         </div>
 
         <button id="btn-invia" onclick="window.inviaDati()" 
-            class="w-full py-4 bg-white text-slate-950 rounded-xl font-black text-lg uppercase transition-all shadow-xl active:scale-95">
-            Invia Messaggio
+            class="w-full py-5 bg-white text-slate-950 rounded-xl font-black text-xl uppercase transition-all shadow-2xl active:scale-95 border-b-4 border-slate-300">
+            Invia Report
         </button>
     </main>
+
+    <footer class="mt-8 text-center opacity-20">
+        <p class="text-[8px] font-black tracking-[0.3em] uppercase">Thiene SO Master Terminal v78.31</p>
+    </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
@@ -89,24 +98,22 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const squadraId = urlParams.get('id') ? urlParams.get('id').toUpperCase() : "SCONOSCIUTA";
-        document.getElementById('label-squadra').innerText = "UNITÀ: " + squadraId;
+        document.getElementById('label-squadra').innerText = "Unit: " + squadraId;
 
-        // 1. MONITORAGGIO STATO SALA OPERATIVA
         onValue(ref(db, ".info/connected"), (snap) => {
             const dot = document.getElementById('sala-dot');
             const txt = document.getElementById('sala-status');
             if (snap.val()) {
                 dot.className = "online-dot is-online";
                 txt.innerText = "Sala Online";
-                txt.className = "text-[9px] font-bold uppercase text-emerald-400";
+                txt.className = "text-[10px] font-black uppercase text-emerald-400";
             } else {
                 dot.className = "online-dot is-offline";
                 txt.innerText = "Sala Offline";
-                txt.className = "text-[9px] font-bold uppercase text-red-500";
+                txt.className = "text-[10px] font-black uppercase text-red-500";
             }
         });
 
-        // 2. ASCOLTO RISPOSTE DALLA SALA (Solo per questa squadra)
         const logRef = query(ref(db, 'brogliaccio'), orderByChild('squadra'), equalTo(squadraId), limitToLast(5));
         onValue(logRef, (snap) => {
             const logs = snap.val();
@@ -115,15 +122,14 @@
                 if (lastLog) {
                     document.getElementById('box-risposta').classList.remove('hidden');
                     document.getElementById('testo-risposta').innerText = lastLog.m2;
-                    // Notifica sonora o vibrazione se supportata
-                    if ("vibrate" in navigator) navigator.vibrate(200);
+                    if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
                 }
             }
         });
 
         window.statoRapido = (testoStato, valoreStato) => {
             const extra = document.getElementById('messaggio').value.trim();
-            const messaggioFinale = extra ? `${testoStato} - ${extra}` : testoStato;
+            const messaggioFinale = extra ? `${testoStato} | ${extra}` : testoStato;
             window.inviaDati(messaggioFinale, valoreStato);
         };
 
@@ -136,7 +142,7 @@
             if (!testo) return;
 
             btn.disabled = true;
-            btn.innerText = "INVIO...";
+            btn.innerText = "TRASMISSIONE...";
 
             if (gpsEnabled) {
                 navigator.geolocation.getCurrentPosition(
@@ -160,12 +166,13 @@
                 if (nuovoStato) { updates.stato = nuovoStato; }
                 if (Object.keys(updates).length > 0) await update(ref(db, `anagrafica_squadre/${squadraId}`), updates);
                 document.getElementById('messaggio').value = "";
-                Swal.fire({ icon: 'success', title: 'Inviato', timer: 800, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'REPORT TRASMESSO', timer: 1000, showConfirmButton: false, position: 'top', background: '#0f172a', color: '#fff' });
             } catch (e) {
-                Swal.fire({ icon: 'error', title: 'Errore' });
+                Swal.fire({ icon: 'error', title: 'ERRORE INVIO' });
             } finally {
-                btn-invia.disabled = false;
-                btn-invia.innerText = "INVIA MESSAGGIO";
+                const btn = document.getElementById('btn-invia');
+                btn.disabled = false;
+                btn.innerText = "INVIA REPORT";
             }
         }
     </script>
