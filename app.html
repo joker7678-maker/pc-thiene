@@ -3,134 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SQUADRA - COMUNICAZIONI PC THIENE</title>
+    <title>PC THIENE - App Squadra</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { background: #0f172a; color: white; font-family: 'Inter', sans-serif; touch-action: manipulation; }
-        .btn-big { height: 80px; font-weight: 900; text-transform: uppercase; border-radius: 16px; transition: 0.2s; box-shadow: 0 4px 0 rgba(0,0,0,0.4); }
-        .btn-big:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
-        .status-pill { padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 900; text-transform: uppercase; }
-        .input-dark { background: #1e293b; border: 2px solid #334155; color: white; border-radius: 12px; padding: 15px; font-size: 18px; font-weight: 700; width: 100%; outline: none; }
-        .input-dark:focus { border-color: #3b82f6; }
-        #gps-bar { background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); border-top: 1px solid rgba(255,255,255,0.1); }
+        body { background-color: #0f172a; font-family: 'Inter', sans-serif; color: white; }
+        .btn-active:active { transform: scale(0.95); }
+        /* Stile per lo switch della privacy */
+        .toggle-checkbox:checked { right: 0; border-color: #3b82f6; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #3b82f6; }
     </style>
 </head>
-<body class="flex flex-col min-height-screen">
+<body class="p-4 flex flex-col min-h-screen">
 
-    <header class="p-6 text-center border-b border-slate-800 bg-slate-900/50 shadow-xl">
-        <h1 id="sq-id" class="text-5xl font-black text-blue-500 tracking-tighter">UNITÀ ---</h1>
-        <div class="flex justify-center gap-2 mt-2">
-            <span id="sq-capo" class="status-pill bg-slate-700 text-slate-300 italic uppercase">Responsabile: ---</span>
-            <span id="sq-stato" class="status-pill bg-emerald-600 text-white">Caricamento...</span>
-        </div>
+    <header class="text-center mb-6">
+        <h1 class="text-2xl font-black text-blue-500 uppercase">PC THIENE</h1>
+        <p id="label-squadra" class="text-lg font-bold text-slate-400 italic">Identificazione...</p>
+        <div id="gps-status" class="text-[10px] uppercase font-bold text-slate-600 mt-1">Privacy: Posizione gestita dall'utente</div>
     </header>
 
-    <main class="flex-1 p-6 space-y-6">
-        <div class="space-y-2">
-            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Nuovo Messaggio TETRA / Radio</label>
-            <textarea id="msg-input" class="input-dark h-32 resize-none" placeholder="Indica posizione, necessità o dettagli intervento..."></textarea>
-            <button onclick="window.sendToSala()" class="w-full btn-big bg-blue-600 active:bg-blue-700 text-2xl flex items-center justify-center gap-3">
-                Invia a Sala ➔
-            </button>
+    <main class="flex-1 flex flex-col gap-4 max-w-md mx-auto w-full">
+        <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold text-slate-500 uppercase ml-1">Messaggio per la Sala</label>
+            <textarea id="messaggio" rows="4" 
+                class="w-full p-4 bg-slate-800 border-2 border-slate-700 rounded-xl text-white font-bold focus:border-blue-500 outline-none" 
+                placeholder="Scrivi qui..."></textarea>
         </div>
 
-        <div class="pt-4 border-t border-slate-800">
-            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-3 block">Aggiornamento Stato Rapido</label>
-            <div class="grid grid-cols-2 gap-4">
-                <button onclick="window.updateStato('Intervento')" class="btn-big bg-red-600 text-lg">🚨 Sul Posto</button>
-                <button onclick="window.updateStato('In Corso')" class="btn-big bg-purple-600 text-lg">⚡ In Lavoro</button>
-                <button onclick="window.updateStato('Rientro')" class="btn-big bg-cyan-600 text-lg">🔙 Rientro</button>
-                <button onclick="window.updateStato('Sede')" class="btn-big bg-emerald-700 text-lg">🏠 In Sede</button>
+        <div class="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+            <div class="flex flex-col">
+                <span class="text-sm font-bold uppercase">Invia Posizione GPS</span>
+                <span id="gps-hint" class="text-[10px] text-slate-400">Attiva per aggiornare la mappa in sala</span>
+            </div>
+            <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+                <input type="checkbox" name="toggle" id="toggle-gps" checked
+                    class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer outline-none transition-all duration-300"/>
+                <label for="toggle-gps" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-600 cursor-pointer"></label>
             </div>
         </div>
+
+        <button id="btn-invia" onclick="window.inviaDati()" 
+            class="w-full py-5 bg-blue-600 rounded-xl font-black text-xl shadow-lg shadow-blue-900/20 btn-active uppercase transition-all">
+            Invia Messaggio
+        </button>
     </main>
 
-    <footer id="gps-bar" class="fixed bottom-0 left-0 right-0 p-3 flex justify-between items-center text-[10px] font-bold">
-        <div id="gps-status" class="text-slate-400 uppercase tracking-tighter">
-            🛰️ GPS: Acquisizione segnale...
-        </div>
-        <div id="connection-status" class="text-emerald-500 uppercase">
-            ● Collegato
-        </div>
+    <footer class="mt-auto text-center py-4">
+        <p class="text-[10px] text-slate-600 font-bold uppercase tracking-widest">S.O. Master Dashboard Online</p>
     </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getDatabase, ref, onValue, push, update } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+        import { getDatabase, ref, push, update } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
-        const cfg = { apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54", databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com", projectId: "realtime-database-6962f" };
-        const app = initializeApp(cfg); const db = getDatabase(app);
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54",
+            databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com"
+        };
 
-        // Recupero ID Squadra dall'URL
-        const params = new URLSearchParams(window.location.search);
-        const sqId = params.get('id')?.toUpperCase();
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-        if(!sqId) {
-            Swal.fire({ icon: 'error', title: 'ERRORE', text: 'Sigla Squadra non identificata. Scansiona nuovamente il QR Code.', background: '#0f172a', color: '#fff' });
-        } else {
-            document.getElementById('sq-id').innerText = sqId;
-            initApp();
-        }
+        const urlParams = new URLSearchParams(window.location.search);
+        const squadraId = urlParams.get('id') ? urlParams.get('id').toUpperCase() : "SCONOSCIUTA";
+        document.getElementById('label-squadra').innerText = "UNITÀ: " + squadraId;
 
-        function initApp() {
-            // Sincronizzazione Dati Squadra (Capo e Stato attuale)
-            onValue(ref(db, `anagrafica_squadre/${sqId}`), (s) => {
-                const d = s.val();
-                if(d) {
-                    document.getElementById('sq-capo').innerText = `Responsabile: ${d.capo || '---'}`;
-                    const st = document.getElementById('sq-stato');
-                    st.innerText = d.stato;
-                    // Cambio colore pillola in base allo stato
-                    const colors = { 'Sede': '#059669', 'Intervento': '#dc2626', 'Uscita': '#f59e0b', 'Rientro': '#06b6d4', 'In Corso': '#9333ea' };
-                    st.style.backgroundColor = colors[d.stato] || '#334155';
+        window.inviaDati = async () => {
+            const msgInput = document.getElementById('messaggio');
+            const btn = document.getElementById('btn-invia');
+            const gpsEnabled = document.getElementById('toggle-gps').checked;
+            const testo = msgInput.value.trim();
+
+            if (!testo) {
+                Swal.fire({ icon: 'error', title: 'Attenzione', text: 'Inserisci un messaggio prima di inviare.' });
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = gpsEnabled ? "RILEVAMENTO GPS..." : "INVIO IN CORSO...";
+            btn.style.opacity = "0.7";
+
+            if (gpsEnabled) {
+                navigator.geolocation.getCurrentPosition(
+                    async (p) => {
+                        await spedisci(testo, p.coords.latitude, p.coords.longitude);
+                    },
+                    async () => {
+                        // Se fallisce il GPS ma era richiesto, avvisiamo e inviamo senza
+                        Swal.fire({ icon: 'warning', title: 'GPS non trovato', text: 'Messaggio inviato senza posizione.', timer: 2000 });
+                        await spedisci(testo, "", "");
+                    },
+                    { enableHighAccuracy: true, timeout: 6000 }
+                );
+            } else {
+                // Se l'utente ha spento il GPS volontariamente
+                await spedisci(testo, "", "");
+            }
+        };
+
+        async function spedisci(m, la, lo) {
+            try {
+                const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                
+                // Scrittura nel Brogliaccio
+                await push(ref(db, 'brogliaccio'), {
+                    ora: ora,
+                    squadra: squadraId,
+                    m1: m,
+                    m2: "",
+                    lat: la || "",
+                    lng: lo || "",
+                    stato: 'ATTESA',
+                    dir: 'SQ'
+                });
+
+                // Aggiornamento posizione nell'Anagrafica (solo se il GPS è stato inviato)
+                if(la && lo) {
+                    await update(ref(db, `anagrafica_squadre/${squadraId}`), {
+                        lat: la,
+                        lng: lo
+                    });
                 }
-            });
 
-            // Avvio GPS continuo (watchPosition)
-            navigator.geolocation.watchPosition(p => {
-                const coords = { lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) };
-                update(ref(db, `anagrafica_squadre/${sqId}`), coords);
-                document.getElementById('gps-status').innerText = `🛰️ GPS ATTIVO: ${coords.lat}, ${coords.lng}`;
-            }, e => {
-                document.getElementById('gps-status').innerText = "🛰️ GPS: Errore (Attiva Localizzazione)";
-            }, { enableHighAccuracy: true });
+                document.getElementById('messaggio').value = "";
+                Swal.fire({ icon: 'success', title: 'Inviato!', showConfirmButton: false, timer: 1500 });
+            } catch (e) {
+                Swal.fire({ icon: 'error', title: 'Errore', text: 'Connessione fallita.' });
+            } finally {
+                const btn = document.getElementById('btn-invia');
+                btn.disabled = false;
+                btn.innerText = "INVIA MESSAGGIO";
+                btn.style.opacity = "1";
+            }
         }
-
-        window.sendToSala = async () => {
-            const msg = document.getElementById('msg-input').value;
-            if(!msg) return;
-
-            // Invio log in stato ATTESA per allertare la Sala Operativa
-            await push(ref(db, 'brogliaccio'), {
-                ora: new Date().toLocaleTimeString().slice(0,5),
-                data: new Date().toLocaleDateString(),
-                squadra: sqId,
-                dir: 'SQ',
-                m1: msg,
-                m2: '---',
-                stato: 'ATTESA' // Fa lampeggiare la Dashboard
-            });
-
-            document.getElementById('msg-input').value = "";
-            Swal.fire({ icon: 'success', title: 'INVIATO', timer: 1000, showConfirmButton: false, background: '#0f172a', color: '#fff' });
-        };
-
-        window.updateStato = async (nuovo) => {
-            await update(ref(db, `anagrafica_squadre/${sqId}`), { stato: nuovo });
-            // Registriamo anche l'aggiornamento nel log per tracciabilità
-            await push(ref(db, 'brogliaccio'), {
-                ora: new Date().toLocaleTimeString().slice(0,5),
-                data: new Date().toLocaleDateString(),
-                squadra: sqId,
-                dir: 'SQ',
-                m1: `CAMBIO STATO: ${nuovo}`,
-                m2: 'RICEVUTO',
-                stato: 'OK'
-            });
-            Swal.fire({ icon: 'info', title: 'STATO AGGIORNATO', text: nuovo, timer: 1000, showConfirmButton: false, background: '#0f172a', color: '#fff' });
-        };
     </script>
 </body>
 </html>
