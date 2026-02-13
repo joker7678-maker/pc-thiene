@@ -17,10 +17,10 @@
         .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #2563eb; border-color: #3b82f6; }
         input:checked + .slider:before { transform: translateX(22px); }
+        .glass { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
         .online-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
         .is-online { background: #10b981; box-shadow: 0 0 10px #10b981; }
         .is-offline { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
-        .glass { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
     </style>
 </head>
 <body class="p-4 flex flex-col min-h-screen">
@@ -31,14 +31,12 @@
                 PROTEZIONE CIVILE<br>
                 <span class="text-blue-500 text-2xl">THIENE</span>
             </h1>
-            <div class="flex items-center mt-1">
-                <span class="text-[9px] font-bold text-blue-400 uppercase tracking-[0.2em]">App Communication System</span>
-            </div>
+            <span class="text-[9px] font-bold text-blue-400 uppercase tracking-[0.2em] mt-1">App Communication System</span>
         </div>
         <div class="flex flex-col items-end">
             <div class="glass px-3 py-1.5 rounded-lg flex items-center gap-2">
                 <span id="sala-dot" class="online-dot is-offline"></span>
-                <span id="sala-status" class="text-[10px] font-black uppercase text-slate-400">Sala Offline</span>
+                <span id="sala-status" class="text-[10px] font-black uppercase text-slate-400">Offline</span>
             </div>
             <p id="label-squadra" class="text-[11px] font-bold text-slate-500 font-mono mt-1 uppercase">Unit: ---</p>
         </div>
@@ -46,47 +44,52 @@
 
     <main class="flex-1 flex flex-col gap-4 max-w-md mx-auto w-full">
         
-        <div id="box-risposta" class="hidden transform transition-all">
-            <div class="bg-blue-600 border-l-4 border-white p-4 rounded-r-xl shadow-lg shadow-blue-900/40">
-                <p class="text-[10px] font-black uppercase text-blue-100 mb-1 tracking-widest">Messaggio Ricevuto dalla Sala:</p>
-                <p id="testo-risposta" class="text-md font-bold text-white leading-tight italic"></p>
+        <div class="glass p-3 rounded-xl border-l-4 border-blue-500">
+            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Membri Squadra</label>
+            <input type="text" id="membri" class="w-full bg-transparent text-sm font-bold outline-none text-white placeholder-slate-600" placeholder="Esempio: Rossi, Bianchi, Verdi">
+        </div>
+
+        <div id="box-risposta" class="hidden">
+            <div class="bg-blue-600 p-4 rounded-xl shadow-lg border-l-4 border-white">
+                <p class="text-[10px] font-black uppercase text-blue-100 mb-1">Dalla Sala:</p>
+                <p id="testo-risposta" class="text-md font-bold text-white italic"></p>
             </div>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
-            <button onclick="window.statoRapido('IN PARTENZA 🚚', 'Uscita')" class="btn-status bg-amber-500 p-4 rounded-xl font-black text-xs uppercase text-slate-950 shadow-lg">🚚 Partenza</button>
-            <button onclick="window.statoRapido('SUL POSTO 🚨', 'Intervento')" class="btn-status bg-red-600 p-4 rounded-xl font-black text-xs uppercase text-white shadow-lg">🚨 Sul Posto</button>
-            <button onclick="window.statoRapido('OPERATIVI ⚡', 'In Corso')" class="btn-status bg-blue-600 p-4 rounded-xl font-black text-xs uppercase text-white shadow-lg">⚡ Operativi</button>
-            <button onclick="window.statoRapido('RIENTRO 🏠', 'Rientro')" class="btn-status bg-emerald-600 p-4 rounded-xl font-black text-xs uppercase text-white shadow-lg">🏠 Rientro</button>
+            <button onclick="window.statoRapido('IN PARTENZA 🚚', 'Uscita')" class="btn-status bg-amber-500 p-4 rounded-xl font-black text-xs uppercase text-slate-950">🚚 Partenza</button>
+            <button onclick="window.statoRapido('SUL POSTO 🚨', 'Intervento')" class="btn-status bg-red-600 p-4 rounded-xl font-black text-xs uppercase text-white">🚨 Sul Posto</button>
+            <button onclick="window.statoRapido('OPERATIVI ⚡', 'In Corso')" class="btn-status bg-blue-600 p-4 rounded-xl font-black text-xs uppercase text-white">⚡ Operativi</button>
+            <button onclick="window.statoRapido('RIENTRO 🏠', 'Rientro')" class="btn-status bg-emerald-600 p-4 rounded-xl font-black text-xs uppercase text-white">🏠 Rientro</button>
         </div>
 
         <div class="flex flex-col gap-1 mt-2">
             <label class="text-[10px] font-black text-slate-500 uppercase ml-1 tracking-widest">Comunicazione Libera</label>
-            <textarea id="messaggio" rows="3" 
-                class="w-full p-4 bg-slate-900 border-2 border-slate-800 rounded-xl text-white font-bold focus:border-blue-500 outline-none resize-none shadow-inner" 
-                placeholder="Inserisci note o dettagli..."></textarea>
+            <textarea id="messaggio" rows="3" class="w-full p-4 bg-slate-900 border-2 border-slate-800 rounded-xl text-white font-bold focus:border-blue-500 outline-none resize-none" placeholder="Note extra..."></textarea>
         </div>
 
-        <div class="glass flex items-center justify-between p-4 rounded-xl">
-            <div class="flex flex-col">
-                <span class="text-xs font-black uppercase tracking-wide">Posizione GPS</span>
-                <span class="text-[9px] text-slate-500 font-bold">Invia coordinate alla sala</span>
+        <div class="glass p-4 rounded-xl">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex flex-col">
+                    <span class="text-xs font-black uppercase tracking-wide">Usa GPS Telefono</span>
+                    <span class="text-[9px] text-slate-500 font-bold">Spegni per inserire a mano</span>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="toggle-gps" checked onchange="window.toggleGpsInput()">
+                    <span class="slider"></span>
+                </label>
             </div>
-            <label class="switch">
-                <input type="checkbox" id="toggle-gps" checked>
-                <span class="slider"></span>
-            </label>
+            
+            <div id="manual-gps-box" class="hidden grid grid-cols-2 gap-2 pt-2 border-t border-slate-700">
+                <input type="text" id="manual-lat" class="bg-slate-900 border border-slate-700 p-2 rounded text-xs font-mono" placeholder="Lat: 45.1234">
+                <input type="text" id="manual-lng" class="bg-slate-900 border border-slate-700 p-2 rounded text-xs font-mono" placeholder="Lng: 11.1234">
+            </div>
         </div>
 
-        <button id="btn-invia" onclick="window.inviaDati()" 
-            class="w-full py-5 bg-white text-slate-950 rounded-xl font-black text-xl uppercase transition-all shadow-2xl active:scale-95 border-b-4 border-slate-300">
+        <button id="btn-invia" onclick="window.inviaDati()" class="w-full py-5 bg-white text-slate-950 rounded-xl font-black text-xl uppercase transition-all shadow-2xl active:scale-95 border-b-4 border-slate-300">
             Invia Report
         </button>
     </main>
-
-    <footer class="mt-8 text-center opacity-20">
-        <p class="text-[8px] font-black tracking-[0.3em] uppercase">Thiene SO Master Terminal v78.31</p>
-    </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
@@ -100,20 +103,21 @@
         const squadraId = urlParams.get('id') ? urlParams.get('id').toUpperCase() : "SCONOSCIUTA";
         document.getElementById('label-squadra').innerText = "Unit: " + squadraId;
 
+        // Toggle visualizzazione input manuali
+        window.toggleGpsInput = () => {
+            const isAuto = document.getElementById('toggle-gps').checked;
+            document.getElementById('manual-gps-box').classList.toggle('hidden', isAuto);
+        };
+
+        // Stato Sala
         onValue(ref(db, ".info/connected"), (snap) => {
             const dot = document.getElementById('sala-dot');
             const txt = document.getElementById('sala-status');
-            if (snap.val()) {
-                dot.className = "online-dot is-online";
-                txt.innerText = "Sala Online";
-                txt.className = "text-[10px] font-black uppercase text-emerald-400";
-            } else {
-                dot.className = "online-dot is-offline";
-                txt.innerText = "Sala Offline";
-                txt.className = "text-[10px] font-black uppercase text-red-500";
-            }
+            dot.className = snap.val() ? "online-dot is-online" : "online-dot is-offline";
+            txt.innerText = snap.val() ? "Online" : "Offline";
         });
 
+        // Risposte
         const logRef = query(ref(db, 'brogliaccio'), orderByChild('squadra'), equalTo(squadraId), limitToLast(5));
         onValue(logRef, (snap) => {
             const logs = snap.val();
@@ -134,45 +138,47 @@
         };
 
         window.inviaDati = async (msgForzato = null, statoForzato = null) => {
-            const msgInput = document.getElementById('messaggio');
             const btn = document.getElementById('btn-invia');
-            const gpsEnabled = document.getElementById('toggle-gps').checked;
-            const testo = msgForzato || msgInput.value.trim();
+            const gpsAuto = document.getElementById('toggle-gps').checked;
+            const testo = msgForzato || document.getElementById('messaggio').value.trim();
+            const membri = document.getElementById('membri').value.trim();
 
             if (!testo) return;
-
             btn.disabled = true;
             btn.innerText = "TRASMISSIONE...";
 
-            if (gpsEnabled) {
+            if (gpsAuto) {
                 navigator.geolocation.getCurrentPosition(
-                    async (p) => { await spedisci(testo, p.coords.latitude, p.coords.longitude, statoForzato); },
-                    async () => { await spedisci(testo, "", "", statoForzato); },
+                    async (p) => { await spedisci(testo, p.coords.latitude, p.coords.longitude, statoForzato, membri); },
+                    async () => { await spedisci(testo, "", "", statoForzato, membri); },
                     { enableHighAccuracy: true, timeout: 5000 }
                 );
             } else {
-                await spedisci(testo, "", "", statoForzato);
+                const mLat = document.getElementById('manual-lat').value;
+                const mLng = document.getElementById('manual-lng').value;
+                await spedisci(testo, mLat, mLng, statoForzato, membri);
             }
         };
 
-        async function spedisci(m, la, lo, nuovoStato) {
+        async function spedisci(m, la, lo, nuovoStato, membri) {
             try {
                 const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
                 await push(ref(db, 'brogliaccio'), {
-                    ora, squadra: squadraId, m1: m, m2: "", lat: la || "", lng: lo || "", stato: 'ATTESA', dir: 'SQ'
+                    ora, squadra: squadraId, componenti: membri, m1: m, m2: "", lat: la || "", lng: lo || "", stato: 'ATTESA', dir: 'SQ'
                 });
-                const updates = {};
+                
+                const updates = { nomi: membri };
                 if (la && lo) { updates.lat = la; updates.lng = lo; }
                 if (nuovoStato) { updates.stato = nuovoStato; }
-                if (Object.keys(updates).length > 0) await update(ref(db, `anagrafica_squadre/${squadraId}`), updates);
+                await update(ref(db, `anagrafica_squadre/${squadraId}`), updates);
+
                 document.getElementById('messaggio').value = "";
-                Swal.fire({ icon: 'success', title: 'REPORT TRASMESSO', timer: 1000, showConfirmButton: false, position: 'top', background: '#0f172a', color: '#fff' });
+                Swal.fire({ icon: 'success', title: 'INVIATO', timer: 1000, showConfirmButton: false, background: '#0f172a', color: '#fff' });
             } catch (e) {
-                Swal.fire({ icon: 'error', title: 'ERRORE INVIO' });
+                Swal.fire({ icon: 'error', title: 'ERRORE' });
             } finally {
-                const btn = document.getElementById('btn-invia');
-                btn.disabled = false;
-                btn.innerText = "INVIA REPORT";
+                document.getElementById('btn-invia').disabled = false;
+                document.getElementById('btn-invia').innerText = "INVIA REPORT";
             }
         }
     </script>
