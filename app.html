@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SQUADRA - COMUNICAZIONI PC THIENE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { background: #0f172a; color: white; font-family: 'Inter', sans-serif; touch-action: manipulation; }
+        .btn-big { height: 80px; font-weight: 900; text-transform: uppercase; border-radius: 16px; transition: 0.2s; box-shadow: 0 4px 0 rgba(0,0,0,0.4); }
+        .btn-big:active { transform: translateY(4px); box-shadow: 0 0 0 transparent; }
+        .status-pill { padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 900; text-transform: uppercase; }
+        .input-dark { background: #1e293b; border: 2px solid #334155; color: white; border-radius: 12px; padding: 15px; font-size: 18px; font-weight: 700; width: 100%; outline: none; }
+        .input-dark:focus { border-color: #3b82f6; }
+        #gps-bar { background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); border-top: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body class="flex flex-col min-height-screen">
+
+    <header class="p-6 text-center border-b border-slate-800 bg-slate-900/50 shadow-xl">
+        <h1 id="sq-id" class="text-5xl font-black text-blue-500 tracking-tighter">UNITÀ ---</h1>
+        <div class="flex justify-center gap-2 mt-2">
+            <span id="sq-capo" class="status-pill bg-slate-700 text-slate-300 italic uppercase">Responsabile: ---</span>
+            <span id="sq-stato" class="status-pill bg-emerald-600 text-white">Caricamento...</span>
+        </div>
+    </header>
+
+    <main class="flex-1 p-6 space-y-6">
+        <div class="space-y-2">
+            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Nuovo Messaggio TETRA / Radio</label>
+            <textarea id="msg-input" class="input-dark h-32 resize-none" placeholder="Indica posizione, necessità o dettagli intervento..."></textarea>
+            <button onclick="window.sendToSala()" class="w-full btn-big bg-blue-600 active:bg-blue-700 text-2xl flex items-center justify-center gap-3">
+                Invia a Sala ➔
+            </button>
+        </div>
+
+        <div class="pt-4 border-t border-slate-800">
+            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-3 block">Aggiornamento Stato Rapido</label>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="window.updateStato('Intervento')" class="btn-big bg-red-600 text-lg">🚨 Sul Posto</button>
+                <button onclick="window.updateStato('In Corso')" class="btn-big bg-purple-600 text-lg">⚡ In Lavoro</button>
+                <button onclick="window.updateStato('Rientro')" class="btn-big bg-cyan-600 text-lg">🔙 Rientro</button>
+                <button onclick="window.updateStato('Sede')" class="btn-big bg-emerald-700 text-lg">🏠 In Sede</button>
+            </div>
+        </div>
+    </main>
+
+    <footer id="gps-bar" class="fixed bottom-0 left-0 right-0 p-3 flex justify-between items-center text-[10px] font-bold">
+        <div id="gps-status" class="text-slate-400 uppercase tracking-tighter">
+            🛰️ GPS: Acquisizione segnale...
+        </div>
+        <div id="connection-status" class="text-emerald-500 uppercase">
+            ● Collegato
+        </div>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+        import { getDatabase, ref, onValue, push, update } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+
+        const cfg = { apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54", databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com", projectId: "realtime-database-6962f" };
+        const app = initializeApp(cfg); const db = getDatabase(app);
+
+        // Recupero ID Squadra dall'URL
+        const params = new URLSearchParams(window.location.search);
+        const sqId = params.get('id')?.toUpperCase();
+
+        if(!sqId) {
+            Swal.fire({ icon: 'error', title: 'ERRORE', text: 'Sigla Squadra non identificata. Scansiona nuovamente il QR Code.', background: '#0f172a', color: '#fff' });
+        } else {
+            document.getElementById('sq-id').innerText = sqId;
+            initApp();
+        }
+
+        function initApp() {
+            // Sincronizzazione Dati Squadra (Capo e Stato attuale)
+            onValue(ref(db, `anagrafica_squadre/${sqId}`), (s) => {
+                const d = s.val();
+                if(d) {
+                    document.getElementById('sq-capo').innerText = `Responsabile: ${d.capo || '---'}`;
+                    const st = document.getElementById('sq-stato');
+                    st.innerText = d.stato;
+                    // Cambio colore pillola in base allo stato
+                    const colors = { 'Sede': '#059669', 'Intervento': '#dc2626', 'Uscita': '#f59e0b', 'Rientro': '#06b6d4', 'In Corso': '#9333ea' };
+                    st.style.backgroundColor = colors[d.stato] || '#334155';
+                }
+            });
+
+            // Avvio GPS continuo (watchPosition)
+            navigator.geolocation.watchPosition(p => {
+                const coords = { lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) };
+                update(ref(db, `anagrafica_squadre/${sqId}`), coords);
+                document.getElementById('gps-status').innerText = `🛰️ GPS ATTIVO: ${coords.lat}, ${coords.lng}`;
+            }, e => {
+                document.getElementById('gps-status').innerText = "🛰️ GPS: Errore (Attiva Localizzazione)";
+            }, { enableHighAccuracy: true });
+        }
+
+        window.sendToSala = async () => {
+            const msg = document.getElementById('msg-input').value;
+            if(!msg) return;
+
+            // Invio log in stato ATTESA per allertare la Sala Operativa
+            await push(ref(db, 'brogliaccio'), {
+                ora: new Date().toLocaleTimeString().slice(0,5),
+                data: new Date().toLocaleDateString(),
+                squadra: sqId,
+                dir: 'SQ',
+                m1: msg,
+                m2: '---',
+                stato: 'ATTESA' // Fa lampeggiare la Dashboard
+            });
+
+            document.getElementById('msg-input').value = "";
+            Swal.fire({ icon: 'success', title: 'INVIATO', timer: 1000, showConfirmButton: false, background: '#0f172a', color: '#fff' });
+        };
+
+        window.updateStato = async (nuovo) => {
+            await update(ref(db, `anagrafica_squadre/${sqId}`), { stato: nuovo });
+            // Registriamo anche l'aggiornamento nel log per tracciabilità
+            await push(ref(db, 'brogliaccio'), {
+                ora: new Date().toLocaleTimeString().slice(0,5),
+                data: new Date().toLocaleDateString(),
+                squadra: sqId,
+                dir: 'SQ',
+                m1: `CAMBIO STATO: ${nuovo}`,
+                m2: 'RICEVUTO',
+                stato: 'OK'
+            });
+            Swal.fire({ icon: 'info', title: 'STATO AGGIORNATO', text: nuovo, timer: 1000, showConfirmButton: false, background: '#0f172a', color: '#fff' });
+        };
+    </script>
+</body>
+</html>
