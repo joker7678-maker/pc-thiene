@@ -7,15 +7,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { background-color: #0f172a; font-family: 'Inter', sans-serif; color: white; }
-        
-        /* Stile Switch Privacy */
+        body { background-color: #0f172a; font-family: sans-serif; color: white; }
         .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 34px; }
         .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #2563eb; }
         input:checked + .slider:before { transform: translateX(24px); }
+        .btn-active:active { transform: scale(0.95); }
     </style>
 </head>
 <body class="p-4 flex flex-col min-h-screen">
@@ -33,10 +32,10 @@
                 placeholder="Scrivi qui..."></textarea>
         </div>
 
-        <div class="flex items-center justify-between p-4 bg-slate-800 border border-slate-700 rounded-xl shadow-inner">
+        <div class="flex items-center justify-between p-4 bg-slate-800 border border-slate-700 rounded-xl">
             <div class="flex flex-col">
-                <span class="text-sm font-black uppercase tracking-wide">Invia Posizione GPS</span>
-                <span class="text-[10px] text-slate-400">Attiva per essere visto sulla mappa</span>
+                <span class="text-sm font-black uppercase">Invia Posizione GPS</span>
+                <span class="text-[10px] text-slate-400 italic">Privacy: puoi spegnere il tracciamento</span>
             </div>
             <label class="switch">
                 <input type="checkbox" id="toggle-gps" checked>
@@ -45,14 +44,10 @@
         </div>
 
         <button id="btn-invia" onclick="window.inviaDati()" 
-            class="w-full py-5 bg-blue-600 rounded-xl font-black text-xl shadow-lg shadow-blue-900/40 active:scale-95 transition-all uppercase">
+            class="w-full py-5 bg-blue-600 rounded-xl font-black text-xl shadow-lg shadow-blue-900/40 btn-active uppercase transition-all">
             Invia Messaggio
         </button>
     </main>
-
-    <footer class="mt-auto text-center py-4 border-t border-slate-800">
-        <p class="text-[10px] text-slate-600 font-bold uppercase tracking-widest">S.O. Master Dashboard Online</p>
-    </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
@@ -66,7 +61,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Recupero ID Squadra dal link
         const urlParams = new URLSearchParams(window.location.search);
         const squadraId = urlParams.get('id') ? urlParams.get('id').toUpperCase() : "SCONOSCIUTA";
         document.getElementById('label-squadra').innerText = "UNITÀ: " + squadraId;
@@ -78,28 +72,21 @@
             const testo = msgInput.value.trim();
 
             if (!testo) {
-                Swal.fire({ icon: 'error', title: 'Attenzione', text: 'Inserisci un messaggio prima di inviare.' });
+                Swal.fire({ icon: 'error', title: 'Attenzione', text: 'Inserisci un messaggio.' });
                 return;
             }
 
             btn.disabled = true;
-            btn.innerText = gpsEnabled ? "RILEVAMENTO GPS..." : "INVIO IN CORSO...";
-            btn.classList.replace('bg-blue-600', 'bg-slate-700');
+            btn.innerText = gpsEnabled ? "CERCO GPS..." : "INVIO...";
 
             if (gpsEnabled) {
-                // Opzioni GPS per alta precisione
-                const options = { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 };
-
                 navigator.geolocation.getCurrentPosition(
-                    async (p) => {
-                        await spedisci(testo, p.coords.latitude, p.coords.longitude);
+                    async (p) => { await spedisci(testo, p.coords.latitude, p.coords.longitude); },
+                    async () => { 
+                        Swal.fire({ icon: 'warning', title: 'GPS assente', text: 'Inviato solo testo.', timer: 1500 });
+                        await spedisci(testo, "", ""); 
                     },
-                    async (err) => {
-                        console.error("Errore GPS:", err);
-                        Swal.fire({ icon: 'warning', title: 'GPS non trovato', text: 'Messaggio inviato senza posizione.', timer: 2000 });
-                        await spedisci(testo, "", "");
-                    },
-                    options
+                    { enableHighAccuracy: true, timeout: 6000 }
                 );
             } else {
                 await spedisci(testo, "", "");
@@ -109,36 +96,22 @@
         async function spedisci(m, la, lo) {
             try {
                 const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-                
-                // 1. Scrittura nel Brogliaccio (Storico)
                 await push(ref(db, 'brogliaccio'), {
-                    ora: ora,
-                    squadra: squadraId,
-                    m1: m,
-                    m2: "",
-                    lat: la || "",
-                    lng: lo || "",
-                    stato: 'ATTESA',
-                    dir: 'SQ'
+                    ora: ora, squadra: squadraId, m1: m, m2: "",
+                    lat: la || "", lng: lo || "", stato: 'ATTESA', dir: 'SQ'
                 });
 
-                // 2. Aggiornamento posizione nell'Anagrafica (Mappa real-time)
                 if(la && lo) {
-                    await update(ref(db, `anagrafica_squadre/${squadraId}`), {
-                        lat: la,
-                        lng: lo
-                    });
+                    await update(ref(db, `anagrafica_squadre/${squadraId}`), { lat: la, lng: lo });
                 }
 
                 document.getElementById('messaggio').value = "";
-                Swal.fire({ icon: 'success', title: 'Inviato correttamente!', showConfirmButton: false, timer: 1500 });
+                Swal.fire({ icon: 'success', title: 'Inviato!', timer: 1000, showConfirmButton: false });
             } catch (e) {
-                Swal.fire({ icon: 'error', title: 'Errore', text: 'Problema di rete o Firebase.' });
+                Swal.fire({ icon: 'error', title: 'Errore', text: 'Rete assente.' });
             } finally {
-                const btn = document.getElementById('btn-invia');
                 btn.disabled = false;
                 btn.innerText = "INVIA MESSAGGIO";
-                btn.classList.replace('bg-slate-700', 'bg-blue-600');
             }
         }
     </script>
