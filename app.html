@@ -7,35 +7,65 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { background-color: #0f172a; font-family: sans-serif; color: white; }
-        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { background-color: #020617; font-family: 'Inter', sans-serif; color: white; }
+        .btn-status { transition: all 0.2s; border-bottom: 4px solid rgba(0,0,0,0.3); }
+        .btn-status:active { transform: translateY(2px); border-bottom-width: 2px; }
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #2563eb; }
-        input:checked + .slider:before { transform: translateX(24px); }
-        .btn-active:active { transform: scale(0.95); }
+        input:checked + .slider:before { transform: translateX(22px); }
+        .online-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+        .is-online { background: #10b981; box-shadow: 0 0 8px #10b981; }
+        .is-offline { background: #ef4444; }
     </style>
 </head>
 <body class="p-4 flex flex-col min-h-screen">
 
-    <header class="text-center mb-6">
-        <h1 class="text-2xl font-black text-blue-500 uppercase tracking-tighter">PROTEZIONE CIVILE</h1>
-        <p id="label-squadra" class="text-lg font-bold text-slate-400 italic">Identificazione...</p>
+    <header class="flex justify-between items-start mb-4">
+        <div class="flex flex-col">
+            <h1 class="text-xl font-black text-blue-500 uppercase tracking-tighter">PC THIENE</h1>
+            <p id="label-squadra" class="text-sm font-bold text-slate-400 font-mono">ID: ---</p>
+        </div>
+        <div class="flex flex-col items-end">
+            <div class="flex items-center bg-slate-800/50 px-2 py-1 rounded-full border border-slate-700">
+                <span id="sala-dot" class="online-dot is-offline"></span>
+                <span id="sala-status" class="text-[9px] font-bold uppercase text-slate-400">Sala Offline</span>
+            </div>
+        </div>
     </header>
 
     <main class="flex-1 flex flex-col gap-4 max-w-md mx-auto w-full">
+        
+        <div id="box-risposta" class="hidden animate-pulse">
+            <div class="bg-blue-600/20 border-2 border-blue-500 p-3 rounded-xl">
+                <p class="text-[10px] font-black uppercase text-blue-400 mb-1">Ultima risposta dalla Sala:</p>
+                <p id="testo-risposta" class="text-sm font-bold text-white"></p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+            <button onclick="window.statoRapido('IN PARTENZA 🚚', 'Uscita')" class="btn-status bg-amber-500 p-4 rounded-xl font-black text-[11px] uppercase text-slate-900 text-center">🚚 Partenza</button>
+            <button onclick="window.statoRapido('SUL POSTO 🚨', 'Intervento')" class="btn-status bg-red-600 p-4 rounded-xl font-black text-[11px] uppercase text-center">🚨 Sul Posto</button>
+            <button onclick="window.statoRapido('OPERATIVI ⚡', 'In Corso')" class="btn-status bg-blue-600 p-4 rounded-xl font-black text-[11px] uppercase text-center">⚡ Operativi</button>
+            <button onclick="window.statoRapido('RIENTRO IN SEDE 🏠', 'Rientro')" class="btn-status bg-emerald-600 p-4 rounded-xl font-black text-[11px] uppercase text-center">🏠 Rientro</button>
+        </div>
+
+        <div class="h-[1px] bg-slate-800 my-1"></div>
+
         <div class="flex flex-col gap-1">
-            <label class="text-xs font-bold text-slate-500 uppercase ml-1">Messaggio per la Sala</label>
-            <textarea id="messaggio" rows="4" 
-                class="w-full p-4 bg-slate-800 border-2 border-slate-700 rounded-xl text-white font-bold focus:border-blue-500 outline-none resize-none" 
+            <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Nota extra o messaggio</label>
+            <textarea id="messaggio" rows="3" 
+                class="w-full p-3 bg-slate-800 border-2 border-slate-700 rounded-xl text-white font-bold focus:border-blue-500 outline-none resize-none" 
                 placeholder="Scrivi qui..."></textarea>
         </div>
 
-        <div class="flex items-center justify-between p-4 bg-slate-800 border border-slate-700 rounded-xl">
+        <div class="flex items-center justify-between p-3 bg-slate-800/50 border border-slate-700 rounded-xl">
             <div class="flex flex-col">
-                <span class="text-sm font-black uppercase">Invia Posizione GPS</span>
-                <span class="text-[10px] text-slate-400 italic">Privacy: puoi spegnere il tracciamento</span>
+                <span class="text-xs font-bold uppercase">Invia posizione GPS</span>
+                <span class="text-[9px] text-slate-500 uppercase">Privacy attiva</span>
             </div>
             <label class="switch">
                 <input type="checkbox" id="toggle-gps" checked>
@@ -44,20 +74,16 @@
         </div>
 
         <button id="btn-invia" onclick="window.inviaDati()" 
-            class="w-full py-5 bg-blue-600 rounded-xl font-black text-xl shadow-lg shadow-blue-900/40 btn-active uppercase transition-all">
+            class="w-full py-4 bg-white text-slate-950 rounded-xl font-black text-lg uppercase transition-all shadow-xl active:scale-95">
             Invia Messaggio
         </button>
     </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getDatabase, ref, push, update } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+        import { getDatabase, ref, push, update, onValue, query, orderByChild, equalTo, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54",
-            databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com"
-        };
-
+        const firebaseConfig = { apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54", databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
@@ -65,53 +91,81 @@
         const squadraId = urlParams.get('id') ? urlParams.get('id').toUpperCase() : "SCONOSCIUTA";
         document.getElementById('label-squadra').innerText = "UNITÀ: " + squadraId;
 
-        window.inviaDati = async () => {
+        // 1. MONITORAGGIO STATO SALA OPERATIVA
+        onValue(ref(db, ".info/connected"), (snap) => {
+            const dot = document.getElementById('sala-dot');
+            const txt = document.getElementById('sala-status');
+            if (snap.val()) {
+                dot.className = "online-dot is-online";
+                txt.innerText = "Sala Online";
+                txt.className = "text-[9px] font-bold uppercase text-emerald-400";
+            } else {
+                dot.className = "online-dot is-offline";
+                txt.innerText = "Sala Offline";
+                txt.className = "text-[9px] font-bold uppercase text-red-500";
+            }
+        });
+
+        // 2. ASCOLTO RISPOSTE DALLA SALA (Solo per questa squadra)
+        const logRef = query(ref(db, 'brogliaccio'), orderByChild('squadra'), equalTo(squadraId), limitToLast(5));
+        onValue(logRef, (snap) => {
+            const logs = snap.val();
+            if (logs) {
+                const lastLog = Object.values(logs).reverse().find(l => l.m2 && l.m2 !== "---");
+                if (lastLog) {
+                    document.getElementById('box-risposta').classList.remove('hidden');
+                    document.getElementById('testo-risposta').innerText = lastLog.m2;
+                    // Notifica sonora o vibrazione se supportata
+                    if ("vibrate" in navigator) navigator.vibrate(200);
+                }
+            }
+        });
+
+        window.statoRapido = (testoStato, valoreStato) => {
+            const extra = document.getElementById('messaggio').value.trim();
+            const messaggioFinale = extra ? `${testoStato} - ${extra}` : testoStato;
+            window.inviaDati(messaggioFinale, valoreStato);
+        };
+
+        window.inviaDati = async (msgForzato = null, statoForzato = null) => {
             const msgInput = document.getElementById('messaggio');
             const btn = document.getElementById('btn-invia');
             const gpsEnabled = document.getElementById('toggle-gps').checked;
-            const testo = msgInput.value.trim();
+            const testo = msgForzato || msgInput.value.trim();
 
-            if (!testo) {
-                Swal.fire({ icon: 'error', title: 'Attenzione', text: 'Inserisci un messaggio.' });
-                return;
-            }
+            if (!testo) return;
 
             btn.disabled = true;
-            btn.innerText = gpsEnabled ? "CERCO GPS..." : "INVIO...";
+            btn.innerText = "INVIO...";
 
             if (gpsEnabled) {
                 navigator.geolocation.getCurrentPosition(
-                    async (p) => { await spedisci(testo, p.coords.latitude, p.coords.longitude); },
-                    async () => { 
-                        Swal.fire({ icon: 'warning', title: 'GPS assente', text: 'Inviato solo testo.', timer: 1500 });
-                        await spedisci(testo, "", ""); 
-                    },
-                    { enableHighAccuracy: true, timeout: 6000 }
+                    async (p) => { await spedisci(testo, p.coords.latitude, p.coords.longitude, statoForzato); },
+                    async () => { await spedisci(testo, "", "", statoForzato); },
+                    { enableHighAccuracy: true, timeout: 5000 }
                 );
             } else {
-                await spedisci(testo, "", "");
+                await spedisci(testo, "", "", statoForzato);
             }
         };
 
-        async function spedisci(m, la, lo) {
+        async function spedisci(m, la, lo, nuovoStato) {
             try {
                 const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
                 await push(ref(db, 'brogliaccio'), {
-                    ora: ora, squadra: squadraId, m1: m, m2: "",
-                    lat: la || "", lng: lo || "", stato: 'ATTESA', dir: 'SQ'
+                    ora, squadra: squadraId, m1: m, m2: "", lat: la || "", lng: lo || "", stato: 'ATTESA', dir: 'SQ'
                 });
-
-                if(la && lo) {
-                    await update(ref(db, `anagrafica_squadre/${squadraId}`), { lat: la, lng: lo });
-                }
-
+                const updates = {};
+                if (la && lo) { updates.lat = la; updates.lng = lo; }
+                if (nuovoStato) { updates.stato = nuovoStato; }
+                if (Object.keys(updates).length > 0) await update(ref(db, `anagrafica_squadre/${squadraId}`), updates);
                 document.getElementById('messaggio').value = "";
-                Swal.fire({ icon: 'success', title: 'Inviato!', timer: 1000, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'Inviato', timer: 800, showConfirmButton: false });
             } catch (e) {
-                Swal.fire({ icon: 'error', title: 'Errore', text: 'Rete assente.' });
+                Swal.fire({ icon: 'error', title: 'Errore' });
             } finally {
-                btn.disabled = false;
-                btn.innerText = "INVIA MESSAGGIO";
+                btn-invia.disabled = false;
+                btn-invia.innerText = "INVIA MESSAGGIO";
             }
         }
     </script>
