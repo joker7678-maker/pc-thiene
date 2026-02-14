@@ -8,170 +8,152 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; overflow-x: hidden; }
-        .btn-action { transition: all 0.2s; active: scale(0.95); }
-        .status-pill { padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 900; text-transform: uppercase; }
-        #audio-visualizer { height: 40px; background: #1e293b; border-radius: 8px; display: none; align-items: center; justify-content: center; gap: 3px; }
-        .bar { width: 4px; height: 15px; background: #3b82f6; border-radius: 2px; }
-        .recording .bar { animation: sound 0.5s infinite ease-in-out; }
-        @keyframes sound { 0%, 100% { height: 10px; } 50% { height: 30px; } }
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        .btn-status { transition: all 0.2s; }
+        .btn-status:active { transform: scale(0.95); }
+        /* Animazione per il caricamento */
+        .loading-pulse { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
-<body class="p-4">
+<body class="p-4 pb-10">
 
-    <header class="flex justify-between items-center mb-6">
+    <header class="flex justify-between items-start mb-6">
         <div>
-            <h1 class="text-xl font-black tracking-tighter">PC THIENE</h1>
-            <p id="sq-name" class="text-blue-500 font-bold text-xs uppercase tracking-widest">Inizializzazione...</p>
+            <h1 class="text-2xl font-black tracking-tighter leading-none">PC THIENE</h1>
+            <p id="sq-display" class="text-blue-500 font-black text-xs uppercase tracking-widest mt-1 italic">SQUADRA...</p>
         </div>
-        <div id="status-online" class="status-pill bg-emerald-500/20 text-emerald-500 border border-emerald-500/50">Online</div>
+        <div id="net-status" class="bg-emerald-500/20 text-emerald-500 text-[10px] font-bold px-3 py-1 rounded-full border border-emerald-500/30">ONLINE</div>
     </header>
 
-    <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 mb-6 shadow-xl">
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Stato Attuale</label>
-        <div id="current-status" class="text-2xl font-black mb-4">---</div>
+    <div class="bg-slate-800/50 border border-slate-700 rounded-3xl p-5 mb-6 shadow-2xl">
+        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">Stato Squadra</label>
+        <div id="current-status" class="text-3xl font-black text-white mb-5 uppercase italic tracking-tighter">Attesa...</div>
         
-        <div class="grid grid-cols-2 gap-2">
-            <button onclick="window.updateStatus('In Corso')" class="bg-amber-500 text-black font-black py-3 rounded-xl text-xs uppercase">🚨 In Corso</button>
-            <button onclick="window.updateStatus('Rientro')" class="bg-cyan-500 text-black font-black py-3 rounded-xl text-xs uppercase">🔙 Rientro</button>
+        <div class="grid grid-cols-2 gap-3">
+            <button onclick="window.updateStatus('In Corso')" class="btn-status bg-amber-500 text-black font-black py-4 rounded-2xl text-xs uppercase shadow-lg">🚨 In Corso</button>
+            <button onclick="window.updateStatus('Rientro')" class="btn-status bg-cyan-500 text-black font-black py-4 rounded-2xl text-xs uppercase shadow-lg">🔙 Rientro</button>
         </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-4 mb-6">
-        <div onclick="document.getElementById('input-foto').click()" class="btn-action bg-white text-black rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-lg">
-            <span class="text-3xl">📷</span>
-            <span class="font-black text-[10px] uppercase">Scatta Foto</span>
-            <input type="file" id="input-foto" accept="image/*" capture="camera" class="hidden" onchange="window.caricaMedia(this.files[0], 'IMG')">
-        </div>
-
-        <div id="btn-audio" class="btn-action bg-red-600 text-white rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-lg">
-            <span id="audio-icon" class="text-3xl">🎤</span>
-            <span id="audio-label" class="font-black text-[10px] uppercase text-center">Invia Vocale</span>
+    <div class="mb-6">
+        <div onclick="document.getElementById('input-foto').click()" class="cursor-pointer bg-white text-black rounded-3xl p-8 flex flex-col items-center justify-center gap-3 shadow-xl active:scale-95 transition-transform border-4 border-blue-600/20">
+            <span class="text-5xl">📷</span>
+            <span class="font-black text-sm uppercase tracking-tighter">Invia Foto Segnalazione</span>
+            <p class="text-[9px] font-bold text-slate-400 uppercase">Acquisizione rapida e invio</p>
+            <input type="file" id="input-foto" accept="image/*" capture="camera" class="hidden" onchange="window.caricaFotoBase64(this.files[0])">
         </div>
     </div>
 
-    <div id="audio-visualizer" class="mb-6"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
-
-    <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 mb-6">
-        <label class="text-[10px] font-bold text-slate-400 uppercase mb-2 block tracking-widest">Messaggio alla Sala Radio</label>
-        <textarea id="msg-text" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:border-blue-500 outline-none h-24 mb-3" placeholder="Scrivi qui..."></textarea>
-        <button onclick="window.sendTextLog()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg">Invia Messaggio</button>
+    <div class="bg-slate-800/50 border border-slate-700 rounded-3xl p-5 shadow-xl">
+        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Rapporto Radio / Note</label>
+        <textarea id="msg-input" class="w-full bg-slate-950 border border-slate-700 rounded-2xl p-4 text-white text-base font-bold outline-none focus:border-blue-500 transition-colors h-28 mb-4 resize-none" placeholder="Scrivi alla Sala Radio..."></textarea>
+        <button onclick="window.sendTextLog()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl uppercase tracking-widest text-sm shadow-lg shadow-blue-600/30">Invia Messaggio</button>
     </div>
 
-    <footer class="text-center opacity-30 py-4">
-        <p class="text-[10px] font-bold tracking-widest uppercase">System Manager TETRA</p>
-        <p class="text-[12px] font-black italic">JoK<span class="text-red-500">ART</span> 2026</p>
+    <footer class="mt-10 text-center opacity-40">
+        <p class="text-[9px] font-bold uppercase tracking-[0.3em]">System Manager TETRA</p>
+        <p class="text-sm font-black italic">JoK<span class="text-red-600">ART</span> 2026</p>
     </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
         import { getDatabase, ref, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
-        import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js";
 
         const cfg = { 
             apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54", 
             databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com", 
-            projectId: "realtime-database-6962f",
-            storageBucket: "realtime-database-6962f.appspot.com"
+            projectId: "realtime-database-6962f"
         };
 
         const app = initializeApp(cfg);
         const db = getDatabase(app);
-        const storage = getStorage(app);
 
-        // Recupero ID Squadra dall'URL (es: app.html?id=SQUADRA1)
+        // Identificazione Squadra via URL
         const urlParams = new URLSearchParams(window.location.search);
-        const sqId = urlParams.get('id') || "SCONOSCIUTA";
-        document.getElementById('sq-name').innerText = sqId;
+        const sqId = urlParams.get('id') || "SQUADRA NON DEFINITA";
+        document.getElementById('sq-display').innerText = sqId;
 
-        // --- SINCRONIZZAZIONE STATO ---
+        // Monitoraggio Stato
         onValue(ref(db, `anagrafica_squadre/${sqId}`), (snap) => {
-            const data = snap.val();
-            if(data) document.getElementById('current-status').innerText = data.stato;
+            const val = snap.val();
+            if(val) document.getElementById('current-status').innerText = val.stato;
         });
 
-        // --- AGGIORNAMENTO STATO ---
-        window.updateStatus = (nuovoStato) => {
-            update(ref(db, `anagrafica_squadre/${sqId}`), { stato: nuovoStato });
-            const logData = {
-                ora: new Date().toLocaleTimeString().slice(0,5),
+        // Funzione Cambio Stato
+        window.updateStatus = (s) => {
+            update(ref(db, `anagrafica_squadre/${sqId}`), { stato: s });
+            push(ref(db, 'brogliaccio'), {
+                ora: new Date().toLocaleTimeString('it-IT').slice(0,5),
                 squadra: sqId,
                 dir: 'SQ',
-                m1: `Cambio stato in: ${nuovoStato}`,
+                m1: `🔄 CAMBIO STATO: ${s.toUpperCase()}`,
                 stato: 'OK'
-            };
-            push(ref(db, 'brogliaccio'), logData);
-            Swal.fire({ icon:'success', title: nuovoStato, timer: 1000, showConfirmButton:false });
+            });
+            Swal.fire({ icon:'success', title: s, timer: 1000, showConfirmButton:false, toast:true, position:'top' });
         };
 
-        // --- INVIO TESTO ---
+        // Funzione Invia Testo
         window.sendTextLog = () => {
-            const txt = document.getElementById('msg-text').value;
-            if(!txt) return;
-            const logData = {
-                ora: new Date().toLocaleTimeString().slice(0,5),
+            const m = document.getElementById('msg-input').value;
+            if(!m) return;
+            push(ref(db, 'brogliaccio'), {
+                ora: new Date().toLocaleTimeString('it-IT').slice(0,5),
                 squadra: sqId,
                 dir: 'SQ',
-                m1: txt,
+                m1: m,
                 stato: 'ATTESA'
-            };
-            push(ref(db, 'brogliaccio'), logData);
-            document.getElementById('msg-text').value = "";
-            Swal.fire({ icon:'success', title:'Inviato', timer: 1000, showConfirmButton:false });
+            });
+            document.getElementById('msg-input').value = "";
+            Swal.fire({ icon:'success', title:'Inviato', timer: 1000, showConfirmButton:false, toast:true, position:'top' });
         };
 
-        // --- CARICAMENTO MEDIA (FOTO/AUDIO) ---
-        window.caricaMedia = async (file, type) => {
+        // FUNZIONE FOTO BASE64 (Piano Gratuito)
+        window.caricaFotoBase64 = (file) => {
             if(!file) return;
-            const fileName = `${type}_${Date.now()}_${sqId}`;
-            const storageRef = sRef(storage, `media/${fileName}`);
 
-            Swal.fire({ title: 'Invio...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            
+            Swal.fire({ title: 'Compressione Foto...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-            try {
-                const snapshot = await uploadBytes(storageRef, file);
-                const url = await getDownloadURL(snapshot.ref);
-                const logData = {
-                    ora: new Date().toLocaleTimeString().slice(0,5),
-                    squadra: sqId,
-                    dir: 'SQ',
-                    m1: type === 'IMG' ? '📷 [FOTO INVIATA]' : '🎤 [VOCALE INVIATO]',
-                    mediaUrl: url,
-                    mediaType: type,
-                    stato: 'ATTESA'
+            reader.onload = (e) => {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = () => {
+                    // Ridimensionamento per Database
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Base64 JPG con qualità 0.6 per stare sotto i limiti di dimensione
+                    const base64data = canvas.toDataURL('image/jpeg', 0.6);
+
+                    push(ref(db, 'brogliaccio'), {
+                        ora: new Date().toLocaleTimeString('it-IT').slice(0,5),
+                        squadra: sqId,
+                        dir: 'SQ',
+                        m1: '📷 [FOTO DAL CAMPO]',
+                        mediaUrl: base64data,
+                        mediaType: 'IMG',
+                        stato: 'ATTESA'
+                    }).then(() => {
+                        Swal.fire({ icon:'success', title:'Foto Inviata!', timer: 1500, showConfirmButton:false });
+                    }).catch(err => {
+                        Swal.fire('Errore', 'Dati troppo pesanti', 'error');
+                    });
                 };
-                push(ref(db, 'brogliaccio'), logData);
-                Swal.close();
-            } catch (e) {
-                Swal.fire('Errore', 'Fallito', 'error');
-            }
-        };
-
-        // --- REGISTRATORE AUDIO ---
-        let mediaRecorder;
-        let audioChunks = [];
-        const btnAudio = document.getElementById('btn-audio');
-        const visualizer = document.getElementById('audio-visualizer');
-
-        btnAudio.onclick = async () => {
-            if (!mediaRecorder || mediaRecorder.state === "inactive") {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' });
-                    window.caricaMedia(audioBlob, 'AUDIO');
-                };
-                mediaRecorder.start();
-                visualizer.style.display = 'flex';
-                visualizer.classList.add('recording');
-                document.getElementById('audio-label').innerText = "STOP PER INVIARE";
-            } else {
-                mediaRecorder.stop();
-                visualizer.style.display = 'none';
-                document.getElementById('audio-label').innerText = "INVIA VOCALE";
-            }
+            };
         };
     </script>
 </body>
