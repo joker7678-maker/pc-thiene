@@ -3,17 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - App Operatore</title>
+    <title>PC THIENE - App Operatore Advanced GPS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; -webkit-tap-highlight-color: transparent; }
         .btn-status { transition: all 0.2s; font-size: 10px; font-weight: 800; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); }
         .btn-status:active { transform: scale(0.95); opacity: 0.8; }
-        #visualizer.recording { display: flex !important; }
-        .bar { width: 3px; height: 8px; background: #ef4444; border-radius: 2px; animation: pulse 0.6s infinite ease-in-out; }
-        @keyframes pulse { 50% { height: 20px; } }
+        /* Toggle Switch Style */
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #10b981; }
+        input:checked + .slider:before { transform: translateX(20px); }
     </style>
 </head>
 <body class="p-4 pb-10">
@@ -23,46 +27,59 @@
             <h1 class="text-xl font-black tracking-tighter leading-none text-white">PC THIENE</h1>
             <p id="sq-display" class="text-blue-500 font-black text-[10px] uppercase tracking-widest mt-1 italic">SQUADRA...</p>
         </div>
-        <div class="bg-emerald-500/20 text-emerald-500 text-[9px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">ONLINE</div>
+        <div class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700">
+            <span class="text-[9px] font-bold uppercase tracking-tighter">Auto GPS</span>
+            <label class="switch">
+                <input type="checkbox" id="gps-toggle" checked onchange="window.toggleGPSFields()">
+                <span class="slider"></span>
+            </label>
+        </div>
     </header>
 
-    <div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 mb-5 shadow-xl text-center">
-        <label class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 block text-center">Stato Operativo</label>
+    <div id="manual-gps-box" class="hidden bg-slate-800 border border-amber-500/30 rounded-2xl p-4 mb-4 shadow-2xl">
+        <label class="text-[10px] font-bold text-amber-500 uppercase mb-3 block text-center tracking-widest">Posizione Manuale</label>
+        
+        <input type="text" id="manual-addr" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white text-xs font-bold mb-3 shadow-inner" placeholder="Indirizzo (es. Via Roma 10)">
+        
+        <div class="flex gap-2">
+            <div class="flex-1">
+                <label class="text-[8px] text-slate-500 font-bold ml-1 uppercase">Latitudine</label>
+                <input type="number" id="manual-lat" step="any" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-white text-xs font-mono" placeholder="45.70...">
+            </div>
+            <div class="flex-1">
+                <label class="text-[8px] text-slate-500 font-bold ml-1 uppercase">Longitudine</label>
+                <input type="number" id="manual-lng" step="any" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-white text-xs font-mono" placeholder="11.48...">
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 mb-5 shadow-xl">
         <div class="grid grid-cols-3 gap-2">
-            <button onclick="window.confirmStatus('Partenza', '🚚')" class="btn-status bg-slate-700 text-white py-2.5 rounded-xl shadow-sm">Partenza</button>
-            <button onclick="window.confirmStatus('In Corso', '🚨')" class="btn-status bg-amber-500 text-black py-2.5 rounded-xl shadow-sm">In Corso</button>
-            <button onclick="window.confirmStatus('Arrivo Posto', '📍')" class="btn-status bg-indigo-500 text-white py-2.5 rounded-xl shadow-sm">Arrivo Posto</button>
-            <button onclick="window.confirmStatus('Rientro', '🔙')" class="btn-status bg-cyan-500 text-black py-2.5 rounded-xl shadow-sm">Rientro</button>
-            <button onclick="window.confirmStatus('Disponibile', '✅')" class="btn-status bg-emerald-600 text-white py-2.5 rounded-xl shadow-sm">Disp.</button>
-            <button onclick="window.confirmStatus('Fine Servizio', '🏁')" class="btn-status bg-red-800 text-white py-2.5 rounded-xl shadow-sm">Fine Serv.</button>
+            <button onclick="window.confirmStatus('Partenza', '🚚')" class="btn-status bg-slate-700 text-white py-3 rounded-xl">Partenza</button>
+            <button onclick="window.confirmStatus('In Corso', '🚨')" class="btn-status bg-amber-500 text-black py-3 rounded-xl shadow-lg shadow-amber-500/10">In Corso</button>
+            <button onclick="window.confirmStatus('Arrivo', '📍')" class="btn-status bg-indigo-500 text-white py-3 rounded-xl">Arrivo</button>
+            <button onclick="window.confirmStatus('Rientro', '🔙')" class="btn-status bg-cyan-500 text-black py-3 rounded-xl">Rientro</button>
+            <button onclick="window.confirmStatus('Disponibile', '✅')" class="btn-status bg-emerald-600 text-white py-3 rounded-xl">Disp.</button>
+            <button onclick="window.confirmStatus('Fine Serv.', '🏁')" class="btn-status bg-red-800 text-white py-3 rounded-xl">Fine Serv.</button>
         </div>
     </div>
 
     <div class="grid grid-cols-2 gap-3 mb-5">
-        <div onclick="document.getElementById('input-foto').click()" class="cursor-pointer bg-white text-black rounded-2xl p-4 flex flex-col items-center justify-center gap-1 shadow-md active:scale-95 transition-all">
+        <div onclick="document.getElementById('input-foto').click()" class="cursor-pointer bg-white text-black rounded-2xl p-5 flex flex-col items-center justify-center gap-2 shadow-md active:scale-95 transition-all">
             <span class="text-3xl">📷</span>
-            <span class="font-black text-[10px] uppercase">Invia Foto</span>
+            <span class="font-black text-[10px] uppercase">Foto + POS</span>
             <input type="file" id="input-foto" accept="image/*" capture="camera" class="hidden" onchange="window.handleFile(this.files[0], 'IMG')">
         </div>
-        <div id="btn-audio" class="cursor-pointer bg-red-600 text-white rounded-2xl p-4 flex flex-col items-center justify-center gap-1 shadow-md active:scale-95 transition-all text-center">
-            <span id="audio-icon" class="text-3xl">🎤</span>
-            <span id="audio-label" class="font-black text-[10px] uppercase italic">Registra</span>
+        <div id="btn-audio" class="cursor-pointer bg-red-600 text-white rounded-2xl p-5 flex flex-col items-center justify-center gap-2 shadow-md active:scale-95 transition-all text-center">
+            <span class="text-3xl text-white">🎤</span>
+            <span class="font-black text-[10px] uppercase">Audio</span>
         </div>
-    </div>
-
-    <div id="visualizer" class="hidden mb-5 h-8 bg-slate-900/80 border border-slate-700 rounded-xl items-center justify-center gap-1">
-        <div class="bar"></div><div class="bar" style="animation-delay:0.1s"></div><div class="bar" style="animation-delay:0.2s"></div>
-        <div class="bar" style="animation-delay:0.3s"></div><div class="bar" style="animation-delay:0.4s"></div>
     </div>
 
     <div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 shadow-xl">
-        <textarea id="msg-input" class="w-full bg-slate-950 border border-slate-700/50 rounded-xl p-3 text-white font-bold h-20 mb-3 text-sm resize-none focus:border-blue-500 outline-none" placeholder="Note per la Sala Radio..."></textarea>
-        <button onclick="window.sendTextLog()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl uppercase tracking-widest text-xs shadow-md">Invia Rapporto</button>
+        <textarea id="msg-input" class="w-full bg-slate-950 border border-slate-700/50 rounded-xl p-4 text-white font-bold h-24 mb-3 text-sm resize-none outline-none focus:border-blue-500 transition-all shadow-inner" placeholder="Note per la Sala Radio..."></textarea>
+        <button onclick="window.sendTextLog()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-5 rounded-xl uppercase tracking-[0.2em] text-[11px] shadow-lg shadow-blue-600/20">Invia Report Completo</button>
     </div>
-
-    <footer class="mt-8 text-center opacity-30">
-        <p class="text-[8px] font-black italic">JoKART 2026 - PROTEZIONE CIVILE THIENE</p>
-    </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
@@ -78,125 +95,92 @@
         
         const urlParams = new URLSearchParams(window.location.search);
         const sqId = urlParams.get('id') || "SCONOSCIUTA";
-        const tsLink = urlParams.get('t'); 
         document.getElementById('sq-display').innerText = sqId;
 
-        // --- SCADENZA LINK 24H ---
-        if (tsLink && (Date.now() - parseInt(tsLink) > 86400000)) {
-            Swal.fire({ icon:'error', title:'QR Scaduto', text:'Richiedi nuovo QR', allowOutsideClick:false });
-            document.body.innerHTML = "<h1 style='text-align:center;padding:50px'>SESSIONE SCADUTA</h1>";
-        }
-
-        // --- CONFERMA STATO ---
-        window.confirmStatus = (s, e) => {
-            Swal.fire({
-                title: e, text: `Confermi lo stato "${s.toUpperCase()}"?`,
-                icon: 'question', showCancelButton: true, confirmButtonText: 'SÌ', cancelButtonText: 'NO',
-                background: '#1e293b', color: '#fff'
-            }).then((res) => {
-                if (res.isConfirmed) {
-                    update(ref(db, `anagrafica_squadre/${sqId}`), { stato: s });
-                    push(ref(db, 'brogliaccio'), {
-                        ora: new Date().toLocaleTimeString('it-IT').slice(0,5),
-                        squadra: sqId, dir: 'SQ', m1: `🔄 STATO: ${s.toUpperCase()}`, stato: 'OK'
-                    });
-                }
-            });
+        window.toggleGPSFields = () => {
+            const isAuto = document.getElementById('gps-toggle').checked;
+            document.getElementById('manual-gps-box').classList.toggle('hidden', isAuto);
         };
 
-        // --- GESTIONE MEDIA CON DOPPIO CONTROLLO ---
-        window.handleFile = (file, type) => {
-            if (!file) return;
-
-            // 1. Chiedi conferma prima di elaborare
-            Swal.fire({
-                title: type === 'IMG' ? 'Inviare Foto?' : 'Inviare Audio?',
-                icon: 'question', showCancelButton: true, confirmButtonText: 'Invia', cancelButtonText: 'Annulla',
-                background: '#1e293b', color: '#fff'
-            }).then((res) => {
-                if (res.isConfirmed) {
-                    processMedia(file, type);
-                } else {
-                    document.getElementById('input-foto').value = ""; // Resetta input
-                }
-            });
-        };
-
-        const processMedia = (file, type) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            Swal.fire({ title: 'Caricamento...', background: '#1e293b', color: '#fff', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-            reader.onload = (e) => {
-                if (type === 'IMG') {
-                    const img = new Image();
-                    img.src = e.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const MAX = 600;
-                        let w = img.width; let h = img.height;
-                        if (w > h) { if (w > MAX) { h *= MAX/w; w = MAX; } }
-                        else { if (h > MAX) { w *= MAX/h; h = MAX; } }
-                        canvas.width = w; canvas.height = h;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, w, h);
-                        sendToDB(canvas.toDataURL('image/jpeg', 0.5), 'IMG');
-                    };
-                } else {
-                    sendToDB(e.target.result, 'AUDIO');
-                }
-            };
-        };
-
-        const sendToDB = (data, type) => {
-            push(ref(db, 'brogliaccio'), {
-                ora: new Date().toLocaleTimeString('it-IT').slice(0,5),
-                squadra: sqId, dir: 'SQ',
-                m1: type === 'IMG' ? '📷 FOTO INVIATA' : '🎤 AUDIO INVIATO',
-                mediaUrl: data, mediaType: type, stato: 'ATTESA'
-            }).then(() => {
-                // 2. Feedback invio riuscito
-                Swal.fire({ 
-                    icon: 'success', 
-                    title: 'Inviato con successo!', 
-                    toast: true, position: 'top-end', 
-                    timer: 2000, showConfirmButton: false 
+        // Funzione Unificata di calcolo posizione
+        const getFinalPos = async () => {
+            const isAuto = document.getElementById('gps-toggle').checked;
+            if (isAuto) {
+                return new Promise((resolve) => {
+                    navigator.geolocation.getCurrentPosition(
+                        (p) => resolve(`https://www.google.com/maps?q=${p.coords.latitude},${p.coords.longitude}`),
+                        () => resolve(null),
+                        { timeout: 5000, enableHighAccuracy: true }
+                    );
                 });
-            }).catch(() => Swal.fire('Errore', 'Connessione assente o file pesante', 'error'));
-        };
-
-        // --- AUDIO ---
-        let recorder; let chunks = [];
-        const btnAudio = document.getElementById('btn-audio');
-        btnAudio.onclick = async () => {
-            if (!recorder || recorder.state === "inactive") {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    recorder = new MediaRecorder(stream);
-                    chunks = [];
-                    recorder.ondataavailable = e => chunks.push(e.data);
-                    recorder.onstop = () => window.handleFile(new Blob(chunks, { type: 'audio/mp3' }), 'AUDIO');
-                    recorder.start();
-                    document.getElementById('visualizer').classList.add('recording');
-                    document.getElementById('audio-label').innerText = "STOP";
-                } catch(e) { Swal.fire('Errore', 'Attivare Microfono nelle impostazioni browser', 'error'); }
             } else {
-                recorder.stop();
-                document.getElementById('visualizer').classList.remove('recording');
-                document.getElementById('audio-label').innerText = "AUDIO";
+                const addr = document.getElementById('manual-addr').value;
+                const lat = document.getElementById('manual-lat').value;
+                const lng = document.getElementById('manual-lng').value;
+                
+                // Se ci sono lat/long, crea il link mappa, altrimenti usa l'indirizzo
+                if (lat && lng) return `https://www.google.com/maps?q=${lat},${lng}`;
+                if (addr) return `📍 ${addr}`;
+                return null;
             }
         };
 
-        window.sendTextLog = () => {
+        window.confirmStatus = async (s, e) => {
+            const res = await Swal.fire({ 
+                title: e, 
+                text: `Confermi lo stato "${s.toUpperCase()}"?`, 
+                showCancelButton: true,
+                confirmButtonColor: '#2563eb',
+                cancelButtonColor: '#475569'
+            });
+            if (res.isConfirmed) {
+                const pos = await getFinalPos();
+                update(ref(db, `anagrafica_squadre/${sqId}`), { stato: s, last_pos: pos });
+                push(ref(db, 'brogliaccio'), {
+                    ora: new Date().toLocaleTimeString('it-IT').slice(0,5),
+                    squadra: sqId, dir: 'SQ', m1: `🔄 STATO: ${s.toUpperCase()}`, gps: pos, stato: 'OK'
+                });
+            }
+        };
+
+        window.handleFile = async (file, type) => {
+            if (!file) return;
+            const pos = await getFinalPos();
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            Swal.fire({ title: 'Caricamento...', background: '#0f172a', color: '#fff', didOpen: () => Swal.showLoading() });
+            
+            reader.onload = (e) => {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX = 600;
+                    let w = img.width, h = img.height;
+                    if (w > h) { if (w > MAX) { h *= MAX/w; w = MAX; } }
+                    else { if (h > MAX) { w *= MAX/h; h = MAX; } }
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    
+                    push(ref(db, 'brogliaccio'), {
+                        ora: new Date().toLocaleTimeString('it-IT').slice(0,5),
+                        squadra: sqId, dir: 'SQ', m1: '📷 FOTO INVIATA',
+                        mediaUrl: canvas.toDataURL('image/jpeg', 0.5), mediaType: 'IMG', gps: pos, stato: 'ATTESA'
+                    }).then(() => Swal.close());
+                };
+            };
+        };
+
+        window.sendTextLog = async () => {
             const m = document.getElementById('msg-input').value;
             if(!m) return;
+            const pos = await getFinalPos();
             push(ref(db, 'brogliaccio'), {
                 ora: new Date().toLocaleTimeString('it-IT').slice(0,5),
-                squadra: sqId, dir: 'SQ', m1: m, stato: 'ATTESA'
-            }).then(() => {
-                Swal.fire({ icon:'success', title:'Inviato', timer: 1000, showConfirmButton:false, toast:true, position:'top-end' });
+                squadra: sqId, dir: 'SQ', m1: m, gps: pos, stato: 'ATTESA'
             });
             document.getElementById('msg-input').value = "";
+            Swal.fire({ icon:'success', title:'Inviato', timer: 1000, showConfirmButton:false, background: '#0f172a', color: '#fff' });
         };
     </script>
 </body>
