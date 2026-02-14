@@ -3,184 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - APP COMMUNICATION</title>
+    <title>PC THIENE - App Operatore</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { background-color: #020617; font-family: 'Inter', sans-serif; color: white; }
-        .btn-status { transition: all 0.2s; border-bottom: 4px solid rgba(0,0,0,0.4); }
-        .btn-status:active { transform: translateY(2px); border-bottom-width: 2px; }
-        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #1e293b; transition: .4s; border-radius: 34px; border: 1px solid #334155; }
-        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #2563eb; border-color: #3b82f6; }
-        input:checked + .slider:before { transform: translateX(22px); }
-        .glass { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
-        .online-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; }
-        .is-online { background: #10b981; box-shadow: 0 0 10px #10b981; }
-        .is-offline { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; overflow-x: hidden; }
+        .btn-action { transition: all 0.2s; active: scale(0.95); }
+        .status-pill { padding: 4px 12px; border-radius: 99px; font-size: 10px; font-weight: 900; text-transform: uppercase; }
+        #audio-visualizer { height: 40px; background: #1e293b; border-radius: 8px; display: none; align-items: center; justify-content: center; gap: 3px; }
+        .bar { width: 4px; height: 15px; background: #3b82f6; border-radius: 2px; }
+        .recording .bar { animation: sound 0.5s infinite ease-in-out; }
+        @keyframes sound { 0%, 100% { height: 10px; } 50% { height: 30px; } }
     </style>
 </head>
-<body class="p-4 flex flex-col min-h-screen">
+<body class="p-4">
 
-    <header class="flex justify-between items-center mb-6 border-b-2 border-blue-600 pb-4">
-        <div class="flex flex-col">
-            <h1 class="text-xl font-black text-white uppercase leading-none tracking-tighter">
-                PROTEZIONE CIVILE<br>
-                <span class="text-blue-500 text-2xl">THIENE</span>
-            </h1>
-            <span class="text-[9px] font-bold text-blue-400 uppercase tracking-[0.2em] mt-1">App Communication System</span>
+    <header class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-xl font-black tracking-tighter">PC THIENE</h1>
+            <p id="sq-name" class="text-blue-500 font-bold text-xs uppercase tracking-widest">Inizializzazione...</p>
         </div>
-        <div class="flex flex-col items-end">
-            <div class="glass px-3 py-1.5 rounded-lg flex items-center gap-2">
-                <span id="sala-dot" class="online-dot is-offline"></span>
-                <span id="sala-status" class="text-[10px] font-black uppercase text-slate-400">Offline</span>
-            </div>
-            <p id="label-squadra" class="text-[11px] font-bold text-slate-500 font-mono mt-1 uppercase">Unit: ---</p>
-        </div>
+        <div id="status-online" class="status-pill bg-emerald-500/20 text-emerald-500 border border-emerald-500/50">Online</div>
     </header>
 
-    <main class="flex-1 flex flex-col gap-4 max-w-md mx-auto w-full">
+    <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 mb-6 shadow-xl">
+        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Stato Attuale</label>
+        <div id="current-status" class="text-2xl font-black mb-4">---</div>
         
-        <div class="glass p-3 rounded-xl border-l-4 border-blue-500">
-            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Membri Squadra</label>
-            <input type="text" id="membri" class="w-full bg-transparent text-sm font-bold outline-none text-white placeholder-slate-600" placeholder="Esempio: Rossi, Bianchi, Verdi">
+        <div class="grid grid-cols-2 gap-2">
+            <button onclick="window.updateStatus('In Corso')" class="bg-amber-500 text-black font-black py-3 rounded-xl text-xs uppercase">🚨 In Corso</button>
+            <button onclick="window.updateStatus('Rientro')" class="bg-cyan-500 text-black font-black py-3 rounded-xl text-xs uppercase">🔙 Rientro</button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-6">
+        <div onclick="document.getElementById('input-foto').click()" class="btn-action bg-white text-black rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-lg">
+            <span class="text-3xl">📷</span>
+            <span class="font-black text-[10px] uppercase">Scatta Foto</span>
+            <input type="file" id="input-foto" accept="image/*" capture="camera" class="hidden" onchange="window.caricaMedia(this.files[0], 'IMG')">
         </div>
 
-        <div id="box-risposta" class="hidden">
-            <div class="bg-blue-600 p-4 rounded-xl shadow-lg border-l-4 border-white">
-                <p class="text-[10px] font-black uppercase text-blue-100 mb-1">Dalla Sala:</p>
-                <p id="testo-risposta" class="text-md font-bold text-white italic"></p>
-            </div>
+        <div id="btn-audio" class="btn-action bg-red-600 text-white rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-lg">
+            <span id="audio-icon" class="text-3xl">🎤</span>
+            <span id="audio-label" class="font-black text-[10px] uppercase text-center">Invia Vocale</span>
         </div>
+    </div>
 
-        <div class="grid grid-cols-2 gap-3">
-            <button onclick="window.statoRapido('IN PARTENZA 🚚', 'Uscita')" class="btn-status bg-amber-500 p-4 rounded-xl font-black text-xs uppercase text-slate-950">🚚 Partenza</button>
-            <button onclick="window.statoRapido('SUL POSTO 🚨', 'Intervento')" class="btn-status bg-red-600 p-4 rounded-xl font-black text-xs uppercase text-white">🚨 Sul Posto</button>
-            <button onclick="window.statoRapido('OPERATIVI ⚡', 'In Corso')" class="btn-status bg-blue-600 p-4 rounded-xl font-black text-xs uppercase text-white">⚡ Operativi</button>
-            <button onclick="window.statoRapido('RIENTRO 🏠', 'Rientro')" class="btn-status bg-emerald-600 p-4 rounded-xl font-black text-xs uppercase text-white">🏠 Rientro</button>
-        </div>
+    <div id="audio-visualizer" class="mb-6"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
 
-        <div class="flex flex-col gap-1 mt-2">
-            <label class="text-[10px] font-black text-slate-500 uppercase ml-1 tracking-widest">Comunicazione Libera</label>
-            <textarea id="messaggio" rows="3" class="w-full p-4 bg-slate-900 border-2 border-slate-800 rounded-xl text-white font-bold focus:border-blue-500 outline-none resize-none" placeholder="Note extra..."></textarea>
-        </div>
+    <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 mb-6">
+        <label class="text-[10px] font-bold text-slate-400 uppercase mb-2 block tracking-widest">Messaggio alla Sala Radio</label>
+        <textarea id="msg-text" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:border-blue-500 outline-none h-24 mb-3" placeholder="Scrivi qui..."></textarea>
+        <button onclick="window.sendTextLog()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg">Invia Messaggio</button>
+    </div>
 
-        <div class="glass p-4 rounded-xl">
-            <div class="flex items-center justify-between mb-3">
-                <div class="flex flex-col">
-                    <span class="text-xs font-black uppercase tracking-wide">Usa GPS Telefono</span>
-                    <span class="text-[9px] text-slate-500 font-bold">Spegni per inserire a mano</span>
-                </div>
-                <label class="switch">
-                    <input type="checkbox" id="toggle-gps" checked onchange="window.toggleGpsInput()">
-                    <span class="slider"></span>
-                </label>
-            </div>
-            
-            <div id="manual-gps-box" class="hidden grid grid-cols-2 gap-2 pt-2 border-t border-slate-700">
-                <input type="text" id="manual-lat" class="bg-slate-900 border border-slate-700 p-2 rounded text-xs font-mono" placeholder="Lat: 45.1234">
-                <input type="text" id="manual-lng" class="bg-slate-900 border border-slate-700 p-2 rounded text-xs font-mono" placeholder="Lng: 11.1234">
-            </div>
-        </div>
-
-        <button id="btn-invia" onclick="window.inviaDati()" class="w-full py-5 bg-white text-slate-950 rounded-xl font-black text-xl uppercase transition-all shadow-2xl active:scale-95 border-b-4 border-slate-300">
-            Invia Report
-        </button>
-    </main>
+    <footer class="text-center opacity-30 py-4">
+        <p class="text-[10px] font-bold tracking-widest uppercase">System Manager TETRA</p>
+        <p class="text-[12px] font-black italic">JoK<span class="text-red-500">ART</span> 2026</p>
+    </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getDatabase, ref, push, update, onValue, query, orderByChild, equalTo, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+        import { getDatabase, ref, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+        import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js";
 
-        const firebaseConfig = { apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54", databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com" };
-        const app = initializeApp(firebaseConfig);
+        const cfg = { 
+            apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54", 
+            databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com", 
+            projectId: "realtime-database-6962f",
+            storageBucket: "realtime-database-6962f.appspot.com"
+        };
+
+        const app = initializeApp(cfg);
         const db = getDatabase(app);
+        const storage = getStorage(app);
 
+        // Recupero ID Squadra dall'URL (es: app.html?id=SQUADRA1)
         const urlParams = new URLSearchParams(window.location.search);
-        const squadraId = urlParams.get('id') ? urlParams.get('id').toUpperCase() : "SCONOSCIUTA";
-        document.getElementById('label-squadra').innerText = "Unit: " + squadraId;
+        const sqId = urlParams.get('id') || "SCONOSCIUTA";
+        document.getElementById('sq-name').innerText = sqId;
 
-        // Toggle visualizzazione input manuali
-        window.toggleGpsInput = () => {
-            const isAuto = document.getElementById('toggle-gps').checked;
-            document.getElementById('manual-gps-box').classList.toggle('hidden', isAuto);
-        };
-
-        // Stato Sala
-        onValue(ref(db, ".info/connected"), (snap) => {
-            const dot = document.getElementById('sala-dot');
-            const txt = document.getElementById('sala-status');
-            dot.className = snap.val() ? "online-dot is-online" : "online-dot is-offline";
-            txt.innerText = snap.val() ? "Online" : "Offline";
+        // --- SINCRONIZZAZIONE STATO ---
+        onValue(ref(db, `anagrafica_squadre/${sqId}`), (snap) => {
+            const data = snap.val();
+            if(data) document.getElementById('current-status').innerText = data.stato;
         });
 
-        // Risposte
-        const logRef = query(ref(db, 'brogliaccio'), orderByChild('squadra'), equalTo(squadraId), limitToLast(5));
-        onValue(logRef, (snap) => {
-            const logs = snap.val();
-            if (logs) {
-                const lastLog = Object.values(logs).reverse().find(l => l.m2 && l.m2 !== "---");
-                if (lastLog) {
-                    document.getElementById('box-risposta').classList.remove('hidden');
-                    document.getElementById('testo-risposta').innerText = lastLog.m2;
-                    if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
-                }
-            }
-        });
-
-        window.statoRapido = (testoStato, valoreStato) => {
-            const extra = document.getElementById('messaggio').value.trim();
-            const messaggioFinale = extra ? `${testoStato} | ${extra}` : testoStato;
-            window.inviaDati(messaggioFinale, valoreStato);
+        // --- AGGIORNAMENTO STATO ---
+        window.updateStatus = (nuovoStato) => {
+            update(ref(db, `anagrafica_squadre/${sqId}`), { stato: nuovoStato });
+            const logData = {
+                ora: new Date().toLocaleTimeString().slice(0,5),
+                squadra: sqId,
+                dir: 'SQ',
+                m1: `Cambio stato in: ${nuovoStato}`,
+                stato: 'OK'
+            };
+            push(ref(db, 'brogliaccio'), logData);
+            Swal.fire({ icon:'success', title: nuovoStato, timer: 1000, showConfirmButton:false });
         };
 
-        window.inviaDati = async (msgForzato = null, statoForzato = null) => {
-            const btn = document.getElementById('btn-invia');
-            const gpsAuto = document.getElementById('toggle-gps').checked;
-            const testo = msgForzato || document.getElementById('messaggio').value.trim();
-            const membri = document.getElementById('membri').value.trim();
-
-            if (!testo) return;
-            btn.disabled = true;
-            btn.innerText = "TRASMISSIONE...";
-
-            if (gpsAuto) {
-                navigator.geolocation.getCurrentPosition(
-                    async (p) => { await spedisci(testo, p.coords.latitude, p.coords.longitude, statoForzato, membri); },
-                    async () => { await spedisci(testo, "", "", statoForzato, membri); },
-                    { enableHighAccuracy: true, timeout: 5000 }
-                );
-            } else {
-                const mLat = document.getElementById('manual-lat').value;
-                const mLng = document.getElementById('manual-lng').value;
-                await spedisci(testo, mLat, mLng, statoForzato, membri);
-            }
+        // --- INVIO TESTO ---
+        window.sendTextLog = () => {
+            const txt = document.getElementById('msg-text').value;
+            if(!txt) return;
+            const logData = {
+                ora: new Date().toLocaleTimeString().slice(0,5),
+                squadra: sqId,
+                dir: 'SQ',
+                m1: txt,
+                stato: 'ATTESA'
+            };
+            push(ref(db, 'brogliaccio'), logData);
+            document.getElementById('msg-text').value = "";
+            Swal.fire({ icon:'success', title:'Inviato', timer: 1000, showConfirmButton:false });
         };
 
-        async function spedisci(m, la, lo, nuovoStato, membri) {
+        // --- CARICAMENTO MEDIA (FOTO/AUDIO) ---
+        window.caricaMedia = async (file, type) => {
+            if(!file) return;
+            const fileName = `${type}_${Date.now()}_${sqId}`;
+            const storageRef = sRef(storage, `media/${fileName}`);
+
+            Swal.fire({ title: 'Invio...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
             try {
-                const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-                await push(ref(db, 'brogliaccio'), {
-                    ora, squadra: squadraId, componenti: membri, m1: m, m2: "", lat: la || "", lng: lo || "", stato: 'ATTESA', dir: 'SQ'
-                });
-                
-                const updates = { nomi: membri };
-                if (la && lo) { updates.lat = la; updates.lng = lo; }
-                if (nuovoStato) { updates.stato = nuovoStato; }
-                await update(ref(db, `anagrafica_squadre/${squadraId}`), updates);
-
-                document.getElementById('messaggio').value = "";
-                Swal.fire({ icon: 'success', title: 'INVIATO', timer: 1000, showConfirmButton: false, background: '#0f172a', color: '#fff' });
+                const snapshot = await uploadBytes(storageRef, file);
+                const url = await getDownloadURL(snapshot.ref);
+                const logData = {
+                    ora: new Date().toLocaleTimeString().slice(0,5),
+                    squadra: sqId,
+                    dir: 'SQ',
+                    m1: type === 'IMG' ? '📷 [FOTO INVIATA]' : '🎤 [VOCALE INVIATO]',
+                    mediaUrl: url,
+                    mediaType: type,
+                    stato: 'ATTESA'
+                };
+                push(ref(db, 'brogliaccio'), logData);
+                Swal.close();
             } catch (e) {
-                Swal.fire({ icon: 'error', title: 'ERRORE' });
-            } finally {
-                document.getElementById('btn-invia').disabled = false;
-                document.getElementById('btn-invia').innerText = "INVIA REPORT";
+                Swal.fire('Errore', 'Fallito', 'error');
             }
-        }
+        };
+
+        // --- REGISTRATORE AUDIO ---
+        let mediaRecorder;
+        let audioChunks = [];
+        const btnAudio = document.getElementById('btn-audio');
+        const visualizer = document.getElementById('audio-visualizer');
+
+        btnAudio.onclick = async () => {
+            if (!mediaRecorder || mediaRecorder.state === "inactive") {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' });
+                    window.caricaMedia(audioBlob, 'AUDIO');
+                };
+                mediaRecorder.start();
+                visualizer.style.display = 'flex';
+                visualizer.classList.add('recording');
+                document.getElementById('audio-label').innerText = "STOP PER INVIARE";
+            } else {
+                mediaRecorder.stop();
+                visualizer.style.display = 'none';
+                document.getElementById('audio-label').innerText = "INVIA VOCALE";
+            }
+        };
     </script>
 </body>
 </html>
