@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         .btn-status { transition: all 0.2s; font-size: 10px; font-weight: 800; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); }
         .btn-status:active { transform: scale(0.95); opacity: 0.8; }
         #visualizer.recording { display: flex !important; }
@@ -33,7 +33,7 @@
             <button onclick="window.confirmStatus('In Corso', '🚨')" class="btn-status bg-amber-500 text-black py-2.5 rounded-xl shadow-sm">In Corso</button>
             <button onclick="window.confirmStatus('Arrivo Posto', '📍')" class="btn-status bg-indigo-500 text-white py-2.5 rounded-xl shadow-sm">Arrivo Posto</button>
             <button onclick="window.confirmStatus('Rientro', '🔙')" class="btn-status bg-cyan-500 text-black py-2.5 rounded-xl shadow-sm">Rientro</button>
-            <button onclick="window.confirmStatus('Disponibile', '✅')" class="btn-status bg-emerald-600 text-white py-2.5 rounded-xl shadow-sm text-[9px]">Disp.</button>
+            <button onclick="window.confirmStatus('Disponibile', '✅')" class="btn-status bg-emerald-600 text-white py-2.5 rounded-xl shadow-sm">Disp.</button>
             <button onclick="window.confirmStatus('Fine Servizio', '🏁')" class="btn-status bg-red-800 text-white py-2.5 rounded-xl shadow-sm">Fine Serv.</button>
         </div>
     </div>
@@ -44,7 +44,7 @@
             <span class="font-black text-[10px] uppercase">Foto</span>
             <input type="file" id="input-foto" accept="image/*" capture="camera" class="hidden" onchange="window.handleFile(this.files[0], 'IMG')">
         </div>
-        <div id="btn-audio" class="cursor-pointer bg-red-600 text-white rounded-2xl p-4 flex flex-col items-center justify-center gap-1 shadow-md active:scale-95 transition-all">
+        <div id="btn-audio" class="cursor-pointer bg-red-600 text-white rounded-2xl p-4 flex flex-col items-center justify-center gap-1 shadow-md active:scale-95 transition-all text-center">
             <span id="audio-icon" class="text-3xl">🎤</span>
             <span id="audio-label" class="font-black text-[10px] uppercase">Audio</span>
         </div>
@@ -61,7 +61,7 @@
     </div>
 
     <footer class="mt-8 text-center opacity-30">
-        <p class="text-[8px] font-black italic">JoKART 2026 - SCADENZA SESSIONE 24H</p>
+        <p class="text-[8px] font-black italic uppercase tracking-widest">JoKART 2026 - Protezione Civile Thiene</p>
     </footer>
 
     <script type="module">
@@ -78,25 +78,27 @@
         
         const urlParams = new URLSearchParams(window.location.search);
         const sqId = urlParams.get('id') || "SCONOSCIUTA";
+        const timestampLink = urlParams.get('t'); 
         document.getElementById('sq-display').innerText = sqId;
 
-        // SCADENZA 24H
-        const checkSession = () => {
-            const now = Date.now();
-            const start = localStorage.getItem('pc_session_start');
-            if(!start) localStorage.setItem('pc_session_start', now);
-            else if((now - start) > 24*60*60*1000) {
-                localStorage.clear();
-                window.location.reload();
+        // 1. CONTROLLO SCADENZA QR (24 ORE)
+        if (timestampLink) {
+            const oraAttuale = Date.now();
+            const differenza = oraAttuale - parseInt(timestampLink);
+            if (differenza > 24 * 60 * 60 * 1000) {
+                Swal.fire({
+                    icon: 'error', title: 'QR Scaduto', text: 'Il collegamento è scaduto. Richiedine uno nuovo.',
+                    allowOutsideClick: false, confirmButtonText: 'Chiudi'
+                }).then(() => { document.body.innerHTML = "<h1 style='text-align:center; margin-top:50px;'>QR SCADUTO</h1>"; });
             }
-        };
-        checkSession();
+        }
 
+        // 2. CAMBIO STATO CON CONFERMA
         window.confirmStatus = (status, emoji) => {
             Swal.fire({
-                title: emoji, text: `Confermi "${status.toUpperCase()}"?`,
-                icon: 'question', showCancelButton: true, confirmButtonText: 'SÌ', cancelButtonText: 'NO',
-                background: '#1e293b', color: '#fff'
+                title: emoji, text: `Confermi lo stato "${status.toUpperCase()}"?`,
+                icon: 'question', showCancelButton: true, confirmButtonColor: '#2563eb',
+                confirmButtonText: 'SÌ', cancelButtonText: 'NO', background: '#1e293b', color: '#fff'
             }).then((res) => {
                 if (res.isConfirmed) {
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: status });
@@ -108,32 +110,59 @@
             });
         };
 
+        // 3. GESTIONE FILE (FOTO CON COMPRESSIONE)
         window.handleFile = (file, type) => {
+            if (!file) return;
             const reader = new FileReader();
             reader.readAsDataURL(file);
-            Swal.fire({ title: 'Invio...', background: '#1e293b', color: '#fff', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            reader.onload = () => {
-                push(ref(db, 'brogliaccio'), {
-                    ora: new Date().toLocaleTimeString('it-IT').slice(0,5),
-                    squadra: sqId, dir: 'SQ',
-                    m1: type === 'IMG' ? '📷 FOTO' : '🎤 AUDIO',
-                    mediaUrl: reader.result, mediaType: type, stato: 'ATTESA'
-                }).then(() => Swal.close());
+            Swal.fire({ title: 'Invio in corso...', background: '#1e293b', color: '#fff', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            reader.onload = (e) => {
+                if (type === 'IMG') {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_SIZE = 600; // Ridimensiona per database
+                        let w = img.width; let h = img.height;
+                        if (w > h) { if (w > MAX_SIZE) { h *= MAX_SIZE / w; w = MAX_SIZE; } }
+                        else { if (h > MAX_SIZE) { w *= MAX_SIZE / h; h = MAX_SIZE; } }
+                        canvas.width = w; canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        const base64 = canvas.toDataURL('image/jpeg', 0.5); // Qualità 50%
+                        sendToDB(base64, 'IMG');
+                    };
+                } else {
+                    sendToDB(e.target.result, 'AUDIO');
+                }
             };
         };
 
+        const sendToDB = (data, type) => {
+            push(ref(db, 'brogliaccio'), {
+                ora: new Date().toLocaleTimeString('it-IT').slice(0,5),
+                squadra: sqId, dir: 'SQ',
+                m1: type === 'IMG' ? '📷 FOTO INVIATA' : '🎤 AUDIO INVIATO',
+                mediaUrl: data, mediaType: type, stato: 'ATTESA'
+            }).then(() => Swal.close()).catch(() => Swal.fire('Errore', 'File troppo pesante', 'error'));
+        };
+
+        // 4. REGISTRATORE AUDIO
         let recorder; let chunks = [];
         const btnAudio = document.getElementById('btn-audio');
         btnAudio.onclick = async () => {
             if (!recorder || recorder.state === "inactive") {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                recorder = new MediaRecorder(stream);
-                chunks = [];
-                recorder.ondataavailable = e => chunks.push(e.data);
-                recorder.onstop = () => window.handleFile(new Blob(chunks, { type: 'audio/mp3' }), 'AUDIO');
-                recorder.start();
-                document.getElementById('visualizer').classList.add('recording');
-                document.getElementById('audio-label').innerText = "STOP";
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    recorder = new MediaRecorder(stream);
+                    chunks = [];
+                    recorder.ondataavailable = e => chunks.push(e.data);
+                    recorder.onstop = () => window.handleFile(new Blob(chunks, { type: 'audio/mp3' }), 'AUDIO');
+                    recorder.start();
+                    document.getElementById('visualizer').classList.add('recording');
+                    document.getElementById('audio-label').innerText = "STOP";
+                } catch(e) { Swal.fire('Errore', 'Microfono non autorizzato', 'error'); }
             } else {
                 recorder.stop();
                 document.getElementById('visualizer').classList.remove('recording');
