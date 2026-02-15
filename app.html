@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - App Operatore V1.6</title>
+    <title>PC THIENE - App Operatore V1.8</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -23,58 +23,52 @@
 
     <header class="flex justify-between items-center mb-4">
         <div>
-            <h1 class="text-xl font-black italic">PC <span class="text-blue-500">THIENE</span></h1>
-            <p id="sq-name" class="text-blue-400 font-bold text-[10px] uppercase tracking-widest">Inizializzazione...</p>
+            <h1 class="text-xl font-black italic text-white">PC <span class="text-blue-500">THIENE</span></h1>
+            <p id="sq-name" class="text-blue-400 font-bold text-[10px] uppercase">Caricamento...</p>
         </div>
         <div class="flex flex-col items-end gap-1">
             <div class="flex items-center gap-2">
-                <span class="text-[9px] font-black uppercase text-slate-400">GPS AUTO</span>
-                <label class="switch">
-                    <input type="checkbox" id="gps-toggle" checked>
-                    <span class="slider"></span>
-                </label>
+                <span class="text-[9px] font-black text-slate-400 uppercase">GPS AUTO</span>
+                <label class="switch"><input type="checkbox" id="gps-toggle" checked><span class="slider"></span></label>
             </div>
-            <div id="gps-status" class="text-[8px] font-black text-slate-500 uppercase">GPS: Standby</div>
+            <div id="gps-status" class="text-[8px] font-black text-slate-500 uppercase italic">In attesa segnale...</div>
         </div>
     </header>
 
-    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 mb-4 shadow-2xl text-center">
-        <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Stato Squadra</label>
+    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 mb-4 text-center shadow-2xl">
         <div id="current-status" class="text-3xl font-black text-blue-500 italic mb-4 uppercase">---</div>
         <div class="grid grid-cols-2 gap-2">
-            <button onclick="window.confirmAction('Sede', '🏠 In Sede')" class="btn-status bg-emerald-600 text-white font-black py-4 rounded-xl text-xs uppercase">🏠 In Sede</button>
-            <button onclick="window.confirmAction('Uscita', '🚚 Uscita')" class="btn-status bg-amber-500 text-black font-black py-4 rounded-xl text-xs uppercase">🚚 Uscita</button>
-            <button onclick="window.confirmAction('Intervento', '🚨 Sul Posto')" class="btn-status bg-red-600 text-white font-black py-4 rounded-xl text-xs uppercase">🚨 Sul Posto</button>
-            <button onclick="window.confirmAction('Rientro', '🔙 Rientro')" class="btn-status bg-blue-600 text-white font-black py-4 rounded-xl text-xs uppercase">🔙 Rientro</button>
+            <button onclick="window.confirmStatus('Sede', '🏠 In Sede')" class="btn-status bg-emerald-600 text-white font-black py-4 rounded-xl text-xs uppercase">🏠 Sede</button>
+            <button onclick="window.confirmStatus('Uscita', '🚚 Uscita')" class="btn-status bg-amber-500 text-black font-black py-4 rounded-xl text-xs uppercase">🚚 Uscita</button>
+            <button onclick="window.confirmStatus('Intervento', '🚨 Posto')" class="btn-status bg-red-600 text-white font-black py-4 rounded-xl text-xs uppercase">🚨 Posto</button>
+            <button onclick="window.confirmStatus('Rientro', '🔙 Rientro')" class="btn-status bg-blue-600 text-white font-black py-4 rounded-xl text-xs uppercase">🔙 Rientro</button>
         </div>
     </div>
 
     <div class="grid grid-cols-2 gap-3 mb-4">
-        <div onclick="document.getElementById('input-foto').click()" class="bg-white text-black rounded-2xl p-5 flex flex-col items-center justify-center gap-2 active:scale-95">
+        <div onclick="document.getElementById('input-foto').click()" class="bg-white text-black rounded-2xl p-5 flex flex-col items-center justify-center gap-2 active:scale-95 shadow-lg">
             <span class="text-4xl">📷</span>
-            <span class="font-black text-[10px] uppercase text-center">Scatta e Comprimi</span>
+            <span class="font-black text-[10px] uppercase text-center">Invia Foto</span>
             <input type="file" id="input-foto" accept="image/*" capture="camera" class="hidden" onchange="window.handleImage(this.files[0])">
         </div>
-        <div id="btn-audio" class="bg-red-600 text-white rounded-2xl p-5 flex flex-col items-center justify-center gap-2 active:scale-95">
-            <span id="audio-icon" class="text-4xl text-center">🎤</span>
+        <div id="btn-audio" class="bg-red-600 text-white rounded-2xl p-5 flex flex-col items-center justify-center gap-2 active:scale-95 shadow-lg">
+            <span id="audio-icon" class="text-4xl">🎤</span>
             <span id="audio-label" class="font-black text-[10px] uppercase">Vocale</span>
         </div>
     </div>
 
-    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4">
-        <textarea id="msg-text" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 font-bold text-white mb-2" placeholder="Messaggio..."></textarea>
-        <button onclick="window.sendTextLog()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase">Invia Log</button>
+    <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 shadow-xl">
+        <textarea id="msg-text" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 font-bold text-white mb-2 h-20 outline-none focus:border-blue-500" placeholder="Messaggio..."></textarea>
+        <button onclick="window.sendTextLog()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest">Invia Messaggio</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
         import { getDatabase, ref, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
-        import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js";
 
-        const cfg = { apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54", databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com", storageBucket: "realtime-database-6962f.appspot.com" };
+        const cfg = { apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54", databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com" };
         const app = initializeApp(cfg);
         const db = getDatabase(app);
-        const storage = getStorage(app);
 
         const urlParams = new URLSearchParams(window.location.search);
         const sqId = urlParams.get('id') || "SCONOSCIUTA";
@@ -83,7 +77,15 @@
         async function getGPS() {
             if (!document.getElementById('gps-toggle').checked) return { lat: '', lng: '' };
             return new Promise((r) => {
-                navigator.geolocation.getCurrentPosition(p => r({ lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) }), () => r({ lat: '', lng: '' }), { timeout: 3000 });
+                navigator.geolocation.getCurrentPosition(
+                    p => {
+                        const coords = { lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) };
+                        document.getElementById('gps-status').innerText = `GPS: OK (${coords.lat})`;
+                        r(coords);
+                    }, 
+                    () => r({ lat: '', lng: '' }), 
+                    { timeout: 3000 }
+                );
             });
         }
 
@@ -92,106 +94,90 @@
             if(data) document.getElementById('current-status').innerText = data.stato;
         });
 
-        // COMPRESSIONE IMMAGINE LATO CLIENT
-        window.handleImage = async (file) => {
+        // --- GESTIONE FOTO (BASE64 + COMPRESSIONE) ---
+        window.handleImage = (file) => {
             if(!file) return;
-            Swal.fire({ title: 'Compressione foto...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            
+            Swal.fire({ title: 'Elaborazione...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             const reader = new FileReader();
             reader.readAsDataURL(file);
-            reader.onload = (event) => {
+            reader.onload = (e) => {
                 const img = new Image();
-                img.src = event.target.result;
+                img.src = e.target.result;
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 1024;
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > MAX_WIDTH) {
-                        height *= MAX_WIDTH / width;
-                        width = MAX_WIDTH;
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
+                    const MAX = 800; // Ridotto per Base64 più leggero
+                    let w = img.width, h = img.height;
+                    if (w > h && w > MAX) { h *= MAX / w; w = MAX; }
+                    else if (h > MAX) { w *= MAX / h; h = MAX; }
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                     
-                    canvas.toBlob((blob) => {
-                        Swal.close();
-                        Swal.fire({
-                            title: 'INVIARE FOTO?',
-                            imageUrl: URL.createObjectURL(blob),
-                            showCancelButton: true,
-                            confirmButtonText: 'INVIA COMPRESSA',
-                            background: '#1e293b', color: '#fff'
-                        }).then((r) => { if(r.isConfirmed) window.uploadMedia(blob, 'IMG'); });
-                    }, 'image/jpeg', 0.6); // Qualità 60%
+                    const base64Data = canvas.toDataURL('image/jpeg', 0.5); // Compressione 50%
+                    Swal.close();
+                    Swal.fire({ 
+                        title: 'Inviare foto?', 
+                        imageUrl: base64Data, 
+                        showCancelButton: true, 
+                        confirmButtonText: 'SÌ' 
+                    }).then(r => { if(r.isConfirmed) window.saveToDatabase(base64Data, 'IMG'); });
                 };
             };
         };
 
-        window.uploadMedia = async (blob, type) => {
-            Swal.fire({ title: 'Invio...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            try {
-                const path = `media/${type}_${Date.now()}_${sqId}`;
-                const storageReference = sRef(storage, path);
-                const metadata = { contentType: type === 'IMG' ? 'image/jpeg' : 'audio/webm' };
-                
-                const snapshot = await uploadBytes(storageReference, blob, metadata);
-                const url = await getDownloadURL(snapshot.ref);
-                const pos = await getGPS();
-
-                push(ref(db, 'brogliaccio'), {
-                    ora: new Date().toLocaleTimeString().slice(0,5),
-                    squadra: sqId, dir: 'SQ', stato: 'ATTESA',
-                    m1: type === 'IMG' ? '📷 FOTO COMPRESSA' : '🎤 VOCALE COMPRESSO',
-                    mediaUrl: url, mediaType: type, lat: pos.lat, lng: pos.lng
-                });
-                Swal.fire({ icon:'success', title: 'Inviato!', timer: 1000, showConfirmButton: false });
-            } catch (e) {
-                Swal.fire('Errore', 'Fallito. Prova a scattare di nuovo.', 'error');
-            }
-        };
-
-        // AUDIO CON COMPRESSIONE BITRATE
-        let mediaRecorder; let audioChunks = [];
+        // --- GESTIONE AUDIO (BASE64) ---
+        let mediaRecorder, audioChunks = [];
         const btnAudio = document.getElementById('btn-audio');
 
         btnAudio.onclick = async () => {
             if (!mediaRecorder || mediaRecorder.state === "inactive") {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    // Forza bitrate basso per massima velocità
-                    mediaRecorder = new MediaRecorder(stream, { audioBitsPerSecond: 16000 });
+                    mediaRecorder = new MediaRecorder(stream);
                     audioChunks = [];
                     mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
                     mediaRecorder.onstop = () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                        Swal.fire({
-                            title: 'INVIA VOCALE?',
-                            showCancelButton: true, confirmButtonText: 'INVIA',
-                            background: '#1e293b', color: '#fff'
-                        }).then((r) => { if(r.isConfirmed) window.uploadMedia(audioBlob, 'AUDIO'); });
+                        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.readAsDataURL(blob);
+                        reader.onloadend = () => {
+                            const base64Audio = reader.result;
+                            Swal.fire({ title: 'Inviare vocale?', showCancelButton: true, confirmButtonText: 'INVIA' })
+                            .then(r => { if(r.isConfirmed) window.saveToDatabase(base64Audio, 'AUDIO'); });
+                        };
                     };
                     mediaRecorder.start();
-                    document.getElementById('audio-label').innerText = "STOP";
                     btnAudio.classList.replace('bg-red-600', 'bg-slate-700');
-                } catch(e) { Swal.fire('Errore', 'Microfono non pronto', 'error'); }
+                    document.getElementById('audio-label').innerText = "STOP";
+                } catch(e) { Swal.fire('Errore Microfono', '', 'error'); }
             } else {
                 mediaRecorder.stop();
-                document.getElementById('audio-label').innerText = "VOCALE";
                 btnAudio.classList.replace('bg-slate-700', 'bg-red-600');
+                document.getElementById('audio-label').innerText = "VOCALE";
             }
         };
 
-        window.confirmAction = (val, label) => {
-            Swal.fire({
-                title: 'CONFERMI?', text: label, icon: 'warning',
-                showCancelButton: true, confirmButtonText: 'SÌ',
-                background: '#1e293b', color: '#fff'
-            }).then(async (r) => {
+        // --- SALVATAGGIO UNIFICATO NEL BROGLIACCIO ---
+        window.saveToDatabase = async (dataString, type) => {
+            Swal.fire({ title: 'Invio...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            const pos = await getGPS();
+            const logEntry = {
+                ora: new Date().toLocaleTimeString().slice(0,5),
+                squadra: sqId,
+                dir: 'SQ',
+                stato: 'ATTESA',
+                m1: type === 'IMG' ? '📷 FOTO INVIATA' : '🎤 VOCALE INVIATO',
+                mediaUrl: dataString, // Qui ora c'è la stringa Base64
+                mediaType: type,
+                lat: pos.lat,
+                lng: pos.lng
+            };
+            push(ref(db, 'brogliaccio'), logEntry);
+            Swal.fire({ icon:'success', title: 'Inviato', timer: 1000, showConfirmButton: false });
+        };
+
+        window.confirmStatus = (val, label) => {
+            Swal.fire({ title: 'Confermi?', text: label, showCancelButton: true, background: '#1e293b', color: '#fff' })
+            .then(async r => {
                 if(r.isConfirmed) {
                     const pos = await getGPS();
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: val, lat: pos.lat, lng: pos.lng });
@@ -212,7 +198,7 @@
                 squadra: sqId, dir: 'SQ', stato: 'ATTESA', m1: txt.toUpperCase(), lat: pos.lat, lng: pos.lng
             });
             document.getElementById('msg-text').value = "";
-            Swal.fire({ icon:'success', title: 'Inviato', timer: 1000 });
+            Swal.fire({ icon:'success', title: 'Inviato', timer: 1000, showConfirmButton: false });
         };
     </script>
 </body>
