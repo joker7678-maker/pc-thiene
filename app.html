@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - App Operatore V2.4</title>
+    <title>PC THIENE - App Operatore V2.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -36,7 +36,7 @@
     <header class="flex justify-between items-center mb-4">
         <div>
             <h1 class="text-xl font-black italic text-white leading-none">PC <span class="text-blue-500">THIENE</span></h1>
-            <p id="sq-name" class="text-blue-400 font-bold text-[10px] uppercase mt-1 italic tracking-wider italic">Identificazione...</p>
+            <p id="sq-name" class="text-blue-400 font-black text-xl uppercase mt-1 italic tracking-tight">CARICAMENTO...</p>
         </div>
         <div class="flex items-center gap-2">
             <span class="text-[9px] font-black text-slate-400 uppercase">GPS</span>
@@ -45,8 +45,8 @@
     </header>
 
     <div id="reply-box" class="bg-emerald-900/40 border-2 border-emerald-500 rounded-2xl p-3 mb-4 shadow-lg hidden">
-        <label class="text-[8px] font-black text-emerald-300 uppercase tracking-widest block mb-1">Risposta dalla Sala Operativa</label>
-        <div id="reply-msg" class="text-sm font-black text-white italic uppercase">---</div>
+        <label class="text-[8px] font-black text-emerald-300 uppercase tracking-widest block mb-1">Ultimo messaggio dalla Sala</label>
+        <div id="reply-msg" class="text-sm font-black text-white italic uppercase leading-tight">---</div>
     </div>
 
     <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 mb-4 text-center shadow-2xl">
@@ -68,14 +68,14 @@
             <div id="rec-dot" class="absolute top-1 right-1 w-2 h-2 bg-white rounded-full hidden pulse-red"></div>
             <span id="audio-icon" class="text-2xl">🎤</span><span id="audio-label" class="font-black text-[8px] uppercase">Vocale</span>
         </div>
-        <div onclick="window.sendGPSOnly()" class="bg-emerald-600 text-white rounded-xl p-3 flex flex-col items-center justify-center gap-1 active:scale-95 shadow-lg">
-            <span class="text-2xl">📍</span><span class="font-black text-[8px] uppercase">GPS</span>
+        <div onclick="window.sendGPSOnly()" class="bg-emerald-600 text-white rounded-xl p-3 flex flex-col items-center justify-center gap-1 active:scale-95 shadow-lg text-center">
+            <span class="text-2xl">📍</span><span class="font-black text-[8px] uppercase leading-none">Invia Posizione</span>
         </div>
     </div>
 
     <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 shadow-xl">
         <textarea id="msg-text" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 font-bold text-white mb-2 h-20 outline-none focus:border-blue-500 uppercase" placeholder="Messaggio..."></textarea>
-        <button onclick="window.sendTextLog()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg">Invia Log</button>
+        <button onclick="window.sendTextLog()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg">Invia alla Sala</button>
     </div>
 
     <footer class="text-center opacity-30 mt-6 pb-6"><p class="text-[11px] font-black italic">JoKART 2026</p></footer>
@@ -87,8 +87,8 @@
         const cfg = { apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54", databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com" };
         const app = initializeApp(cfg); const db = getDatabase(app);
         const urlParams = new URLSearchParams(window.location.search);
-        const sqId = urlParams.get('id') || "SCONOSCIUTA";
-        document.getElementById('sq-name').innerText = "UNITÀ: " + sqId;
+        const sqId = urlParams.get('id') || "SQUADRA...";
+        document.getElementById('sq-name').innerText = "SQUADRA: " + sqId;
 
         window.checkAppPassword = () => { if (document.getElementById('app-password').value === "2026") { document.getElementById('login-overlay').classList.add('hidden'); sessionStorage.setItem('pc_auth', 'true'); } };
         if (sessionStorage.getItem('pc_auth') === 'true') document.getElementById('login-overlay').classList.add('hidden');
@@ -100,7 +100,6 @@
             });
         }
 
-        // RICEZIONE RISPOSTA E VIBRAZIONE
         let lastResponseM2 = "";
         onValue(query(ref(db, 'brogliaccio'), limitToLast(10)), (snap) => {
             const logs = snap.val();
@@ -110,7 +109,6 @@
                 
                 if (myLastLogWithReply) {
                     if (lastResponseM2 !== myLastLogWithReply.m2) {
-                        // NUOVA RISPOSTA RILEVATA: VIBRAZIONE
                         if ("vibrate" in navigator) { navigator.vibrate([200, 100, 200]); }
                         lastResponseM2 = myLastLogWithReply.m2;
                     }
@@ -120,10 +118,8 @@
             }
         });
 
-        // AGGIORNAMENTO STATO
         onValue(ref(db, `anagrafica_squadre/${sqId}`), (snap) => { if(snap.val()) document.getElementById('current-status').innerText = snap.val().stato; });
 
-        // GESTIONE AUDIO (VOCALE)
         let mediaRecorder, audioChunks = [];
         const btnAudio = document.getElementById('btn-audio');
         btnAudio.onclick = async () => {
@@ -138,7 +134,7 @@
                         const reader = new FileReader();
                         reader.readAsDataURL(blob);
                         reader.onloadend = () => {
-                            Swal.fire({ title: 'INVIARE VOCALE?', showCancelButton: true, confirmButtonText: 'INVIA' }).then(async r => {
+                            Swal.fire({ title: 'INVIARE VOCALE?', showCancelButton: true, confirmButtonText: 'INVIA', background: '#1e293b', color: '#fff' }).then(async r => {
                                 if(r.isConfirmed) {
                                     const pos = await getGPS();
                                     push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: "🎤 MESSAGGIO VOCALE", mediaUrl: reader.result, mediaType: 'AUDIO', lat: pos.lat, lng: pos.lng });
@@ -163,7 +159,7 @@
         };
 
         window.confirmStatus = (val, label) => {
-            Swal.fire({ title: 'CONFERMI?', text: label, showCancelButton: true }).then(async r => {
+            Swal.fire({ title: 'CONFERMI?', text: label, showCancelButton: true, background: '#1e293b', color: '#fff' }).then(async r => {
                 if(r.isConfirmed) {
                     const pos = await getGPS();
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: val, lat: pos.lat, lng: pos.lng });
@@ -174,9 +170,13 @@
         };
 
         window.sendGPSOnly = async () => {
-            const pos = await getGPS();
-            push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: "📍 AGGIORNAMENTO GPS", lat: pos.lat, lng: pos.lng });
-            Swal.fire({ icon:'success', title: 'GPS INVIATO', timer: 1000, showConfirmButton: false });
+            Swal.fire({ title: 'INVIARE POSIZIONE?', background: '#1e293b', color: '#fff', showCancelButton: true }).then(async r => {
+                if(r.isConfirmed) {
+                    const pos = await getGPS();
+                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: "📍 AGGIORNAMENTO GPS", lat: pos.lat, lng: pos.lng });
+                    Swal.fire({ icon:'success', title: 'POSIZIONE INVIATA', timer: 1000, showConfirmButton: false });
+                }
+            });
         };
 
         window.sendTextLog = async () => {
@@ -192,7 +192,7 @@
             if(!file) return;
             const reader = new FileReader(); reader.readAsDataURL(file);
             reader.onload = (e) => {
-                Swal.fire({ title: 'INVIARE FOTO?', imageUrl: e.target.result, showCancelButton: true }).then(async r => {
+                Swal.fire({ title: 'INVIARE FOTO?', imageUrl: e.target.result, showCancelButton: true, background: '#1e293b', color: '#fff' }).then(async r => {
                     if(r.isConfirmed) {
                         const pos = await getGPS();
                         push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: "📷 FOTO INVIATA", mediaUrl: e.target.result, lat: pos.lat, lng: pos.lng });
