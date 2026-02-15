@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - App Operatore V2.3</title>
+    <title>PC THIENE - App Operatore V2.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -15,6 +15,12 @@
         .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #10b981; }
         input:checked + .slider:before { transform: translateX(20px); }
+        .pulse-red { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
     </style>
 </head>
 <body class="p-4 pb-10">
@@ -53,13 +59,17 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-3 mb-4">
-        <div onclick="document.getElementById('input-foto').click()" class="bg-white text-black rounded-2xl p-5 flex flex-col items-center justify-center gap-1 active:scale-95 shadow-lg">
-            <span class="text-4xl">📷</span><span class="font-black text-[10px] uppercase">Foto</span>
+    <div class="grid grid-cols-3 gap-2 mb-4">
+        <div onclick="document.getElementById('input-foto').click()" class="bg-white text-black rounded-xl p-3 flex flex-col items-center justify-center gap-1 active:scale-95 shadow-lg">
+            <span class="text-2xl">📷</span><span class="font-black text-[8px] uppercase">Foto</span>
             <input type="file" id="input-foto" accept="image/*" capture="camera" class="hidden" onchange="window.handleImage(this.files[0])">
         </div>
-        <div onclick="window.sendGPSOnly()" class="bg-emerald-600 text-white rounded-2xl p-5 flex flex-col items-center justify-center gap-1 active:scale-95 shadow-lg">
-            <span class="text-4xl">📍</span><span class="font-black text-[10px] uppercase text-center">Invia GPS</span>
+        <div id="btn-audio" class="bg-red-600 text-white rounded-xl p-3 flex flex-col items-center justify-center gap-1 active:scale-95 shadow-lg relative">
+            <div id="rec-dot" class="absolute top-1 right-1 w-2 h-2 bg-white rounded-full hidden pulse-red"></div>
+            <span id="audio-icon" class="text-2xl">🎤</span><span id="audio-label" class="font-black text-[8px] uppercase">Vocale</span>
+        </div>
+        <div onclick="window.sendGPSOnly()" class="bg-emerald-600 text-white rounded-xl p-3 flex flex-col items-center justify-center gap-1 active:scale-95 shadow-lg">
+            <span class="text-2xl">📍</span><span class="font-black text-[8px] uppercase">GPS</span>
         </div>
     </div>
 
@@ -80,11 +90,9 @@
         const sqId = urlParams.get('id') || "SCONOSCIUTA";
         document.getElementById('sq-name').innerText = "UNITÀ: " + sqId;
 
-        // LOGIN
         window.checkAppPassword = () => { if (document.getElementById('app-password').value === "2026") { document.getElementById('login-overlay').classList.add('hidden'); sessionStorage.setItem('pc_auth', 'true'); } };
         if (sessionStorage.getItem('pc_auth') === 'true') document.getElementById('login-overlay').classList.add('hidden');
 
-        // GPS
         async function getGPS() {
             return new Promise((r) => {
                 if (!document.getElementById('gps-toggle').checked) r({ lat: '', lng: '' });
@@ -92,21 +100,67 @@
             });
         }
 
-        // RICEZIONE RISPOSTA SALA (m2)
+        // RICEZIONE RISPOSTA E VIBRAZIONE
+        let lastResponseM2 = "";
         onValue(query(ref(db, 'brogliaccio'), limitToLast(10)), (snap) => {
             const logs = snap.val();
             if(logs) {
-                const myLastLog = Object.values(logs).reverse().find(l => l.squadra === sqId);
+                const myLastLogWithReply = Object.values(logs).reverse().find(l => l.squadra === sqId && l.m2);
                 const box = document.getElementById('reply-box');
-                if (myLastLog && myLastLog.m2) {
+                
+                if (myLastLogWithReply) {
+                    if (lastResponseM2 !== myLastLogWithReply.m2) {
+                        // NUOVA RISPOSTA RILEVATA: VIBRAZIONE
+                        if ("vibrate" in navigator) { navigator.vibrate([200, 100, 200]); }
+                        lastResponseM2 = myLastLogWithReply.m2;
+                    }
                     box.classList.remove('hidden');
-                    document.getElementById('reply-msg').innerText = myLastLog.m2;
+                    document.getElementById('reply-msg').innerText = myLastLogWithReply.m2;
                 } else { box.classList.add('hidden'); }
             }
         });
 
         // AGGIORNAMENTO STATO
         onValue(ref(db, `anagrafica_squadre/${sqId}`), (snap) => { if(snap.val()) document.getElementById('current-status').innerText = snap.val().stato; });
+
+        // GESTIONE AUDIO (VOCALE)
+        let mediaRecorder, audioChunks = [];
+        const btnAudio = document.getElementById('btn-audio');
+        btnAudio.onclick = async () => {
+            if (!mediaRecorder || mediaRecorder.state === "inactive") {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.readAsDataURL(blob);
+                        reader.onloadend = () => {
+                            Swal.fire({ title: 'INVIARE VOCALE?', showCancelButton: true, confirmButtonText: 'INVIA' }).then(async r => {
+                                if(r.isConfirmed) {
+                                    const pos = await getGPS();
+                                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: "🎤 MESSAGGIO VOCALE", mediaUrl: reader.result, mediaType: 'AUDIO', lat: pos.lat, lng: pos.lng });
+                                    Swal.fire({ icon:'success', title: 'INVIATO', timer: 1000, showConfirmButton: false });
+                                }
+                            });
+                        };
+                    };
+                    mediaRecorder.start();
+                    document.getElementById('audio-label').innerText = "REG...";
+                    document.getElementById('audio-icon').innerText = "⏹️";
+                    document.getElementById('rec-dot').classList.remove('hidden');
+                    btnAudio.classList.replace('bg-red-600', 'bg-red-900');
+                } catch(e) { Swal.fire('Errore Mic', '', 'error'); }
+            } else {
+                mediaRecorder.stop();
+                document.getElementById('audio-label').innerText = "VOCALE";
+                document.getElementById('audio-icon').innerText = "🎤";
+                document.getElementById('rec-dot').classList.add('hidden');
+                btnAudio.classList.replace('bg-red-900', 'bg-red-600');
+            }
+        };
 
         window.confirmStatus = (val, label) => {
             Swal.fire({ title: 'CONFERMI?', text: label, showCancelButton: true }).then(async r => {
@@ -120,13 +174,9 @@
         };
 
         window.sendGPSOnly = async () => {
-            Swal.fire({ title: 'INVIARE GPS?', showCancelButton: true }).then(async r => {
-                if(r.isConfirmed) {
-                    const pos = await getGPS();
-                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: "📍 AGGIORNAMENTO GPS", lat: pos.lat, lng: pos.lng });
-                    Swal.fire({ icon:'success', title: 'GPS INVIATO', timer: 1000, showConfirmButton: false });
-                }
-            });
+            const pos = await getGPS();
+            push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: "📍 AGGIORNAMENTO GPS", lat: pos.lat, lng: pos.lng });
+            Swal.fire({ icon:'success', title: 'GPS INVIATO', timer: 1000, showConfirmButton: false });
         };
 
         window.sendTextLog = async () => {
