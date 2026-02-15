@@ -3,15 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - App Operatore V1.9</title>
+    <title>PC THIENE - App Operatore V2.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; touch-action: manipulation; }
+        
         .btn-status { transition: all 0.2s; border-bottom: 4px solid rgba(0,0,0,0.3); }
         .btn-status:active { transform: translateY(2px); border-bottom-width: 0; }
         
+        /* Toggle GPS */
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #10b981; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
         /* Animazione REC */
         .pulse-red { animation: pulse 1.5s infinite; }
         @keyframes pulse { 
@@ -19,69 +28,101 @@
             70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
             100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
-
-        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 20px; }
-        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #10b981; }
-        input:checked + .slider:before { transform: translateX(20px); }
     </style>
 </head>
 <body class="p-4 pb-10">
 
+    <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-900 flex flex-col items-center justify-center p-6 transition-opacity duration-300">
+        <div class="w-full max-w-xs text-center">
+            <h2 class="text-3xl font-black italic text-white mb-2 uppercase">PC <span class="text-blue-500">THIENE</span></h2>
+            <p class="text-[10px] font-bold text-slate-400 mb-8 uppercase tracking-[0.2em]">Accesso Riservato Operatori</p>
+            
+            <input type="password" id="app-password" 
+                   class="w-full bg-slate-800 border-2 border-slate-700 rounded-xl p-4 text-center text-2xl tracking-[0.5em] mb-4 text-white focus:border-blue-500 outline-none" 
+                   placeholder="****" inputmode="numeric">
+            
+            <button onclick="window.checkAppPassword()" 
+                    class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg active:bg-blue-700">
+                Sblocca App
+            </button>
+        </div>
+    </div>
+
     <header class="flex justify-between items-center mb-4">
         <div>
-            <h1 class="text-xl font-black italic text-white">PC <span class="text-blue-500">THIENE</span></h1>
-            <p id="sq-name" class="text-blue-400 font-bold text-[10px] uppercase">ID SQUADRA...</p>
+            <h1 class="text-xl font-black italic text-white leading-none">PC <span class="text-blue-500">THIENE</span></h1>
+            <p id="sq-name" class="text-blue-400 font-bold text-[10px] uppercase mt-1 tracking-wider italic">Identificazione...</p>
         </div>
         <div class="flex items-center gap-2">
-            <span class="text-[9px] font-black text-slate-400">GPS</span>
+            <span class="text-[9px] font-black text-slate-400 uppercase">GPS AUTO</span>
             <label class="switch"><input type="checkbox" id="gps-toggle" checked><span class="slider"></span></label>
         </div>
     </header>
 
     <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 mb-4 text-center shadow-2xl">
+        <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">Stato Unità Operativa</label>
         <div id="current-status" class="text-3xl font-black text-blue-500 italic mb-4 uppercase">---</div>
         <div class="grid grid-cols-2 gap-2">
-            <button onclick="window.confirmStatus('Sede', '🏠 In Sede')" class="btn-status bg-emerald-600 text-white font-black py-4 rounded-xl text-xs uppercase">🏠 Sede</button>
-            <button onclick="window.confirmStatus('Uscita', '🚚 Uscita')" class="btn-status bg-amber-500 text-black font-black py-4 rounded-xl text-xs uppercase">🚚 Uscita</button>
-            <button onclick="window.confirmStatus('Intervento', '🚨 Posto')" class="btn-status bg-red-600 text-white font-black py-4 rounded-xl text-xs uppercase">🚨 Posto</button>
-            <button onclick="window.confirmStatus('Rientro', '🔙 Rientro')" class="btn-status bg-blue-600 text-white font-black py-4 rounded-xl text-xs uppercase">🔙 Rientro</button>
+            <button onclick="window.confirmStatus('Sede', '🏠 In Sede')" class="btn-status bg-emerald-600 text-white font-black py-4 rounded-xl text-[11px] uppercase tracking-tighter">🏠 In Sede</button>
+            <button onclick="window.confirmStatus('Uscita', '🚚 Uscita')" class="btn-status bg-amber-500 text-black font-black py-4 rounded-xl text-[11px] uppercase tracking-tighter">🚚 Uscita</button>
+            <button onclick="window.confirmStatus('Intervento', '🚨 Posto')" class="btn-status bg-red-600 text-white font-black py-4 rounded-xl text-[11px] uppercase tracking-tighter">🚨 Sul Posto</button>
+            <button onclick="window.confirmStatus('Rientro', '🔙 Rientro')" class="btn-status bg-blue-600 text-white font-black py-4 rounded-xl text-[11px] uppercase tracking-tighter">🔙 Rientro</button>
         </div>
     </div>
 
     <div class="grid grid-cols-2 gap-3 mb-4">
-        <div onclick="document.getElementById('input-foto').click()" class="bg-white text-black rounded-2xl p-5 flex flex-col items-center justify-center gap-2 active:scale-95 shadow-lg">
+        <div onclick="document.getElementById('input-foto').click()" class="bg-white text-black rounded-2xl p-5 flex flex-col items-center justify-center gap-1 active:scale-95 shadow-lg">
             <span class="text-4xl">📷</span>
-            <span class="font-black text-[10px] uppercase">Invia Foto</span>
+            <span class="font-black text-[10px] uppercase">Foto</span>
             <input type="file" id="input-foto" accept="image/*" capture="camera" class="hidden" onchange="window.handleImage(this.files[0])">
         </div>
         
-        <div id="btn-audio" class="bg-red-600 text-white rounded-2xl p-5 flex flex-col items-center justify-center gap-2 active:scale-95 shadow-lg relative overflow-hidden">
+        <div id="btn-audio" class="bg-red-600 text-white rounded-2xl p-5 flex flex-col items-center justify-center gap-1 active:scale-95 shadow-lg relative">
             <div id="rec-dot" class="absolute top-2 right-2 w-3 h-3 bg-white rounded-full hidden pulse-red"></div>
             <span id="audio-icon" class="text-4xl">🎤</span>
-            <span id="audio-label" class="font-black text-[10px] uppercase text-center leading-tight">Invia Vocale</span>
+            <span id="audio-label" class="font-black text-[10px] uppercase text-center leading-tight">Vocale</span>
         </div>
     </div>
 
     <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 shadow-xl">
-        <textarea id="msg-text" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 font-bold text-white mb-2 h-20 outline-none" placeholder="Scrivi qui..."></textarea>
-        <button onclick="window.sendTextLog()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest">Invia Messaggio</button>
+        <textarea id="msg-text" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 font-bold text-white mb-2 h-20 outline-none focus:border-blue-500" placeholder="Messaggio libero..."></textarea>
+        <button onclick="window.sendTextLog()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg">Invia Log</button>
     </div>
+
+    <footer class="text-center opacity-30 mt-6">
+        <p class="text-[11px] font-black italic">JoK<span class="text-red-600">ART</span> 2026</p>
+    </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
         import { getDatabase, ref, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
+        // CONFIG
+        const PASSWORD_CORRETTA = "PCTHIENE2026"; // <--- MODIFICA QUI LA TUA PASSWORD
         const cfg = { apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54", databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com" };
+        
         const app = initializeApp(cfg);
         const db = getDatabase(app);
 
         const urlParams = new URLSearchParams(window.location.search);
         const sqId = urlParams.get('id') || "SCONOSCIUTA";
-        document.getElementById('sq-name').innerText = sqId;
+        document.getElementById('sq-name').innerText = "UNITÀ: " + sqId;
 
+        // --- LOGIN LOGIC ---
+        window.checkAppPassword = () => {
+            const inputPass = document.getElementById('app-password').value;
+            if (inputPass === PASSWORD_CORRETTA) {
+                document.getElementById('login-overlay').style.opacity = '0';
+                setTimeout(() => document.getElementById('login-overlay').classList.add('hidden'), 300);
+                sessionStorage.setItem('pc_auth', 'true');
+            } else {
+                Swal.fire({ icon: 'error', title: 'ERRATA', text: 'Password non valida', background: '#1e293b', color: '#fff' });
+                document.getElementById('app-password').value = "";
+            }
+        };
+        if (sessionStorage.getItem('pc_auth') === 'true') document.getElementById('login-overlay').classList.add('hidden');
+
+        // --- GPS ---
         async function getGPS() {
             if (!document.getElementById('gps-toggle').checked) return { lat: '', lng: '' };
             return new Promise((r) => {
@@ -94,10 +135,10 @@
             if(data) document.getElementById('current-status').innerText = data.stato;
         });
 
-        // --- GESTIONE FOTO (BASE64) ---
+        // --- FOTO ---
         window.handleImage = (file) => {
             if(!file) return;
-            Swal.fire({ title: 'Compressione foto...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'Compressione...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = (e) => {
@@ -113,62 +154,49 @@
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                     const base64Data = canvas.toDataURL('image/jpeg', 0.5);
                     Swal.fire({ 
-                        title: 'INVIARE FOTO?', imageUrl: base64Data, showCancelButton: true, confirmButtonText: 'SÌ, INVIA' 
+                        title: 'INVIARE FOTO?', imageUrl: base64Data, showCancelButton: true, confirmButtonText: 'SÌ' 
                     }).then(r => { if(r.isConfirmed) window.saveToDatabase(base64Data, 'IMG'); });
                 };
             };
         };
 
-        // --- GESTIONE AUDIO (STATI: AVVIA, IN CORSO, FINE) ---
+        // --- AUDIO ---
         let mediaRecorder, audioChunks = [];
         const btnAudio = document.getElementById('btn-audio');
-        const audioLabel = document.getElementById('audio-label');
-        const audioIcon = document.getElementById('audio-icon');
-        const recDot = document.getElementById('rec-dot');
-
+        
         btnAudio.onclick = async () => {
-            // STATO: AVVIA REGISTRAZIONE
             if (!mediaRecorder || mediaRecorder.state === "inactive") {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     mediaRecorder = new MediaRecorder(stream);
                     audioChunks = [];
-
                     mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                    
                     mediaRecorder.onstop = () => {
-                        // STATO: FINE REGISTRAZIONE
                         const blob = new Blob(audioChunks, { type: 'audio/webm' });
                         const reader = new FileReader();
                         reader.readAsDataURL(blob);
                         reader.onloadend = () => {
                             Swal.fire({ 
-                                title: 'VOCALE PRONTO', text: 'Vuoi trasmettere il messaggio audio?', 
-                                icon: 'question', showCancelButton: true, confirmButtonText: 'TRASMETTI', cancelButtonText: 'CANCELLA'
+                                title: 'INVIARE VOCALE?', text: 'Confermi trasmissione?', showCancelButton: true, confirmButtonText: 'INVIA'
                             }).then(r => { if(r.isConfirmed) window.saveToDatabase(reader.result, 'AUDIO'); });
                         };
                     };
-
                     mediaRecorder.start();
-                    // STATO: IN CORSO
-                    audioLabel.innerText = "REGISTRAZIONE IN CORSO...";
-                    audioIcon.innerText = "⏹️";
-                    recDot.classList.remove('hidden');
-                    btnAudio.classList.replace('bg-red-600', 'bg-red-800');
-                    btnAudio.classList.add('pulse-red');
-
-                } catch(e) { Swal.fire('Errore Microfono', 'Controlla i permessi del browser', 'error'); }
+                    document.getElementById('audio-label').innerText = "REGISTRAZIONE...";
+                    document.getElementById('audio-icon').innerText = "⏹️";
+                    document.getElementById('rec-dot').classList.remove('hidden');
+                    btnAudio.classList.replace('bg-red-600', 'bg-red-900');
+                } catch(e) { Swal.fire('Errore Microfono', '', 'error'); }
             } else {
-                // FERMA
                 mediaRecorder.stop();
-                audioLabel.innerText = "INVIA VOCALE";
-                audioIcon.innerText = "🎤";
-                recDot.classList.add('hidden');
-                btnAudio.classList.replace('bg-red-800', 'bg-red-600');
-                btnAudio.classList.remove('pulse-red');
+                document.getElementById('audio-label').innerText = "VOCALE";
+                document.getElementById('audio-icon').innerText = "🎤";
+                document.getElementById('rec-dot').classList.add('hidden');
+                btnAudio.classList.replace('bg-red-900', 'bg-red-600');
             }
         };
 
+        // --- SALVATAGGIO ---
         window.saveToDatabase = async (dataString, type) => {
             Swal.fire({ title: 'Invio...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             const pos = await getGPS();
@@ -182,7 +210,7 @@
         };
 
         window.confirmStatus = (val, label) => {
-            Swal.fire({ title: 'CONFERMA STATO', text: label, showCancelButton: true, background: '#1e293b', color: '#fff' })
+            Swal.fire({ title: 'CONFERMI?', text: label, showCancelButton: true, background: '#1e293b', color: '#fff' })
             .then(async r => {
                 if(r.isConfirmed) {
                     const pos = await getGPS();
@@ -204,7 +232,7 @@
                 squadra: sqId, dir: 'SQ', stato: 'ATTESA', m1: txt.toUpperCase(), lat: pos.lat, lng: pos.lng
             });
             document.getElementById('msg-text').value = "";
-            Swal.fire({ icon:'success', title: 'Messaggio Inviato', timer: 1000, showConfirmButton: false });
+            Swal.fire({ icon:'success', title: 'Inviato', timer: 1000, showConfirmButton: false });
         };
     </script>
 </body>
