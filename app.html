@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - App Operatore V1.2</title>
+    <title>PC THIENE - App Operatore V1.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -11,14 +11,12 @@
         body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; overflow-x: hidden; touch-action: manipulation; }
         .btn-status { transition: all 0.2s; border-bottom: 4px solid rgba(0,0,0,0.3); }
         .btn-status:active { transform: translateY(2px); border-bottom-width: 0; }
-        /* Toggle Switch Style */
         .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 20px; }
         .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #10b981; }
         input:checked + .slider:before { transform: translateX(20px); }
-        /* Audio Visualizer */
         .recording .bar { animation: sound 0.5s infinite ease-in-out; }
         @keyframes sound { 0%, 100% { height: 10px; } 50% { height: 30px; } }
         #audio-visualizer { height: 40px; background: #1e293b; border-radius: 12px; display: none; align-items: center; justify-content: center; gap: 4px; }
@@ -45,7 +43,7 @@
     </header>
 
     <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 mb-4 shadow-2xl">
-        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Stato Unità Operativa</label>
+        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Stato Unità</label>
         <div id="current-status" class="text-3xl font-black text-blue-500 italic mb-4 uppercase">---</div>
         
         <div class="grid grid-cols-2 gap-2">
@@ -57,42 +55,31 @@
     </div>
 
     <div class="grid grid-cols-2 gap-3 mb-4">
-        <div onclick="window.confirmMedia('IMG')" class="btn-action bg-white text-black rounded-2xl p-5 flex flex-col items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
+        <div onclick="document.getElementById('input-foto').click()" class="btn-action bg-white text-black rounded-2xl p-5 flex flex-col items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
             <span class="text-4xl">📷</span>
-            <span class="font-black text-[10px] uppercase">Scatta Foto</span>
-            <input type="file" id="input-foto" accept="image/*" capture="camera" class="hidden" onchange="window.processFile(this.files[0], 'IMG')">
+            <span class="font-black text-[10px] uppercase">Foto</span>
+            <input type="file" id="input-foto" accept="image/*" capture="camera" class="hidden" onchange="window.confirmPhoto(this.files[0])">
         </div>
 
         <div id="btn-audio" class="bg-red-600 text-white rounded-2xl p-5 flex flex-col items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
             <span id="audio-icon" class="text-4xl">🎤</span>
-            <span id="audio-label" class="font-black text-[10px] uppercase text-center">Invia Vocale</span>
+            <span id="audio-label" class="font-black text-[10px] uppercase text-center">Vocale</span>
         </div>
     </div>
 
     <div id="audio-visualizer" class="mb-4"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
 
     <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 shadow-xl">
-        <label class="text-[10px] font-bold text-slate-400 uppercase mb-2 block tracking-widest text-center">Messaggio Radio Testuale</label>
-        <textarea id="msg-text" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-base font-bold focus:border-blue-500 outline-none h-20 mb-3 text-white" placeholder="Scrivi..."></textarea>
+        <textarea id="msg-text" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 text-base font-bold focus:border-blue-500 outline-none h-20 mb-3 text-white" placeholder="Messaggio libero..."></textarea>
         <button onclick="window.sendTextLog()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg">Invia Log</button>
     </div>
-
-    <footer class="text-center opacity-40 mt-6">
-        <p class="text-[12px] font-black italic">JoK<span class="text-red-600">ART</span> 2026</p>
-    </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
         import { getDatabase, ref, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
         import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js";
 
-        const cfg = { 
-            apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54", 
-            databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com", 
-            projectId: "realtime-database-6962f",
-            storageBucket: "realtime-database-6962f.appspot.com"
-        };
-
+        const cfg = { apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54", databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com", storageBucket: "realtime-database-6962f.appspot.com" };
         const app = initializeApp(cfg);
         const db = getDatabase(app);
         const storage = getStorage(app);
@@ -101,8 +88,6 @@
         const sqId = urlParams.get('id') || "SCONOSCIUTA";
         document.getElementById('sq-name').innerText = sqId;
 
-        // --- GESTIONE GPS ---
-        let lastCoords = { lat: '', lng: '' };
         async function getGPS() {
             if (!document.getElementById('gps-toggle').checked) return { lat: '', lng: '' };
             return new Promise((resolve) => {
@@ -115,22 +100,20 @@
             });
         }
 
-        // --- SINCRONIZZAZIONE STATO ---
         onValue(ref(db, `anagrafica_squadre/${sqId}`), (snap) => {
             const data = snap.val();
             if(data) document.getElementById('current-status').innerText = data.stato;
         });
 
-        // --- FUNZIONI DI CONFERMA ---
+        // --- CONFERMA STATO ---
         window.confirmStatus = (stVal, stLabel) => {
             Swal.fire({
-                title: 'CONFERMA STATO',
-                text: `Stai impostando: ${stLabel}`,
-                icon: 'question',
+                title: 'CAMBIO STATO?',
+                text: `Confermi: ${stLabel}`,
+                icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: 'SÌ, INVIA',
-                cancelButtonText: 'ANNULLA',
-                confirmButtonColor: '#2563eb'
+                confirmButtonText: 'SÌ', cancelButtonText: 'NO',
+                confirmButtonColor: '#2563eb', background: '#1e293b', color: '#fff'
             }).then((r) => { if(r.isConfirmed) window.executeStatus(stVal); });
         };
 
@@ -139,30 +122,34 @@
             await update(ref(db, `anagrafica_squadre/${sqId}`), { stato: nuovoStato, lat: pos.lat, lng: pos.lng });
             push(ref(db, 'brogliaccio'), {
                 ora: new Date().toLocaleTimeString().slice(0,5),
-                squadra: sqId,
-                dir: 'SQ',
-                m1: `CAMBIO STATO: ${nuovoStato}`,
-                stato: 'OK',
-                lat: pos.lat,
-                lng: pos.lng
+                squadra: sqId, dir: 'SQ', m1: `STATO: ${nuovoStato}`, stato: 'OK', lat: pos.lat, lng: pos.lng
             });
-            Swal.fire({ icon:'success', title: 'Inviato', timer: 800, showConfirmButton: false, toast: true, position: 'top' });
+            Swal.fire({ icon:'success', title: 'Stato Inviato', timer: 1000, showConfirmButton: false });
         };
 
-        window.confirmMedia = (type) => {
-            if(type === 'IMG') {
+        // --- CONFERMA FOTO DOPO LO SCATTO ---
+        window.confirmPhoto = (file) => {
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
                 Swal.fire({
-                    title: 'INVIA FOTO?',
-                    text: 'Vuoi scattare e inviare una foto alla sala?',
+                    title: 'INVIARE FOTO?',
+                    imageUrl: e.target.result,
+                    imageAlt: 'Anteprima',
                     showCancelButton: true,
-                    confirmButtonText: 'APRI FOTOCAMERA'
-                }).then((r) => { if(r.isConfirmed) document.getElementById('input-foto').click(); });
-            }
+                    confirmButtonText: 'INVIA ORA',
+                    cancelButtonText: 'RIFAI',
+                    background: '#1e293b', color: '#fff'
+                }).then((r) => {
+                    if(r.isConfirmed) window.processFile(file, 'IMG');
+                    else document.getElementById('input-foto').value = ""; // Resetta input
+                });
+            };
+            reader.readAsDataURL(file);
         };
 
         window.processFile = async (file, type) => {
-            if(!file) return;
-            Swal.fire({ title: 'Caricamento...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'Invio in corso...', background: '#1e293b', color: '#fff', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
                 const fileName = `${type}_${Date.now()}_${sqId}`;
                 const storageRef = sRef(storage, `media/${fileName}`);
@@ -172,11 +159,11 @@
                 push(ref(db, 'brogliaccio'), {
                     ora: new Date().toLocaleTimeString().slice(0,5),
                     squadra: sqId, dir: 'SQ', stato: 'ATTESA',
-                    m1: type === 'IMG' ? '📷 [FOTO DOCUMENTALE]' : '🎤 [VOCALE]',
+                    m1: type === 'IMG' ? '📷 FOTO INVIATA' : '🎤 VOCALE INVIATO',
                     mediaUrl: url, mediaType: type, lat: pos.lat, lng: pos.lng
                 });
-                Swal.fire({ icon:'success', title: 'Media Inviato', timer: 1000, showConfirmButton: false });
-            } catch (e) { Swal.fire('Errore', 'Invio fallito', 'error'); }
+                Swal.fire({ icon:'success', title: 'Inviato', timer: 1000, showConfirmButton: false });
+            } catch (e) { Swal.fire('Errore', 'Fallito', 'error'); }
         };
 
         window.sendTextLog = async () => {
@@ -189,43 +176,40 @@
                 m1: txt.toUpperCase(), lat: pos.lat, lng: pos.lng
             });
             document.getElementById('msg-text').value = "";
-            Swal.fire({ icon:'success', title:'Messaggio Inviato', timer: 1000, showConfirmButton:false, toast:true, position:'top' });
+            Swal.fire({ icon:'success', title:'Inviato', timer: 1000, showConfirmButton:false });
         };
 
-        // --- AUDIO RECORDER FIXATO ---
-        let mediaRecorder;
-        let audioChunks = [];
+        // --- AUDIO ---
+        let mediaRecorder; let audioChunks = [];
         const btnAudio = document.getElementById('btn-audio');
 
         btnAudio.onclick = async () => {
             if (!mediaRecorder || mediaRecorder.state === "inactive") {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
+                    const options = { mimeType: 'audio/webm;codecs=opus', audioBitsPerSecond: 32000 }; 
+                    mediaRecorder = new MediaRecorder(stream, options);
                     audioChunks = [];
                     mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
                     mediaRecorder.onstop = () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); // WebM è più compatibile
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                         Swal.fire({
-                            title: 'INVIA VOCALE?',
-                            text: 'Vuoi trasmettere la registrazione alla sala?',
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonText: 'SÌ, TRASMETTI',
-                            cancelButtonText: 'RIFAI'
+                            title: 'INVIARE AUDIO?', text: 'Confermi trasmissione vocale?',
+                            showCancelButton: true, confirmButtonText: 'INVIA', cancelButtonText: 'RIFAI',
+                            background: '#1e293b', color: '#fff'
                         }).then((r) => { if(r.isConfirmed) window.processFile(audioBlob, 'AUDIO'); });
                     };
                     mediaRecorder.start();
                     document.getElementById('audio-visualizer').style.display = 'flex';
                     document.getElementById('audio-visualizer').classList.add('recording');
-                    document.getElementById('audio-label').innerText = "STOP PER INVIARE";
+                    document.getElementById('audio-label').innerText = "STOP";
                     document.getElementById('audio-icon').innerText = "⏹️";
                     btnAudio.classList.replace('bg-red-600', 'bg-slate-700');
-                } catch(e) { Swal.fire('Errore', 'Microfono non accessibile', 'error'); }
+                } catch(e) { Swal.fire('Errore microfono', '', 'error'); }
             } else {
                 mediaRecorder.stop();
                 document.getElementById('audio-visualizer').style.display = 'none';
-                document.getElementById('audio-label').innerText = "INVIA VOCALE";
+                document.getElementById('audio-label').innerText = "VOCALE";
                 document.getElementById('audio-icon').innerText = "🎤";
                 btnAudio.classList.replace('bg-slate-700', 'bg-red-600');
             }
