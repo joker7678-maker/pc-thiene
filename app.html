@@ -118,46 +118,27 @@
             }
         });
 
-        onValue(ref(db, `anagrafica_squadre/${sqId}`), (snap) => { if(snap.val()) document.getElementById('current-status').innerText = snap.val().stato; });
+        b, `anagrafica_squadre/${sqId}`), (snap) => { if(snap.val()) document.getElementById('current-status').innerText = snap.val().stato; });
+onValue(ref(db, `anagrafica_squadre/${sqId}`), (snap) => {
+    const data = snap.val();
+    
+    // --- INIZIO LOGICA KILL-SWITCH ---
+    // Se la squadra non esiste o il campo 'attiva' è false, blocca l'app
+    if (!data || data.attiva === false) {
+        document.body.innerHTML = `
+            <div style="height:100vh; background:#0f172a; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; font-family: 'Inter', sans-serif;">
+                <div style="font-size:80px; margin-bottom:20px;">🚫</div>
+                <h1 style="text-transform:uppercase; font-weight:900; letter-spacing:1px; margin-bottom:10px;">Servizio Terminato</h1>
+                <p style="color:#94a3b8; font-size:14px; line-height:1.5;">La tua sessione operativa è stata chiusa dalla Sala Radio.<br>L'app è ora disattivata per questo turno.</p>
+                <button onclick="location.reload()" style="margin-top:30px; background:#2563eb; color:white; border:none; padding:12px 25px; border-radius:10px; font-weight:bold; text-transform:uppercase; font-size:12px;">Riconnetti</button>
+            </div>`;
+        return; // Blocca l'esecuzione del resto delle funzioni
+    }
+    // --- FINE LOGICA KILL-SWITCH ---
 
-        let mediaRecorder, audioChunks = [];
-        const btnAudio = document.getElementById('btn-audio');
-        btnAudio.onclick = async () => {
-            if (!mediaRecorder || mediaRecorder.state === "inactive") {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
-                    audioChunks = [];
-                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                    mediaRecorder.onstop = () => {
-                        const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                        const reader = new FileReader();
-                        reader.readAsDataURL(blob);
-                        reader.onloadend = () => {
-                            Swal.fire({ title: 'INVIARE VOCALE?', showCancelButton: true, confirmButtonText: 'INVIA', background: '#1e293b', color: '#fff' }).then(async r => {
-                                if(r.isConfirmed) {
-                                    const pos = await getGPS();
-                                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: "🎤 MESSAGGIO VOCALE", mediaUrl: reader.result, mediaType: 'AUDIO', lat: pos.lat, lng: pos.lng });
-                                    Swal.fire({ icon:'success', title: 'INVIATO', timer: 1000, showConfirmButton: false });
-                                }
-                            });
-                        };
-                    };
-                    mediaRecorder.start();
-                    document.getElementById('audio-label').innerText = "REG...";
-                    document.getElementById('audio-icon').innerText = "⏹️";
-                    document.getElementById('rec-dot').classList.remove('hidden');
-                    btnAudio.classList.replace('bg-red-600', 'bg-red-900');
-                } catch(e) { Swal.fire('Errore Mic', '', 'error'); }
-            } else {
-                mediaRecorder.stop();
-                document.getElementById('audio-label').innerText = "VOCALE";
-                document.getElementById('audio-icon').innerText = "🎤";
-                document.getElementById('rec-dot').classList.add('hidden');
-                btnAudio.classList.replace('bg-red-900', 'bg-red-600');
-            }
-        };
-
+    // Aggiornamento dello stato se la squadra è attiva
+    if(data) document.getElementById('current-status').innerText = data.stato;
+});
         window.confirmStatus = (val, label) => {
             Swal.fire({ title: 'CONFERMI?', text: label, showCancelButton: true, background: '#1e293b', color: '#fff' }).then(async r => {
                 if(r.isConfirmed) {
@@ -204,3 +185,4 @@
     </script>
 </body>
 </html>
+
