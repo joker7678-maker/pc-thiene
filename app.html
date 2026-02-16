@@ -36,7 +36,7 @@
     <header class="flex justify-between items-center mb-4">
         <div>
             <h1 class="text-xl font-black italic text-white leading-none">PC <span class="text-blue-500">THIENE</span></h1>
-            <p id="sq-name" class="text-blue-400 font-black text-xl uppercase mt-1 italic tracking-tight">CARICAMENTO...</p>
+            <p id="sq-name" class="text-blue-400 font-black text-xl uppercase mt-1 italic tracking-tight">SQUADRA...</p>
         </div>
         <div class="flex items-center gap-2">
             <span class="text-[9px] font-black text-slate-400 uppercase">GPS</span>
@@ -45,17 +45,17 @@
     </header>
 
     <div id="reply-box" class="bg-emerald-900/40 border-2 border-emerald-500 rounded-2xl p-3 mb-4 shadow-lg hidden">
-        <label class="text-[8px] font-black text-emerald-300 uppercase tracking-widest block mb-1">Ultimo messaggio dalla Sala</label>
+        <label class="text-[8px] font-black text-emerald-300 uppercase tracking-widest block mb-1">Dalla Sala Radio</label>
         <div id="reply-msg" class="text-sm font-black text-white italic uppercase leading-tight">---</div>
     </div>
 
     <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 mb-4 text-center shadow-2xl">
         <div id="current-status" class="text-3xl font-black text-blue-500 italic mb-4 uppercase">---</div>
         <div class="grid grid-cols-2 gap-2">
-            <button onclick="window.confirmStatus('Sede', '🏠 In Sede')" class="bg-emerald-600 text-white font-black py-4 rounded-xl text-[11px] uppercase">🏠 In Sede</button>
-            <button onclick="window.confirmStatus('Uscita', '🚚 Uscita')" class="bg-amber-500 text-black font-black py-4 rounded-xl text-[11px] uppercase">🚚 Uscita</button>
-            <button onclick="window.confirmStatus('Intervento', '🚨 Posto')" class="bg-red-600 text-white font-black py-4 rounded-xl text-[11px] uppercase">🚨 Posto</button>
-            <button onclick="window.confirmStatus('Rientro', '🔙 Rientro')" class="bg-blue-600 text-white font-black py-4 rounded-xl text-[11px] uppercase">🔙 Rientro</button>
+            <button onclick="window.confirmStatus('Sede', '🏠 In Sede')" class="bg-emerald-600 text-white font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🏠 In Sede</button>
+            <button onclick="window.confirmStatus('Uscita', '🚚 Uscita')" class="bg-amber-500 text-black font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🚚 Uscita</button>
+            <button onclick="window.confirmStatus('Intervento', '🚨 Posto')" class="bg-red-600 text-white font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🚨 Posto</button>
+            <button onclick="window.confirmStatus('Rientro', '🔙 Rientro')" class="bg-blue-600 text-white font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🔙 Rientro</button>
         </div>
     </div>
 
@@ -74,8 +74,8 @@
     </div>
 
     <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 shadow-xl">
-        <textarea id="msg-text" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 font-bold text-white mb-2 h-20 outline-none focus:border-blue-500 uppercase" placeholder="Messaggio..."></textarea>
-        <button onclick="window.sendTextLog()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg">Invia alla Sala</button>
+        <textarea id="msg-text" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 font-bold text-white mb-2 h-20 outline-none focus:border-blue-500 uppercase" placeholder="Messaggio alla sala..."></textarea>
+        <button onclick="window.sendTextLog()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg active:scale-95">Invia alla Sala</button>
     </div>
 
     <footer class="text-center opacity-30 mt-6 pb-6"><p class="text-[11px] font-black italic">JoKART 2026</p></footer>
@@ -84,29 +84,63 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
         import { getDatabase, ref, push, onValue, update, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
-        const cfg = { apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54", databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com" };
-        const app = initializeApp(cfg); const db = getDatabase(app);
+        const cfg = { 
+            apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54", 
+            databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com" 
+        };
+        const app = initializeApp(cfg); 
+        const db = getDatabase(app);
+
         const urlParams = new URLSearchParams(window.location.search);
-        const sqId = urlParams.get('id') || "SQUADRA...";
+        const sqId = urlParams.get('id') || "SQUADRA_TEST";
         document.getElementById('sq-name').innerText = "SQUADRA: " + sqId;
 
-        window.checkAppPassword = () => { if (document.getElementById('app-password').value === "2026") { document.getElementById('login-overlay').classList.add('hidden'); sessionStorage.setItem('pc_auth', 'true'); } };
+        // --- PASSWORD SBLOCCO ---
+        window.checkAppPassword = () => { 
+            if (document.getElementById('app-password').value === "2026") { 
+                document.getElementById('login-overlay').classList.add('hidden'); 
+                sessionStorage.setItem('pc_auth', 'true'); 
+            } else {
+                Swal.fire({ icon: 'error', title: 'Password Errata', timer: 1000, showConfirmButton: false });
+            }
+        };
         if (sessionStorage.getItem('pc_auth') === 'true') document.getElementById('login-overlay').classList.add('hidden');
 
+        // --- LOGICA KILL-SWITCH (SBLOCCO DA SALA RADIO) ---
+        onValue(ref(db, `anagrafica_squadre/${sqId}`), (snap) => {
+            const data = snap.val();
+            if (!data || data.attiva === false || data.attiva === undefined) {
+                document.body.innerHTML = `
+                    <div style="height:100vh; background:#0f172a; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; font-family: 'Inter', sans-serif;">
+                        <div style="font-size:80px; margin-bottom:20px;">🚫</div>
+                        <h1 style="text-transform:uppercase; font-weight:900; letter-spacing:1px; margin-bottom:10px;">Servizio Disattivato</h1>
+                        <p style="color:#94a3b8; font-size:14px; line-height:1.5;">La tua sessione operativa è chiusa o in attesa di attivazione.<br>La Sala Radio deve abilitare la tua squadra.</p>
+                        <button onclick="location.reload()" style="margin-top:30px; background:#2563eb; color:white; border:none; padding:12px 25px; border-radius:10px; font-weight:bold; text-transform:uppercase; font-size:12px;">Controlla Stato</button>
+                    </div>`;
+                return; 
+            }
+            document.getElementById('current-status').innerText = data.stato || "Sede";
+        });
+
+        // --- GEOLOCALIZZAZIONE ---
         async function getGPS() {
             return new Promise((r) => {
                 if (!document.getElementById('gps-toggle').checked) r({ lat: '', lng: '' });
-                navigator.geolocation.getCurrentPosition(p => r({ lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) }), () => r({ lat: '', lng: '' }), { timeout: 4000 });
+                navigator.geolocation.getCurrentPosition(
+                    p => r({ lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) }), 
+                    () => r({ lat: '', lng: '' }), 
+                    { timeout: 5000, enableHighAccuracy: true }
+                );
             });
         }
 
+        // --- RISPOSTE DALLA SALA ---
         let lastResponseM2 = "";
         onValue(query(ref(db, 'brogliaccio'), limitToLast(10)), (snap) => {
             const logs = snap.val();
             if(logs) {
                 const myLastLogWithReply = Object.values(logs).reverse().find(l => l.squadra === sqId && l.m2);
                 const box = document.getElementById('reply-box');
-                
                 if (myLastLogWithReply) {
                     if (lastResponseM2 !== myLastLogWithReply.m2) {
                         if ("vibrate" in navigator) { navigator.vibrate([200, 100, 200]); }
@@ -118,71 +152,118 @@
             }
         });
 
-        b, `anagrafica_squadre/${sqId}`), (snap) => { if(snap.val()) document.getElementById('current-status').innerText = snap.val().stato; });
-onValue(ref(db, `anagrafica_squadre/${sqId}`), (snap) => {
-    const data = snap.val();
-    
-    // --- INIZIO LOGICA KILL-SWITCH ---
-    // Se la squadra non esiste o il campo 'attiva' è false, blocca l'app
-    if (!data || data.attiva === false) {
-        document.body.innerHTML = `
-            <div style="height:100vh; background:#0f172a; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; font-family: 'Inter', sans-serif;">
-                <div style="font-size:80px; margin-bottom:20px;">🚫</div>
-                <h1 style="text-transform:uppercase; font-weight:900; letter-spacing:1px; margin-bottom:10px;">Servizio Terminato</h1>
-                <p style="color:#94a3b8; font-size:14px; line-height:1.5;">La tua sessione operativa è stata chiusa dalla Sala Radio.<br>L'app è ora disattivata per questo turno.</p>
-                <button onclick="location.reload()" style="margin-top:30px; background:#2563eb; color:white; border:none; padding:12px 25px; border-radius:10px; font-weight:bold; text-transform:uppercase; font-size:12px;">Riconnetti</button>
-            </div>`;
-        return; // Blocca l'esecuzione del resto delle funzioni
-    }
-    // --- FINE LOGICA KILL-SWITCH ---
-
-    // Aggiornamento dello stato se la squadra è attiva
-    if(data) document.getElementById('current-status').innerText = data.stato;
-});
+        // --- FUNZIONI OPERATIVE ---
         window.confirmStatus = (val, label) => {
             Swal.fire({ title: 'CONFERMI?', text: label, showCancelButton: true, background: '#1e293b', color: '#fff' }).then(async r => {
                 if(r.isConfirmed) {
                     const pos = await getGPS();
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: val, lat: pos.lat, lng: pos.lng });
-                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: `STATO: ${val}`, lat: pos.lat, lng: pos.lng });
+                    push(ref(db, 'brogliaccio'), { 
+                        ora: new Date().toLocaleTimeString().slice(0,5), 
+                        squadra: sqId, 
+                        m1: `STATO: ${val.toUpperCase()}`, 
+                        lat: pos.lat, 
+                        lng: pos.lng,
+                        dir: 'SQ'
+                    });
                     Swal.fire({ icon:'success', title: 'OK', timer: 1000, showConfirmButton: false });
                 }
             });
         };
 
         window.sendGPSOnly = async () => {
-            Swal.fire({ title: 'INVIARE POSIZIONE?', background: '#1e293b', color: '#fff', showCancelButton: true }).then(async r => {
-                if(r.isConfirmed) {
-                    const pos = await getGPS();
-                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: "📍 AGGIORNAMENTO GPS", lat: pos.lat, lng: pos.lng });
-                    Swal.fire({ icon:'success', title: 'POSIZIONE INVIATA', timer: 1000, showConfirmButton: false });
-                }
+            const pos = await getGPS();
+            push(ref(db, 'brogliaccio'), { 
+                ora: new Date().toLocaleTimeString().slice(0,5), 
+                squadra: sqId, 
+                m1: "📍 AGGIORNAMENTO POSIZIONE", 
+                lat: pos.lat, 
+                lng: pos.lng,
+                dir: 'SQ'
             });
+            Swal.fire({ icon:'success', title: 'POSIZIONE INVIATA', timer: 1000, showConfirmButton: false, toast: true, position: 'top' });
         };
 
         window.sendTextLog = async () => {
             const txt = document.getElementById('msg-text').value.trim();
             if(!txt) return;
             const pos = await getGPS();
-            push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: txt.toUpperCase(), lat: pos.lat, lng: pos.lng });
+            push(ref(db, 'brogliaccio'), { 
+                ora: new Date().toLocaleTimeString().slice(0,5), 
+                squadra: sqId, 
+                m1: txt.toUpperCase(), 
+                lat: pos.lat, 
+                lng: pos.lng,
+                dir: 'SQ' 
+            });
             document.getElementById('msg-text').value = "";
             Swal.fire({ icon:'success', title: 'INVIATO', timer: 1000, showConfirmButton: false });
         };
 
         window.handleImage = (file) => {
             if(!file) return;
-            const reader = new FileReader(); reader.readAsDataURL(file);
+            const reader = new FileReader(); 
+            reader.readAsDataURL(file);
             reader.onload = (e) => {
                 Swal.fire({ title: 'INVIARE FOTO?', imageUrl: e.target.result, showCancelButton: true, background: '#1e293b', color: '#fff' }).then(async r => {
                     if(r.isConfirmed) {
                         const pos = await getGPS();
-                        push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: "📷 FOTO INVIATA", mediaUrl: e.target.result, lat: pos.lat, lng: pos.lng });
+                        push(ref(db, 'brogliaccio'), { 
+                            ora: new Date().toLocaleTimeString().slice(0,5), 
+                            squadra: sqId, 
+                            m1: "📷 FOTO INVIATA", 
+                            mediaUrl: e.target.result, 
+                            mediaType: 'IMG',
+                            lat: pos.lat, 
+                            lng: pos.lng,
+                            dir: 'SQ' 
+                        });
                         Swal.fire({ icon:'success', title: 'FOTO INVIATA', timer: 1000, showConfirmButton: false });
                     }
                 });
             };
         };
+
+        // --- GESTIONE VOCALE (BASE64) ---
+        let mediaRecorder;
+        let audioChunks = [];
+        const btnAudio = document.getElementById('btn-audio');
+
+        btnAudio.onclick = async () => {
+            if (!mediaRecorder || mediaRecorder.state === "inactive") {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = async () => {
+                        const base64Audio = reader.result;
+                        const pos = await getGPS();
+                        push(ref(db, 'brogliaccio'), { 
+                            ora: new Date().toLocaleTimeString().slice(0,5), 
+                            squadra: sqId, 
+                            m1: "🎤 MESSAGGIO VOCALE", 
+                            mediaUrl: base64Audio, 
+                            mediaType: 'AUDIO',
+                            lat: pos.lat, 
+                            lng: pos.lng,
+                            dir: 'SQ' 
+                        });
+                        Swal.fire({ icon: 'success', title: 'VOCALE INVIATO', timer: 1000, showConfirmButton: false });
+                    };
+                };
+                mediaRecorder.start();
+                btnAudio.classList.replace('bg-red-600', 'bg-slate-700');
+                document.getElementById('rec-dot').classList.remove('hidden');
+            } else {
+                mediaRecorder.stop();
+                btnAudio.classList.replace('bg-slate-700', 'bg-red-600');
+                document.getElementById('rec-dot').classList.add('hidden');
+            }
+        };
     </script>
 </body>
 </html>
-
