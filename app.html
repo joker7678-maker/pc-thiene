@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - App Operatore V2.5</title>
+    <title>PC THIENE - App Operatore V2.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -15,11 +15,11 @@
         .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #10b981; }
         input:checked + .slider:before { transform: translateX(20px); }
-        .pulse-red { animation: pulse 1.5s infinite; }
-        @keyframes pulse { 
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        .pulse-emerald { animation: pulseGps 2s infinite; }
+        @keyframes pulseGps { 
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
     </style>
 </head>
@@ -29,7 +29,7 @@
         <div class="w-full max-w-xs text-center">
             <h2 class="text-3xl font-black italic text-white mb-2 uppercase">PC <span class="text-blue-500">THIENE</span></h2>
             <input type="password" id="app-password" class="w-full bg-slate-800 border-2 border-slate-700 rounded-xl p-4 text-center text-2xl mb-4 text-white outline-none" placeholder="****" inputmode="numeric">
-            <button onclick="window.checkAppPassword()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest active:bg-blue-700">Sblocca App</button>
+            <button onclick="window.checkAppPassword()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest active:bg-blue-700 shadow-lg">Sblocca App</button>
         </div>
     </div>
 
@@ -44,15 +44,26 @@
         </div>
     </header>
 
-    <div id="reply-box" class="bg-emerald-900/40 border-2 border-emerald-500 rounded-2xl p-3 mb-4 shadow-lg hidden">
-        <label class="text-[8px] font-black text-emerald-300 uppercase tracking-widest block mb-1">Dalla Sala Radio</label>
+    <div id="reply-box" class="bg-blue-900/40 border-2 border-blue-500 rounded-2xl p-3 mb-3 shadow-lg hidden">
+        <label class="text-[8px] font-black text-blue-300 uppercase tracking-widest block mb-1">Messaggio dalla Sala</label>
         <div id="reply-msg" class="text-sm font-black text-white italic uppercase leading-tight">---</div>
+    </div>
+
+    <div id="gps-nav-box" class="mb-4 hidden">
+        <button onclick="window.openNavigator()" 
+                class="w-full bg-emerald-600 border-2 border-emerald-400 text-white font-black py-4 rounded-2xl shadow-lg flex items-center justify-center gap-3 pulse-emerald active:scale-95">
+            <span class="text-2xl">📍</span>
+            <div class="text-left">
+                <p class="text-[10px] uppercase leading-none opacity-80">Nuova Destinazione</p>
+                <p class="text-sm uppercase leading-none">Avvia Navigatore</p>
+            </div>
+        </button>
     </div>
 
     <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 mb-4 text-center shadow-2xl">
         <div id="current-status" class="text-3xl font-black text-blue-500 italic mb-4 uppercase">---</div>
         <div class="grid grid-cols-2 gap-2">
-            <button onclick="window.confirmStatus('Sede', '🏠 In Sede')" class="bg-emerald-600 text-white font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🏠 In Sede</button>
+            <button onclick="window.confirmStatus('Sede', '🏠 In Sede')" class="bg-slate-700 text-white font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🏠 In Sede</button>
             <button onclick="window.confirmStatus('Uscita', '🚚 Uscita')" class="bg-amber-500 text-black font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🚚 Uscita</button>
             <button onclick="window.confirmStatus('Intervento', '🚨 Posto')" class="bg-red-600 text-white font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🚨 Posto</button>
             <button onclick="window.confirmStatus('Rientro', '🔙 Rientro')" class="bg-blue-600 text-white font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🔙 Rientro</button>
@@ -65,11 +76,11 @@
             <input type="file" id="input-foto" accept="image/*" capture="camera" class="hidden" onchange="window.handleImage(this.files[0])">
         </div>
         <div id="btn-audio" class="bg-red-600 text-white rounded-xl p-3 flex flex-col items-center justify-center gap-1 active:scale-95 shadow-lg relative">
-            <div id="rec-dot" class="absolute top-1 right-1 w-2 h-2 bg-white rounded-full hidden pulse-red"></div>
+            <div id="rec-dot" class="absolute top-1 right-1 w-2 h-2 bg-white rounded-full hidden"></div>
             <span id="audio-icon" class="text-2xl">🎤</span><span id="audio-label" class="font-black text-[8px] uppercase">Vocale</span>
         </div>
         <div onclick="window.sendGPSOnly()" class="bg-emerald-600 text-white rounded-xl p-3 flex flex-col items-center justify-center gap-1 active:scale-95 shadow-lg text-center">
-            <span class="text-2xl">📍</span><span class="font-black text-[8px] uppercase leading-none">Invia Posizione</span>
+            <span class="text-2xl">📍</span><span class="font-black text-[8px] uppercase leading-none">Invia GPS</span>
         </div>
     </div>
 
@@ -95,6 +106,11 @@
         const sqId = urlParams.get('id') || "SQUADRA_TEST";
         document.getElementById('sq-name').innerText = "SQUADRA: " + sqId;
 
+        // Variabili per Navigazione
+        let lastLat = null;
+        let lastLng = null;
+        let lastResponseM2 = "";
+
         // --- PASSWORD SBLOCCO ---
         window.checkAppPassword = () => { 
             if (document.getElementById('app-password').value === "2026") { 
@@ -106,20 +122,52 @@
         };
         if (sessionStorage.getItem('pc_auth') === 'true') document.getElementById('login-overlay').classList.add('hidden');
 
-        // --- LOGICA KILL-SWITCH (SBLOCCO DA SALA RADIO) ---
+        // --- MONITORAGGIO STATO E SBLOCCO SALA ---
         onValue(ref(db, `anagrafica_squadre/${sqId}`), (snap) => {
             const data = snap.val();
-            if (!data || data.attiva === false || data.attiva === undefined) {
-                document.body.innerHTML = `
-                    <div style="height:100vh; background:#0f172a; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; font-family: 'Inter', sans-serif;">
-                        <div style="font-size:80px; margin-bottom:20px;">🚫</div>
-                        <h1 style="text-transform:uppercase; font-weight:900; letter-spacing:1px; margin-bottom:10px;">Servizio Disattivato</h1>
-                        <p style="color:#94a3b8; font-size:14px; line-height:1.5;">La tua sessione operativa è chiusa o in attesa di attivazione.<br>La Sala Radio deve abilitare la tua squadra.</p>
-                        <button onclick="location.reload()" style="margin-top:30px; background:#2563eb; color:white; border:none; padding:12px 25px; border-radius:10px; font-weight:bold; text-transform:uppercase; font-size:12px;">Controlla Stato</button>
-                    </div>`;
+            if (!data || data.attiva === false) {
+                document.body.innerHTML = `<div class="h-screen flex flex-col items-center justify-center bg-slate-900 p-10 text-center uppercase font-black"><span class="text-6xl mb-4">🚫</span><br>Squadra Disattivata<br><span class="text-xs font-normal opacity-50 mt-2">Contattare Sala Radio</span><button onclick="location.reload()" class="mt-8 bg-blue-600 px-6 py-2 rounded-lg">Riprova</button></div>`;
                 return; 
             }
             document.getElementById('current-status').innerText = data.stato || "Sede";
+        });
+
+        // --- RICEZIONE MESSAGGI E COORDINATE ---
+        onValue(query(ref(db, 'brogliaccio'), limitToLast(20)), (snap) => {
+            const logs = snap.val();
+            if(logs) {
+                // Cerchiamo l'ultimo log pertinente
+                const logsArr = Object.values(logs).reverse();
+                const myLastLog = logsArr.find(l => l.squadra === sqId);
+                
+                const boxMsg = document.getElementById('reply-box');
+                const boxGps = document.getElementById('gps-nav-box');
+
+                if (myLastLog) {
+                    // 1. Gestione Testo (M2)
+                    if (myLastLog.m2 && myLastLog.m2 !== '---') {
+                        if (lastResponseM2 !== myLastLog.m2) {
+                            if ("vibrate" in navigator) { navigator.vibrate([200, 100, 200]); }
+                            lastResponseM2 = myLastLog.m2;
+                        }
+                        boxMsg.classList.remove('hidden');
+                        document.getElementById('reply-msg').innerText = myLastLog.m2;
+                    } else { boxMsg.classList.add('hidden'); }
+
+                    // 2. Gestione GPS (Navigazione)
+                    if (myLastLog.lat && myLastLog.lng) {
+                        lastLat = myLastLog.lat;
+                        lastLng = myLastLog.lng;
+                        boxGps.classList.remove('hidden');
+                    } else { boxGps.classList.add('hidden'); }
+                }
+
+                // 3. Comunicazione Generale (Broadcast)
+                const broadcast = logsArr.find(l => l.squadra === 'COMUNICAZIONE GENERALE');
+                if (broadcast && broadcast.m2) {
+                    // Logica aggiuntiva per broadcast se necessaria
+                }
+            }
         });
 
         // --- GEOLOCALIZZAZIONE ---
@@ -134,37 +182,22 @@
             });
         }
 
-        // --- RISPOSTE DALLA SALA ---
-        let lastResponseM2 = "";
-        onValue(query(ref(db, 'brogliaccio'), limitToLast(10)), (snap) => {
-            const logs = snap.val();
-            if(logs) {
-                const myLastLogWithReply = Object.values(logs).reverse().find(l => l.squadra === sqId && l.m2);
-                const box = document.getElementById('reply-box');
-                if (myLastLogWithReply) {
-                    if (lastResponseM2 !== myLastLogWithReply.m2) {
-                        if ("vibrate" in navigator) { navigator.vibrate([200, 100, 200]); }
-                        lastResponseM2 = myLastLogWithReply.m2;
-                    }
-                    box.classList.remove('hidden');
-                    document.getElementById('reply-msg').innerText = myLastLogWithReply.m2;
-                } else { box.classList.add('hidden'); }
-            }
-        });
-
         // --- FUNZIONI OPERATIVE ---
+        window.openNavigator = () => {
+            if (lastLat && lastLng) {
+                const url = `https://www.google.com/maps/dir/?api=1&destination=${lastLat},${lastLng}&travelmode=driving`;
+                window.open(url, '_blank');
+            }
+        };
+
         window.confirmStatus = (val, label) => {
             Swal.fire({ title: 'CONFERMI?', text: label, showCancelButton: true, background: '#1e293b', color: '#fff' }).then(async r => {
                 if(r.isConfirmed) {
                     const pos = await getGPS();
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: val, lat: pos.lat, lng: pos.lng });
                     push(ref(db, 'brogliaccio'), { 
-                        ora: new Date().toLocaleTimeString().slice(0,5), 
-                        squadra: sqId, 
-                        m1: `STATO: ${val.toUpperCase()}`, 
-                        lat: pos.lat, 
-                        lng: pos.lng,
-                        dir: 'SQ'
+                        ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
+                        squadra: sqId, m1: `STATO: ${val.toUpperCase()}`, lat: pos.lat, lng: pos.lng, dir: 'SQ'
                     });
                     Swal.fire({ icon:'success', title: 'OK', timer: 1000, showConfirmButton: false });
                 }
@@ -174,12 +207,8 @@
         window.sendGPSOnly = async () => {
             const pos = await getGPS();
             push(ref(db, 'brogliaccio'), { 
-                ora: new Date().toLocaleTimeString().slice(0,5), 
-                squadra: sqId, 
-                m1: "📍 AGGIORNAMENTO POSIZIONE", 
-                lat: pos.lat, 
-                lng: pos.lng,
-                dir: 'SQ'
+                ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
+                squadra: sqId, m1: "📍 AGGIORNAMENTO POSIZIONE", lat: pos.lat, lng: pos.lng, dir: 'SQ'
             });
             Swal.fire({ icon:'success', title: 'POSIZIONE INVIATA', timer: 1000, showConfirmButton: false, toast: true, position: 'top' });
         };
@@ -189,12 +218,8 @@
             if(!txt) return;
             const pos = await getGPS();
             push(ref(db, 'brogliaccio'), { 
-                ora: new Date().toLocaleTimeString().slice(0,5), 
-                squadra: sqId, 
-                m1: txt.toUpperCase(), 
-                lat: pos.lat, 
-                lng: pos.lng,
-                dir: 'SQ' 
+                ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
+                squadra: sqId, m1: txt.toUpperCase(), lat: pos.lat, lng: pos.lng, dir: 'SQ' 
             });
             document.getElementById('msg-text').value = "";
             Swal.fire({ icon:'success', title: 'INVIATO', timer: 1000, showConfirmButton: false });
@@ -209,26 +234,18 @@
                     if(r.isConfirmed) {
                         const pos = await getGPS();
                         push(ref(db, 'brogliaccio'), { 
-                            ora: new Date().toLocaleTimeString().slice(0,5), 
-                            squadra: sqId, 
-                            m1: "📷 FOTO INVIATA", 
-                            mediaUrl: e.target.result, 
-                            mediaType: 'IMG',
-                            lat: pos.lat, 
-                            lng: pos.lng,
-                            dir: 'SQ' 
+                            ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
+                            squadra: sqId, m1: "📷 FOTO INVIATA", mediaUrl: e.target.result, mediaType: 'IMG', lat: pos.lat, lng: pos.lng, dir: 'SQ' 
                         });
-                        Swal.fire({ icon:'success', title: 'FOTO INVIATA', timer: 1000, showConfirmButton: false });
                     }
                 });
             };
         };
 
-        // --- GESTIONE VOCALE (BASE64) ---
+        // --- GESTIONE VOCALE ---
         let mediaRecorder;
         let audioChunks = [];
         const btnAudio = document.getElementById('btn-audio');
-
         btnAudio.onclick = async () => {
             if (!mediaRecorder || mediaRecorder.state === "inactive") {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -240,19 +257,11 @@
                     const reader = new FileReader();
                     reader.readAsDataURL(audioBlob);
                     reader.onloadend = async () => {
-                        const base64Audio = reader.result;
                         const pos = await getGPS();
                         push(ref(db, 'brogliaccio'), { 
-                            ora: new Date().toLocaleTimeString().slice(0,5), 
-                            squadra: sqId, 
-                            m1: "🎤 MESSAGGIO VOCALE", 
-                            mediaUrl: base64Audio, 
-                            mediaType: 'AUDIO',
-                            lat: pos.lat, 
-                            lng: pos.lng,
-                            dir: 'SQ' 
+                            ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
+                            squadra: sqId, m1: "🎤 MESSAGGIO VOCALE", mediaUrl: reader.result, mediaType: 'AUDIO', lat: pos.lat, lng: pos.lng, dir: 'SQ' 
                         });
-                        Swal.fire({ icon: 'success', title: 'VOCALE INVIATO', timer: 1000, showConfirmButton: false });
                     };
                 };
                 mediaRecorder.start();
