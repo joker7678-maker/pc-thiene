@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - App Operatore V3.5</title>
+    <title>PC THIENE - App Operatore V3.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -23,26 +23,27 @@
         }
         .pulse-warning { animation: pulse-red 1.5s infinite; border: 2px solid #ef4444; }
 
-        /* NASCONDE TUTTO IL BODY DI DEFAULT */
+        /* Lo stato iniziale è nascosto per sicurezza */
         #main-app-container { display: none; }
+        #inhibition-overlay { display: none; }
     </style>
 </head>
 <body class="p-4 pb-10">
 
+    <div id="inhibition-overlay" class="fixed inset-0 z-[10000] bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
+        <div class="text-6xl mb-4">🚫</div>
+        <h2 class="text-2xl font-black text-white uppercase">App Inibita</h2>
+        <p class="text-red-500 font-bold mt-2 uppercase text-xs">Accesso disattivato dalla Sala Operativa</p>
+        <p class="text-slate-400 text-[10px] mt-6 uppercase tracking-widest border-t border-slate-800 pt-4">Contattare la base via radio</p>
+    </div>
+
     <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-900 flex flex-col items-center justify-center p-6">
         <div class="w-full max-w-xs text-center">
-            <h2 class="text-3xl font-black italic text-white mb-2 uppercase tracking-tighter text-blue-500">AREA RISERVATA</h2>
-            <p class="text-slate-400 text-[10px] font-bold uppercase mb-8 tracking-widest">Protezione Civile Thiene</p>
-            
+            <h2 class="text-3xl font-black italic text-white mb-2 uppercase tracking-tighter text-blue-500">PC THIENE</h2>
+            <p class="text-slate-400 text-[10px] font-bold uppercase mb-8 tracking-widest">Accesso Operatore</p>
             <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-2xl">
-                <label class="text-[10px] font-black text-slate-500 uppercase block mb-2">Codice Accesso</label>
-                <input type="password" id="app-password" 
-                       class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-4 text-center text-3xl mb-6 text-white outline-none focus:border-blue-500 transition-all" 
-                       placeholder="••••" inputmode="numeric">
-                <button onclick="window.checkAppPassword()" 
-                        class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-blue-900/40">
-                    Sblocca Terminale
-                </button>
+                <input type="password" id="app-password" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-4 text-center text-3xl mb-6 text-white outline-none focus:border-blue-500" placeholder="••••" inputmode="numeric">
+                <button onclick="window.checkAppPassword()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest active:scale-95 shadow-lg">Sblocca</button>
             </div>
         </div>
     </div>
@@ -83,18 +84,18 @@
                 <span class="text-2xl">📷</span><span class="font-black text-[8px] uppercase">Foto</span>
                 <input type="file" id="input-foto" accept="image/*" capture="camera" class="hidden" onchange="window.handleImage(this.files[0])">
             </div>
-            <div id="btn-audio" class="bg-red-600 text-white rounded-xl p-3 flex flex-col items-center justify-center gap-1 active:scale-95 shadow-lg relative">
+            <div id="btn-audio" class="bg-red-600 text-white rounded-xl p-3 flex flex-col items-center justify-center gap-1 active:scale-95 shadow-lg relative text-center">
                 <div id="rec-dot" class="absolute top-1 right-1 w-2 h-2 bg-white rounded-full hidden animate-pulse"></div>
-                <span id="audio-icon" class="text-2xl">🎤</span><span id="audio-label" class="font-black text-[8px] uppercase">Vocale</span>
+                <span id="audio-icon" class="text-2xl">🎤</span><span id="audio-label" class="font-black text-[8px] uppercase leading-none">Vocale</span>
             </div>
             <div onclick="window.sendGPSOnly()" class="bg-emerald-600 text-white rounded-xl p-3 flex flex-col items-center justify-center gap-1 active:scale-95 shadow-lg text-center">
-                <span class="text-2xl">📍</span><span class="font-black text-[8px] uppercase leading-none">GPS</span>
+                <span class="text-2xl">📍</span><span class="font-black text-[8px] uppercase leading-none">Invia GPS</span>
             </div>
         </div>
 
         <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 shadow-xl">
             <textarea id="msg-text" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 font-bold text-white mb-2 h-20 outline-none uppercase" placeholder="Messaggio..."></textarea>
-            <button onclick="window.sendTextLog()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg active:scale-95">Invia Messaggio</button>
+            <button onclick="window.sendTextLog()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg active:scale-95">Invia</button>
         </div>
         
         <footer class="text-center opacity-30 mt-6 pb-6"><p class="text-[11px] font-black italic uppercase">JoKART 2026</p></footer>
@@ -111,22 +112,40 @@
         const sqId = (urlParams.get('id') || "SQUADRA_TEST").toUpperCase();
         document.getElementById('sq-name').innerText = "SQUADRA: " + sqId;
 
-        // --- SISTEMA BLOCCO PASS ---
-        window.checkAppPassword = () => {
-            const pass = document.getElementById('app-password').value;
-            if (pass === "2026") {
+        // --- 1. CONTROLLO INIBIZIONE REMOTA (MASTER SWITCH) ---
+        onValue(ref(db, `anagrafica_squadre/${sqId}`), (snapshot) => {
+            const data = snapshot.val();
+            const isInhibited = !data || data.attiva === false;
+            
+            if (isInhibited) {
+                document.getElementById('inhibition-overlay').style.display = 'flex';
+                document.getElementById('main-app-container').style.display = 'none';
                 document.getElementById('login-overlay').style.display = 'none';
-                document.getElementById('main-app-container').style.display = 'block';
-                sessionStorage.setItem('pc_auth_v3', 'true');
             } else {
-                Swal.fire({ icon: 'error', title: 'ACCESSO NEGATO', text: 'Password errata', timer: 1500, showConfirmButton: false });
+                document.getElementById('inhibition-overlay').style.display = 'none';
+                // Solo se non è inibita, controlla la password
+                checkAuthStatus();
+            }
+        });
+
+        // --- 2. CONTROLLO PASSWORD ---
+        window.checkAppPassword = () => {
+            if (document.getElementById('app-password').value === "2026") {
+                sessionStorage.setItem('pc_auth_v3', 'true');
+                checkAuthStatus();
+            } else {
+                Swal.fire({ icon: 'error', title: 'Password Errata', timer: 1000, showConfirmButton: false });
             }
         };
 
-        // Verifica all'avvio
-        if (sessionStorage.getItem('pc_auth_v3') === 'true') {
-            document.getElementById('login-overlay').style.display = 'none';
-            document.getElementById('main-app-container').style.display = 'block';
+        function checkAuthStatus() {
+            if (sessionStorage.getItem('pc_auth_v3') === 'true') {
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('main-app-container').style.display = 'block';
+            } else {
+                document.getElementById('login-overlay').style.display = 'flex';
+                document.getElementById('main-app-container').style.display = 'none';
+            }
         }
 
         async function getGPS() {
@@ -139,6 +158,7 @@
             });
         }
 
+        // --- MONITORAGGIO MESSAGGI ---
         let notifiedKeys = new Set();
         onValue(query(ref(db, 'brogliaccio'), limitToLast(10)), (snap) => {
             const data = snap.val();
@@ -164,7 +184,7 @@
                         targetArea.innerHTML = `
                             <div class="p-4 rounded-2xl bg-slate-900 border-2 ${log.stato === 'ATTESA' ? 'pulse-warning bg-red-900/20' : 'border-blue-500 bg-blue-900/10'}">
                                 <p class="text-[9px] font-black uppercase text-blue-400 text-center">Destinazione</p>
-                                <p class="text-sm font-bold text-center uppercase my-2">${log.m1}</p>
+                                <p class="text-sm font-bold text-center uppercase my-2 leading-tight">${log.m1}</p>
                                 ${log.stato === 'ATTESA' ? 
                                     `<button onclick="window.confermaRicezione('${key}')" class="w-full bg-blue-600 font-black py-4 rounded-xl uppercase text-xs">✅ Ricevuto</button>` : 
                                     `<div class="flex flex-col gap-2">
@@ -216,7 +236,9 @@
         window.sendGPSOnly = async () => {
             const p = await getGPS();
             push(ref(db, 'brogliaccio'), { 
-                ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "📍 AGGIORNAMENTO POSIZIONE", lat: p.lat, lng: p.lng, dir: 'SQ', stato:'OK' 
+                ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
+                data: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }).toUpperCase(),
+                squadra: sqId, m1: "📍 AGGIORNAMENTO POSIZIONE", lat: p.lat, lng: p.lng, dir: 'SQ', stato:'OK' 
             });
             Swal.fire({ icon:'success', title: 'GPS INVIATO', timer: 1000, showConfirmButton: false });
         };
@@ -225,7 +247,9 @@
             const t = document.getElementById('msg-text').value.trim(); if(!t) return;
             const p = await getGPS();
             push(ref(db, 'brogliaccio'), { 
-                ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: t.toUpperCase(), lat: p.lat, lng: p.lng, dir: 'SQ', stato:'OK' 
+                ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
+                data: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }).toUpperCase(),
+                squadra: sqId, m1: t.toUpperCase(), lat: p.lat, lng: p.lng, dir: 'SQ', stato:'OK' 
             });
             document.getElementById('msg-text').value = "";
             Swal.fire({ icon:'success', title: 'INVIATO', timer: 1000, showConfirmButton: false });
@@ -238,7 +262,9 @@
                     if(r.isConfirmed) {
                         const p = await getGPS();
                         push(ref(db, 'brogliaccio'), { 
-                            ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "📷 FOTO", mediaUrl: e.target.result, mediaType: 'IMG', lat: p.lat, lng: p.lng, dir: 'SQ', stato:'OK' 
+                            ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
+                            data: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }).toUpperCase(),
+                            squadra: sqId, m1: "📷 FOTO", mediaUrl: e.target.result, mediaType: 'IMG', lat: p.lat, lng: p.lng, dir: 'SQ', stato:'OK' 
                         });
                     }
                 });
@@ -256,7 +282,9 @@
                     r.onloadend = async () => {
                         const p = await getGPS();
                         push(ref(db, 'brogliaccio'), { 
-                            ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "🎤 VOCALE", mediaUrl: r.result, mediaType: 'AUDIO', lat: p.lat, lng: p.lng, dir: 'SQ', stato:'OK' 
+                            ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
+                            data: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }).toUpperCase(),
+                            squadra: sqId, m1: "🎤 VOCALE", mediaUrl: r.result, mediaType: 'AUDIO', lat: p.lat, lng: p.lng, dir: 'SQ', stato:'OK' 
                         });
                     };
                 };
