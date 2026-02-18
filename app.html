@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - App Operatore V3.1</title>
+    <title>PC THIENE - App Operatore V3.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -47,7 +47,7 @@
 
     <div id="last-msg-box" class="mb-4 p-3 bg-slate-800/50 border border-slate-700 rounded-xl hidden">
         <p class="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-1">Ultimo comando dalla Sala:</p>
-        <p id="last-msg-text" class="text-xs font-bold text-white uppercase italic">Nessun messaggio recente</p>
+        <div id="last-msg-text" class="text-xs font-bold text-white uppercase italic leading-tight">Nessun messaggio recente</div>
     </div>
 
     <div id="target-area" class="mb-4 space-y-2 hidden"></div>
@@ -116,7 +116,7 @@
             });
         }
 
-        // --- MONITORAGGIO LOG (VIBRAZIONE + TARGET + ULTIMO MESSAGGIO) ---
+        // --- MONITORAGGIO LOG (VIBRAZIONE + TARGET) ---
         onValue(query(ref(db, 'brogliaccio'), limitToLast(10)), (snap) => {
             const data = snap.val();
             const targetArea = document.getElementById('target-area');
@@ -125,20 +125,21 @@
             let foundActive = false;
             
             if (data) {
-                // Ordiniamo per trovare il più recente messaggio della sala per noi
                 const logsArray = Object.entries(data).reverse();
                 
-                // Cerchiamo l'ultimo messaggio inviato dalla sala a questa squadra
-                const lastSalaMsg = logsArray.find(([k, l]) => l.squadra === sqId && l.dir === 'SALA');
+                // Mostra l'ultimo messaggio inviato dalla sala a questa squadra (qualsiasi stato)
+                const lastSalaMsg = logsArray.find(([k, l]) => l.squadra === sqId && l.dir === 'SA');
                 if(lastSalaMsg) {
                     lastMsgBox.classList.remove('hidden');
                     lastMsgText.innerText = lastSalaMsg[1].m1;
                 }
 
                 logsArray.forEach(([key, log]) => {
+                    // Target attivo solo se lo stato è ATTESA o RICEVUTO
                     if (log.squadra === sqId && (log.stato === 'ATTESA' || log.stato === 'RICEVUTO') && log.lat) {
                         foundActive = true;
                         
+                        // Vibra 5 volte solo al primissimo arrivo
                         if (log.stato === 'ATTESA' && !notifiedKeys.has(key)) {
                             if ("vibrate" in navigator) navigator.vibrate([500, 200, 500, 200, 500, 200, 500, 200, 500]);
                             notifiedKeys.add(key);
@@ -147,15 +148,15 @@
                         targetArea.innerHTML = `
                             <div class="p-4 rounded-2xl bg-slate-900 border-2 ${log.stato === 'ATTESA' ? 'pulse-warning bg-red-900/20' : 'border-blue-500 bg-blue-900/10'} flex flex-col gap-3">
                                 <div class="text-center">
-                                    <p class="text-[9px] font-black uppercase text-blue-400 tracking-widest">Target Operativo</p>
-                                    <p class="text-sm font-bold text-white uppercase mt-1 leading-tight">${log.m1}</p>
+                                    <p class="text-[9px] font-black uppercase text-blue-400 tracking-widest leading-none">Target Operativo</p>
+                                    <p class="text-sm font-bold text-white uppercase mt-2 leading-tight">${log.m1}</p>
                                 </div>
                                 <div class="grid grid-cols-1 gap-2">
                                     ${log.stato === 'ATTESA' ? 
-                                        `<button onclick="window.confermaRicezione('${key}')" class="bg-blue-600 text-white font-black py-4 rounded-xl uppercase text-xs shadow-lg active:bg-blue-700">✅ Conferma Ricezione</button>` : 
+                                        `<button onclick="window.confermaRicezione('${key}')" class="bg-blue-600 text-white font-black py-4 rounded-xl uppercase text-xs shadow-lg active:scale-95">✅ Conferma Ricezione</button>` : 
                                         `<div class="flex flex-col gap-2">
-                                            <button onclick="window.openNavigator(${log.lat}, ${log.lng})" class="bg-emerald-600 text-white font-black py-4 rounded-xl uppercase text-xs flex items-center justify-center gap-2 shadow-lg active:bg-emerald-700">🗺️ Naviga verso Target</button>
-                                            <button onclick="window.confermaArrivo('${key}')" class="bg-red-600 text-white font-black py-4 rounded-xl uppercase text-[10px] shadow-lg active:bg-red-700">🏁 Conferma Arrivo sul Posto</button>
+                                            <button onclick="window.openNavigator(${log.lat}, ${log.lng})" class="bg-emerald-600 text-white font-black py-4 rounded-xl uppercase text-xs flex items-center justify-center gap-2 shadow-lg active:scale-95">🗺️ Naviga verso Target</button>
+                                            <button onclick="window.confermaArrivo('${key}')" class="bg-red-600 text-white font-black py-4 rounded-xl uppercase text-[10px] shadow-lg active:scale-95">🏁 Conferma Arrivo sul Posto</button>
                                         </div>`
                                     }
                                 </div>
@@ -174,19 +175,35 @@
                 stato: 'RICEVUTO',
                 m2: `✅ RICEVUTO ORE ${ora}` 
             });
-            Swal.fire({ icon: 'success', title: 'RICEVUTO', text: 'Navigazione Abilitata', timer: 1500, showConfirmButton: false, background: '#0f172a', color: '#fff' });
+            Swal.fire({ icon: 'success', title: 'RICEVUTO', text: 'Navigazione Abilitata', timer: 1000, showConfirmButton: false, background: '#0f172a', color: '#fff' });
         };
 
         window.confermaArrivo = async (key) => {
             const pos = await getGPS();
+            
+            // 1. Chiude il log del target (stato OK fa sparire il pulsante e la X su mappa sala)
             update(ref(db, `brogliaccio/${key}`), { stato: 'OK' });
-            update(ref(db, `anagrafica_squadre/${sqId}`), { lat: pos.lat, lng: pos.lng, stato: 'Intervento' });
+            
+            // 2. Sposta il pallino della squadra sulla mappa della sala istantaneamente
+            update(ref(db, `anagrafica_squadre/${sqId}`), { 
+                lat: pos.lat, 
+                lng: pos.lng, 
+                stato: 'Intervento' 
+            });
+
+            // 3. Genera un NUOVO log di arrivo marchiato come SQUADRA (dir: 'SQ')
             push(ref(db, 'brogliaccio'), {
                 ora: new Date().toLocaleTimeString('it-IT').slice(0,5),
                 data: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }).toUpperCase(),
-                squadra: sqId, m1: "🏁 POSIZIONE RAGGIUNTA - SQUADRA SUL POSTO", m2: "---",
-                lat: pos.lat, lng: pos.lng, dir: 'SQ', stato: 'ATTESA' 
+                squadra: sqId, 
+                m1: "🏁 POSIZIONE RAGGIUNTA - SQUADRA SUL POSTO", 
+                m2: "---",
+                lat: pos.lat, 
+                lng: pos.lng, 
+                dir: 'SQ', // <--- Fondamentale: Marchia come Squadra per la Sala
+                stato: 'ATTESA' 
             });
+
             Swal.fire({ icon: 'success', title: 'ARRIVATI', text: 'Sala Operativa Avvisata', background: '#0f172a', color: '#fff' });
         };
 
