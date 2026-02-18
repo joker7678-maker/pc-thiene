@@ -3,20 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - App Operatore V3.0</title>
+    <title>PC THIENE - App Operatore V3.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; touch-action: manipulation; overflow-x: hidden; }
-        
-        /* Switch GPS */
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 20px; }
         .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #10b981; }
         input:checked + .slider:before { transform: translateX(20px); }
-        
-        /* Animazione per Target in arrivo */
         @keyframes pulse-red {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); transform: scale(1); }
             50% { transform: scale(1.02); }
@@ -32,7 +28,7 @@
         <div class="w-full max-w-xs text-center">
             <h2 class="text-3xl font-black italic text-white mb-2 uppercase">PC <span class="text-blue-500">THIENE</span></h2>
             <input type="password" id="app-password" class="w-full bg-slate-800 border-2 border-slate-700 rounded-xl p-4 text-center text-2xl mb-4 text-white outline-none" placeholder="****" inputmode="numeric">
-            <button onclick="window.checkAppPassword()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest active:bg-blue-700">Sblocca App</button>
+            <button onclick="window.checkAppPassword()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase active:bg-blue-700">Sblocca App</button>
         </div>
     </div>
 
@@ -44,14 +40,17 @@
         <div class="flex items-center gap-2">
             <span class="text-[9px] font-black text-slate-400 uppercase">GPS</span>
             <label class="relative inline-block w-10 h-5">
-                <input type="checkbox" id="gps-toggle" checked class="opacity-0 w-0 h-0">
-                <span class="slider"></span>
+                <input type="checkbox" id="gps-toggle" checked class="opacity-0 w-0 h-0"><span class="slider"></span>
             </label>
         </div>
     </header>
 
-    <div id="target-area" class="mb-4 space-y-2 hidden">
-        </div>
+    <div id="last-msg-box" class="mb-4 p-3 bg-slate-800/50 border border-slate-700 rounded-xl hidden">
+        <p class="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-1">Ultimo comando dalla Sala:</p>
+        <p id="last-msg-text" class="text-xs font-bold text-white uppercase italic">Nessun messaggio recente</p>
+    </div>
+
+    <div id="target-area" class="mb-4 space-y-2 hidden"></div>
 
     <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 mb-4 text-center shadow-2xl">
         <div id="current-status" class="text-3xl font-black text-blue-500 italic mb-4 uppercase tracking-tighter">---</div>
@@ -89,8 +88,7 @@
         import { getDatabase, ref, push, onValue, update, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
         const cfg = { apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54", databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com" };
-        const app = initializeApp(cfg); 
-        const db = getDatabase(app);
+        const app = initializeApp(cfg); const db = getDatabase(app);
 
         const urlParams = new URLSearchParams(window.location.search);
         const sqId = (urlParams.get('id') || "SQUADRA_TEST").toUpperCase();
@@ -98,11 +96,9 @@
 
         let notifiedKeys = new Set();
 
-        // --- AUTH ---
         window.checkAppPassword = () => {
             if (document.getElementById('app-password').value === "2026") {
-                document.getElementById('login-overlay').classList.add('opacity-0');
-                setTimeout(() => document.getElementById('login-overlay').classList.add('hidden'), 300);
+                document.getElementById('login-overlay').classList.add('hidden');
                 sessionStorage.setItem('pc_auth', 'true');
             } else {
                 Swal.fire({ icon: 'error', title: 'Password Errata', timer: 1000, showConfirmButton: false });
@@ -110,35 +106,41 @@
         };
         if (sessionStorage.getItem('pc_auth') === 'true') document.getElementById('login-overlay').classList.add('hidden');
 
-        // --- CORE GPS ACQUISITION ---
         async function getGPS() {
             return new Promise((r) => {
                 if (!document.getElementById('gps-toggle').checked) r({ lat: '', lng: '' });
                 navigator.geolocation.getCurrentPosition(
                     p => r({ lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) }), 
-                    () => r({ lat: '', lng: '' }), 
-                    { timeout: 5000, enableHighAccuracy: true }
+                    () => r({ lat: '', lng: '' }), { timeout: 5000, enableHighAccuracy: true }
                 );
             });
         }
 
-        // --- MONITORAGGIO TARGET (VIBRAZIONE + GESTIONE STATI) ---
-        onValue(query(ref(db, 'brogliaccio'), limitToLast(5)), (snap) => {
+        // --- MONITORAGGIO LOG (VIBRAZIONE + TARGET + ULTIMO MESSAGGIO) ---
+        onValue(query(ref(db, 'brogliaccio'), limitToLast(10)), (snap) => {
             const data = snap.val();
             const targetArea = document.getElementById('target-area');
+            const lastMsgBox = document.getElementById('last-msg-box');
+            const lastMsgText = document.getElementById('last-msg-text');
             let foundActive = false;
             
             if (data) {
-                Object.entries(data).reverse().forEach(([key, log]) => {
-                    // Controlliamo se il log è diretto a noi ed è in uno stato operativo (ATTESA o RICEVUTO)
+                // Ordiniamo per trovare il più recente messaggio della sala per noi
+                const logsArray = Object.entries(data).reverse();
+                
+                // Cerchiamo l'ultimo messaggio inviato dalla sala a questa squadra
+                const lastSalaMsg = logsArray.find(([k, l]) => l.squadra === sqId && l.dir === 'SALA');
+                if(lastSalaMsg) {
+                    lastMsgBox.classList.remove('hidden');
+                    lastMsgText.innerText = lastSalaMsg[1].m1;
+                }
+
+                logsArray.forEach(([key, log]) => {
                     if (log.squadra === sqId && (log.stato === 'ATTESA' || log.stato === 'RICEVUTO') && log.lat) {
                         foundActive = true;
                         
-                        // VIBRAZIONE 5 VOLTE solo al primo arrivo (ATTESA)
                         if (log.stato === 'ATTESA' && !notifiedKeys.has(key)) {
-                            if ("vibrate" in navigator) {
-                                navigator.vibrate([500, 200, 500, 200, 500, 200, 500, 200, 500]);
-                            }
+                            if ("vibrate" in navigator) navigator.vibrate([500, 200, 500, 200, 500, 200, 500, 200, 500]);
                             notifiedKeys.add(key);
                         }
 
@@ -148,7 +150,6 @@
                                     <p class="text-[9px] font-black uppercase text-blue-400 tracking-widest">Target Operativo</p>
                                     <p class="text-sm font-bold text-white uppercase mt-1 leading-tight">${log.m1}</p>
                                 </div>
-                                
                                 <div class="grid grid-cols-1 gap-2">
                                     ${log.stato === 'ATTESA' ? 
                                         `<button onclick="window.confermaRicezione('${key}')" class="bg-blue-600 text-white font-black py-4 rounded-xl uppercase text-xs shadow-lg active:bg-blue-700">✅ Conferma Ricezione</button>` : 
@@ -163,52 +164,36 @@
                     }
                 });
             }
-            
             if (foundActive) targetArea.classList.remove('hidden');
             else targetArea.classList.add('hidden');
         });
 
-        // --- FUNZIONI RISPOSTA TARGET ---
         window.confermaRicezione = (key) => {
-            update(ref(db, `brogliaccio/${key}`), { stato: 'RICEVUTO' });
+            const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
+            update(ref(db, `brogliaccio/${key}`), { 
+                stato: 'RICEVUTO',
+                m2: `✅ RICEVUTO ORE ${ora}` 
+            });
             Swal.fire({ icon: 'success', title: 'RICEVUTO', text: 'Navigazione Abilitata', timer: 1500, showConfirmButton: false, background: '#0f172a', color: '#fff' });
         };
 
         window.confermaArrivo = async (key) => {
             const pos = await getGPS();
-            
-            // 1. Chiude il log del target (fa sparire la X in sala)
             update(ref(db, `brogliaccio/${key}`), { stato: 'OK' });
-            
-            // 2. Sposta il pallino della squadra sulla mappa della sala
-            update(ref(db, `anagrafica_squadre/${sqId}`), { 
-                lat: pos.lat, 
-                lng: pos.lng,
-                stato: 'Intervento'
-            });
-
-            // 3. Genera un nuovo log automatico di arrivo
+            update(ref(db, `anagrafica_squadre/${sqId}`), { lat: pos.lat, lng: pos.lng, stato: 'Intervento' });
             push(ref(db, 'brogliaccio'), {
                 ora: new Date().toLocaleTimeString('it-IT').slice(0,5),
                 data: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }).toUpperCase(),
-                squadra: sqId,
-                m1: "🏁 POSIZIONE RAGGIUNTA - SQUADRA SUL POSTO",
-                m2: "---",
-                lat: pos.lat,
-                lng: pos.lng,
-                dir: 'SQ',
-                stato: 'ATTESA' // Lampeggia in sala per avvisare dell'arrivo
+                squadra: sqId, m1: "🏁 POSIZIONE RAGGIUNTA - SQUADRA SUL POSTO", m2: "---",
+                lat: pos.lat, lng: pos.lng, dir: 'SQ', stato: 'ATTESA' 
             });
-
             Swal.fire({ icon: 'success', title: 'ARRIVATI', text: 'Sala Operativa Avvisata', background: '#0f172a', color: '#fff' });
         };
 
         window.openNavigator = (lat, lng) => {
-            // Apre Google Maps direttamente in modalità navigazione driving
             window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank');
         };
 
-        // --- FUNZIONI OPERATIVE STANDARD ---
         window.confirmStatus = (v, l) => {
             Swal.fire({ title: 'CONFERMI STATO?', text: l, showCancelButton: true, background: '#0f172a', color: '#fff' }).then(async r => {
                 if(r.isConfirmed) {
@@ -279,9 +264,7 @@
                     };
                 };
                 mediaRecorder.start(); document.getElementById('rec-dot').classList.remove('hidden');
-            } else {
-                mediaRecorder.stop(); document.getElementById('rec-dot').classList.add('hidden');
-            }
+            } else { mediaRecorder.stop(); document.getElementById('rec-dot').classList.add('hidden'); }
         };
     </script>
 </body>
