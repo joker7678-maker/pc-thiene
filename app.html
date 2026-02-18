@@ -3,16 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - App Operatore V3.2</title>
+    <title>PC THIENE - App Operatore V3.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; touch-action: manipulation; overflow-x: hidden; }
+        
+        /* Switch Animato GPS */
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 20px; }
         .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #10b981; }
         input:checked + .slider:before { transform: translateX(20px); }
+        
+        /* Pulse Allarme Rosso */
         @keyframes pulse-red {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); transform: scale(1); }
             50% { transform: scale(1.02); }
@@ -28,14 +32,14 @@
         <div class="w-full max-w-xs text-center">
             <h2 class="text-3xl font-black italic text-white mb-2 uppercase">PC <span class="text-blue-500">THIENE</span></h2>
             <input type="password" id="app-password" class="w-full bg-slate-800 border-2 border-slate-700 rounded-xl p-4 text-center text-2xl mb-4 text-white outline-none" placeholder="****" inputmode="numeric">
-            <button onclick="window.checkAppPassword()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase active:bg-blue-700">Sblocca App</button>
+            <button onclick="window.checkAppPassword()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest active:bg-blue-700">Sblocca App</button>
         </div>
     </div>
 
     <header class="flex justify-between items-center mb-4">
         <div>
             <h1 class="text-xl font-black italic text-white leading-none">PC <span class="text-blue-500">THIENE</span></h1>
-            <p id="sq-name" class="text-blue-400 font-black text-xl uppercase mt-1 italic tracking-tight">SQUADRA...</p>
+            <p id="sq-name" class="text-blue-400 font-black text-xl uppercase mt-1 italic tracking-tight italic">SQUADRA...</p>
         </div>
         <div class="flex items-center gap-2">
             <span class="text-[9px] font-black text-slate-400 uppercase">GPS</span>
@@ -46,7 +50,7 @@
     </header>
 
     <div id="last-msg-box" class="mb-4 p-3 bg-slate-800/50 border border-slate-700 rounded-xl hidden">
-        <p class="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-1">Ultimo comando dalla Sala:</p>
+        <p class="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-1">Ultima comunicazione:</p>
         <div id="last-msg-text" class="text-xs font-bold text-white uppercase italic leading-tight">Nessun messaggio recente</div>
     </div>
 
@@ -116,7 +120,7 @@
             });
         }
 
-        // --- MONITORAGGIO LOG (VIBRAZIONE + TARGET) ---
+        // --- MONITORAGGIO LOG (FILTRATO PER DIREZIONE) ---
         onValue(query(ref(db, 'brogliaccio'), limitToLast(10)), (snap) => {
             const data = snap.val();
             const targetArea = document.getElementById('target-area');
@@ -127,28 +131,31 @@
             if (data) {
                 const logsArray = Object.entries(data).reverse();
                 
-                // Mostra l'ultimo messaggio inviato dalla sala a questa squadra (qualsiasi stato)
+                // 1. Mostra sempre l'ultima cosa detta dalla SALA
                 const lastSalaMsg = logsArray.find(([k, l]) => l.squadra === sqId && l.dir === 'SA');
                 if(lastSalaMsg) {
                     lastMsgBox.classList.remove('hidden');
                     lastMsgText.innerText = lastSalaMsg[1].m1;
                 }
 
+                // 2. Gestione Pulsanti Navigazione (Solo se dir è 'SA')
                 logsArray.forEach(([key, log]) => {
-                    // Target attivo solo se lo stato è ATTESA o RICEVUTO
-                    if (log.squadra === sqId && (log.stato === 'ATTESA' || log.stato === 'RICEVUTO') && log.lat) {
+                    if (log.squadra === sqId && 
+                        (log.stato === 'ATTESA' || log.stato === 'RICEVUTO') && 
+                        log.lat && 
+                        log.dir === 'SA') { // <--- FILTRO FONDAMENTALE
+                        
                         foundActive = true;
                         
-                        // Vibra 5 volte solo al primissimo arrivo
                         if (log.stato === 'ATTESA' && !notifiedKeys.has(key)) {
-                            if ("vibrate" in navigator) navigator.vibrate([500, 200, 500, 200, 500, 200, 500, 200, 500]);
+                            if ("vibrate" in navigator) navigator.vibrate([500, 200, 500, 200, 500, 200, 500]);
                             notifiedKeys.add(key);
                         }
 
                         targetArea.innerHTML = `
                             <div class="p-4 rounded-2xl bg-slate-900 border-2 ${log.stato === 'ATTESA' ? 'pulse-warning bg-red-900/20' : 'border-blue-500 bg-blue-900/10'} flex flex-col gap-3">
                                 <div class="text-center">
-                                    <p class="text-[9px] font-black uppercase text-blue-400 tracking-widest leading-none">Target Operativo</p>
+                                    <p class="text-[9px] font-black uppercase text-blue-400 tracking-widest leading-none">Nuova Destinazione</p>
                                     <p class="text-sm font-bold text-white uppercase mt-2 leading-tight">${log.m1}</p>
                                 </div>
                                 <div class="grid grid-cols-1 gap-2">
@@ -181,17 +188,17 @@
         window.confermaArrivo = async (key) => {
             const pos = await getGPS();
             
-            // 1. Chiude il log del target (stato OK fa sparire il pulsante e la X su mappa sala)
+            // 1. Chiude il log del target inviato dalla Sala
             update(ref(db, `brogliaccio/${key}`), { stato: 'OK' });
             
-            // 2. Sposta il pallino della squadra sulla mappa della sala istantaneamente
+            // 2. Sposta il pallino Squadra su mappa sala
             update(ref(db, `anagrafica_squadre/${sqId}`), { 
                 lat: pos.lat, 
                 lng: pos.lng, 
                 stato: 'Intervento' 
             });
 
-            // 3. Genera un NUOVO log di arrivo marchiato come SQUADRA (dir: 'SQ')
+            // 3. Genera log di conferma arrivo (dir: SQ -> l'app lo ignora nel box target)
             push(ref(db, 'brogliaccio'), {
                 ora: new Date().toLocaleTimeString('it-IT').slice(0,5),
                 data: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }).toUpperCase(),
@@ -200,7 +207,7 @@
                 m2: "---",
                 lat: pos.lat, 
                 lng: pos.lng, 
-                dir: 'SQ', // <--- Fondamentale: Marchia come Squadra per la Sala
+                dir: 'SQ', 
                 stato: 'ATTESA' 
             });
 
