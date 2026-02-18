@@ -8,27 +8,31 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; touch-action: manipulation; }
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; touch-action: manipulation; overflow-x: hidden; }
+        
+        /* Switch GPS */
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 20px; }
         .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #10b981; }
         input:checked + .slider:before { transform: translateX(20px); }
         
+        /* Animazione per Target in arrivo */
         @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); transform: scale(1); }
+            50% { transform: scale(1.02); }
             70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); transform: scale(1); }
         }
         .pulse-warning { animation: pulse-red 1.5s infinite; border: 2px solid #ef4444; }
     </style>
 </head>
 <body class="p-4 pb-10">
 
-    <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-900 flex flex-col items-center justify-center p-6">
+    <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-900 flex flex-col items-center justify-center p-6 transition-opacity duration-300">
         <div class="w-full max-w-xs text-center">
             <h2 class="text-3xl font-black italic text-white mb-2 uppercase">PC <span class="text-blue-500">THIENE</span></h2>
             <input type="password" id="app-password" class="w-full bg-slate-800 border-2 border-slate-700 rounded-xl p-4 text-center text-2xl mb-4 text-white outline-none" placeholder="****" inputmode="numeric">
-            <button onclick="window.checkAppPassword()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase active:bg-blue-700">Sblocca App</button>
+            <button onclick="window.checkAppPassword()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest active:bg-blue-700">Sblocca App</button>
         </div>
     </div>
 
@@ -39,7 +43,7 @@
         </div>
         <div class="flex items-center gap-2">
             <span class="text-[9px] font-black text-slate-400 uppercase">GPS</span>
-            <label class="relative inline-block width-[40px] height-[20px] w-10 h-5">
+            <label class="relative inline-block w-10 h-5">
                 <input type="checkbox" id="gps-toggle" checked class="opacity-0 w-0 h-0">
                 <span class="slider"></span>
             </label>
@@ -50,7 +54,7 @@
         </div>
 
     <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 mb-4 text-center shadow-2xl">
-        <div id="current-status" class="text-3xl font-black text-blue-500 italic mb-4 uppercase">---</div>
+        <div id="current-status" class="text-3xl font-black text-blue-500 italic mb-4 uppercase tracking-tighter">---</div>
         <div class="grid grid-cols-2 gap-2">
             <button onclick="window.confirmStatus('Sede', '🏠 In Sede')" class="bg-slate-700 text-white font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🏠 In Sede</button>
             <button onclick="window.confirmStatus('Uscita', '🚚 Uscita')" class="bg-amber-500 text-black font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🚚 Uscita</button>
@@ -75,7 +79,7 @@
 
     <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 shadow-xl">
         <textarea id="msg-text" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 font-bold text-white mb-2 h-20 outline-none focus:border-blue-500 uppercase" placeholder="Messaggio alla sala..."></textarea>
-        <button onclick="window.sendTextLog()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg active:scale-95">Invia Messaggio</button>
+        <button onclick="window.sendTextLog()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg active:scale-95 text-sm">Invia Messaggio</button>
     </div>
 
     <footer class="text-center opacity-30 mt-6 pb-6"><p class="text-[11px] font-black italic uppercase">JoKART 2026</p></footer>
@@ -85,18 +89,20 @@
         import { getDatabase, ref, push, onValue, update, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
         const cfg = { apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54", databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com" };
-        const app = initializeApp(cfg); const db = getDatabase(app);
+        const app = initializeApp(cfg); 
+        const db = getDatabase(app);
 
         const urlParams = new URLSearchParams(window.location.search);
-        const sqId = urlParams.get('id') || "SQUADRA_TEST";
+        const sqId = (urlParams.get('id') || "SQUADRA_TEST").toUpperCase();
         document.getElementById('sq-name').innerText = "SQUADRA: " + sqId;
 
         let notifiedKeys = new Set();
 
-        // --- LOGIN ---
+        // --- AUTH ---
         window.checkAppPassword = () => {
             if (document.getElementById('app-password').value === "2026") {
-                document.getElementById('login-overlay').classList.add('hidden');
+                document.getElementById('login-overlay').classList.add('opacity-0');
+                setTimeout(() => document.getElementById('login-overlay').classList.add('hidden'), 300);
                 sessionStorage.setItem('pc_auth', 'true');
             } else {
                 Swal.fire({ icon: 'error', title: 'Password Errata', timer: 1000, showConfirmButton: false });
@@ -104,41 +110,51 @@
         };
         if (sessionStorage.getItem('pc_auth') === 'true') document.getElementById('login-overlay').classList.add('hidden');
 
-        // --- MONITORAGGIO TARGET E VIBRAZIONE ---
+        // --- CORE GPS ACQUISITION ---
+        async function getGPS() {
+            return new Promise((r) => {
+                if (!document.getElementById('gps-toggle').checked) r({ lat: '', lng: '' });
+                navigator.geolocation.getCurrentPosition(
+                    p => r({ lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) }), 
+                    () => r({ lat: '', lng: '' }), 
+                    { timeout: 5000, enableHighAccuracy: true }
+                );
+            });
+        }
+
+        // --- MONITORAGGIO TARGET (VIBRAZIONE + GESTIONE STATI) ---
         onValue(query(ref(db, 'brogliaccio'), limitToLast(5)), (snap) => {
             const data = snap.val();
             const targetArea = document.getElementById('target-area');
-            let hasActiveTarget = false;
+            let foundActive = false;
             
             if (data) {
-                Object.entries(data).forEach(([key, log]) => {
-                    // SE IL LOG È PER NOI E NON È ANCORA STATO COMPLETATO (ATTESA o RICEVUTO)
+                Object.entries(data).reverse().forEach(([key, log]) => {
+                    // Controlliamo se il log è diretto a noi ed è in uno stato operativo (ATTESA o RICEVUTO)
                     if (log.squadra === sqId && (log.stato === 'ATTESA' || log.stato === 'RICEVUTO') && log.lat) {
-                        hasActiveTarget = true;
+                        foundActive = true;
                         
-                        // VIBRAZIONE 5 VOLTE (solo se è proprio nuovo 'ATTESA' e non lo abbiamo già notificato)
+                        // VIBRAZIONE 5 VOLTE solo al primo arrivo (ATTESA)
                         if (log.stato === 'ATTESA' && !notifiedKeys.has(key)) {
                             if ("vibrate" in navigator) {
-                                // Vibra 5 volte: 500ms on, 200ms off
                                 navigator.vibrate([500, 200, 500, 200, 500, 200, 500, 200, 500]);
                             }
                             notifiedKeys.add(key);
                         }
 
-                        // COSTRUZIONE AREA TARGET
                         targetArea.innerHTML = `
-                            <div class="p-4 rounded-2xl bg-slate-900 border-2 ${log.stato === 'ATTESA' ? 'pulse-warning bg-red-900/20' : 'border-blue-500'} flex flex-col gap-3">
+                            <div class="p-4 rounded-2xl bg-slate-900 border-2 ${log.stato === 'ATTESA' ? 'pulse-warning bg-red-900/20' : 'border-blue-500 bg-blue-900/10'} flex flex-col gap-3">
                                 <div class="text-center">
-                                    <p class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Nuova Destinazione</p>
-                                    <p class="text-sm font-bold text-white uppercase mt-1">${log.m1}</p>
+                                    <p class="text-[9px] font-black uppercase text-blue-400 tracking-widest">Target Operativo</p>
+                                    <p class="text-sm font-bold text-white uppercase mt-1 leading-tight">${log.m1}</p>
                                 </div>
                                 
                                 <div class="grid grid-cols-1 gap-2">
                                     ${log.stato === 'ATTESA' ? 
-                                        `<button onclick="window.confermaRicezione('${key}')" class="bg-blue-600 text-white font-black py-3 rounded-xl uppercase text-xs">✅ Conferma Ricezione</button>` : 
+                                        `<button onclick="window.confermaRicezione('${key}')" class="bg-blue-600 text-white font-black py-4 rounded-xl uppercase text-xs shadow-lg active:bg-blue-700">✅ Conferma Ricezione</button>` : 
                                         `<div class="flex flex-col gap-2">
-                                            <button onclick="window.openNavigator(${log.lat}, ${log.lng})" class="bg-emerald-600 text-white font-black py-3 rounded-xl uppercase text-xs flex items-center justify-center gap-2">🗺️ Avvia Navigatore</button>
-                                            <button onclick="window.confermaArrivo('${key}')" class="bg-red-600 text-white font-black py-3 rounded-xl uppercase text-xs">🏁 Conferma Arrivo sul Posto</button>
+                                            <button onclick="window.openNavigator(${log.lat}, ${log.lng})" class="bg-emerald-600 text-white font-black py-4 rounded-xl uppercase text-xs flex items-center justify-center gap-2 shadow-lg active:bg-emerald-700">🗺️ Naviga verso Target</button>
+                                            <button onclick="window.confermaArrivo('${key}')" class="bg-red-600 text-white font-black py-4 rounded-xl uppercase text-[10px] shadow-lg active:bg-red-700">🏁 Conferma Arrivo sul Posto</button>
                                         </div>`
                                     }
                                 </div>
@@ -148,60 +164,60 @@
                 });
             }
             
-            if (hasActiveTarget) targetArea.classList.remove('hidden');
+            if (foundActive) targetArea.classList.remove('hidden');
             else targetArea.classList.add('hidden');
         });
 
+        // --- FUNZIONI RISPOSTA TARGET ---
         window.confermaRicezione = (key) => {
             update(ref(db, `brogliaccio/${key}`), { stato: 'RICEVUTO' });
-            Swal.fire({ icon: 'success', title: 'RICEVUTO', text: 'Navigatore abilitato', timer: 1500, showConfirmButton: false, background: '#1e293b', color: '#fff' });
+            Swal.fire({ icon: 'success', title: 'RICEVUTO', text: 'Navigazione Abilitata', timer: 1500, showConfirmButton: false, background: '#0f172a', color: '#fff' });
         };
 
-        window.confermaArrivo = (key) => {
-            // 1. Chiude il log precedente (toglie cerchio con X)
+        window.confermaArrivo = async (key) => {
+            const pos = await getGPS();
+            
+            // 1. Chiude il log del target (fa sparire la X in sala)
             update(ref(db, `brogliaccio/${key}`), { stato: 'OK' });
             
-            // 2. Invia nuovo log di conferma arrivo
+            // 2. Sposta il pallino della squadra sulla mappa della sala
+            update(ref(db, `anagrafica_squadre/${sqId}`), { 
+                lat: pos.lat, 
+                lng: pos.lng,
+                stato: 'Intervento'
+            });
+
+            // 3. Genera un nuovo log automatico di arrivo
             push(ref(db, 'brogliaccio'), {
                 ora: new Date().toLocaleTimeString('it-IT').slice(0,5),
                 data: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }).toUpperCase(),
                 squadra: sqId,
                 m1: "🏁 POSIZIONE RAGGIUNTA - SQUADRA SUL POSTO",
                 m2: "---",
+                lat: pos.lat,
+                lng: pos.lng,
                 dir: 'SQ',
-                stato: 'ATTESA' // In attesa per la sala
+                stato: 'ATTESA' // Lampeggia in sala per avvisare dell'arrivo
             });
-            
-            Swal.fire({ icon: 'success', title: 'ARRIVATI', text: 'Sala Operativa Avvisata', background: '#1e293b', color: '#fff' });
+
+            Swal.fire({ icon: 'success', title: 'ARRIVATI', text: 'Sala Operativa Avvisata', background: '#0f172a', color: '#fff' });
         };
 
         window.openNavigator = (lat, lng) => {
+            // Apre Google Maps direttamente in modalità navigazione driving
             window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank');
         };
 
-        // --- GPS CORE ---
-        async function getGPS() {
-            return new Promise((r) => {
-                if (!document.getElementById('gps-toggle').checked) r({ lat: '', lng: '' });
-                navigator.geolocation.getCurrentPosition(
-                    p => r({ lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) }), 
-                    () => r({ lat: '', lng: '' }), { timeout: 5000, enableHighAccuracy: true }
-                );
-            });
-        }
-
+        // --- FUNZIONI OPERATIVE STANDARD ---
         window.confirmStatus = (v, l) => {
-            Swal.fire({ title: 'CONFERMI?', text: l, showCancelButton: true, background: '#1e293b', color: '#fff' }).then(async r => {
+            Swal.fire({ title: 'CONFERMI STATO?', text: l, showCancelButton: true, background: '#0f172a', color: '#fff' }).then(async r => {
                 if(r.isConfirmed) {
                     const p = await getGPS();
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: v, lat: p.lat, lng: p.lng });
                     push(ref(db, 'brogliaccio'), { 
                         ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
                         data: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }).toUpperCase(),
-                        squadra: sqId, 
-                        m1: `STATO: ${v.toUpperCase()}`, 
-                        lat: p.lat, lng: p.lng, 
-                        dir: 'SQ', stato:'OK' 
+                        squadra: sqId, m1: `STATO: ${v.toUpperCase()}`, lat: p.lat, lng: p.lng, dir: 'SQ', stato:'OK' 
                     });
                 }
             });
@@ -232,7 +248,7 @@
         window.handleImage = (f) => {
             if(!f) return; const r = new FileReader(); r.readAsDataURL(f);
             r.onload = (e) => {
-                Swal.fire({ title: 'INVIARE FOTO?', imageUrl: e.target.result, showCancelButton: true, background: '#1e293b', color: '#fff' }).then(async r => {
+                Swal.fire({ title: 'INVIARE FOTO?', imageUrl: e.target.result, showCancelButton: true, background: '#0f172a', color: '#fff' }).then(async r => {
                     if(r.isConfirmed) {
                         const p = await getGPS();
                         push(ref(db, 'brogliaccio'), { 
