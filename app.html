@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - App Operatore V3.6</title>
+    <title>PC THIENE - App Operatore V3.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -23,7 +23,6 @@
         }
         .pulse-warning { animation: pulse-red 1.5s infinite; border: 2px solid #ef4444; }
 
-        /* Lo stato iniziale è nascosto per sicurezza */
         #main-app-container { display: none; }
         #inhibition-overlay { display: none; }
     </style>
@@ -32,14 +31,14 @@
 
     <div id="inhibition-overlay" class="fixed inset-0 z-[10000] bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
         <div class="text-6xl mb-4">🚫</div>
-        <h2 class="text-2xl font-black text-white uppercase">App Inibita</h2>
+        <h2 class="text-2xl font-black text-white uppercase tracking-tighter">App Inibita</h2>
         <p class="text-red-500 font-bold mt-2 uppercase text-xs">Accesso disattivato dalla Sala Operativa</p>
-        <p class="text-slate-400 text-[10px] mt-6 uppercase tracking-widest border-t border-slate-800 pt-4">Contattare la base via radio</p>
+        <p class="text-slate-400 text-[10px] mt-8 uppercase tracking-widest border-t border-slate-800 pt-4 w-40 mx-auto">Contattare la base via radio</p>
     </div>
 
     <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-900 flex flex-col items-center justify-center p-6">
         <div class="w-full max-w-xs text-center">
-            <h2 class="text-3xl font-black italic text-white mb-2 uppercase tracking-tighter text-blue-500">PC THIENE</h2>
+            <h2 class="text-3xl font-black italic text-white mb-2 uppercase tracking-tighter text-blue-500 leading-none">PC THIENE</h2>
             <p class="text-slate-400 text-[10px] font-bold uppercase mb-8 tracking-widest">Accesso Operatore</p>
             <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-2xl">
                 <input type="password" id="app-password" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-4 text-center text-3xl mb-6 text-white outline-none focus:border-blue-500" placeholder="••••" inputmode="numeric">
@@ -51,7 +50,7 @@
     <div id="main-app-container">
         <header class="flex justify-between items-center mb-4">
             <div>
-                <h1 class="text-xl font-black italic text-white leading-none">PC <span class="text-blue-500">THIENE</span></h1>
+                <h1 class="text-xl font-black italic text-white leading-none tracking-tighter">PC <span class="text-blue-500">THIENE</span></h1>
                 <p id="sq-name" class="text-blue-400 font-black text-xl uppercase mt-1 italic tracking-tight">SQUADRA...</p>
             </div>
             <div class="flex items-center gap-2">
@@ -63,7 +62,7 @@
         </header>
 
         <div id="last-msg-box" class="mb-4 p-3 bg-slate-800/50 border border-slate-700 rounded-xl hidden">
-            <p class="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-1">Ultima comunicazione:</p>
+            <p class="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-1">Dalla Sala Operativa:</p>
             <div id="last-msg-text" class="text-xs font-bold text-white uppercase italic leading-tight">---</div>
         </div>
 
@@ -94,8 +93,8 @@
         </div>
 
         <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 shadow-xl">
-            <textarea id="msg-text" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 font-bold text-white mb-2 h-20 outline-none uppercase" placeholder="Messaggio..."></textarea>
-            <button onclick="window.sendTextLog()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg active:scale-95">Invia</button>
+            <textarea id="msg-text" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 font-bold text-white mb-2 h-20 outline-none uppercase" placeholder="Messaggio per la sala..."></textarea>
+            <button onclick="window.sendTextLog()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg active:scale-95">Invia Messaggio</button>
         </div>
         
         <footer class="text-center opacity-30 mt-6 pb-6"><p class="text-[11px] font-black italic uppercase">JoKART 2026</p></footer>
@@ -112,29 +111,27 @@
         const sqId = (urlParams.get('id') || "SQUADRA_TEST").toUpperCase();
         document.getElementById('sq-name').innerText = "SQUADRA: " + sqId;
 
-        // --- 1. CONTROLLO INIBIZIONE REMOTA (MASTER SWITCH) ---
+        // --- 1. CONTROLLO MASTER SWITCH (SALA) ---
         onValue(ref(db, `anagrafica_squadre/${sqId}`), (snapshot) => {
             const data = snapshot.val();
             const isInhibited = !data || data.attiva === false;
-            
             if (isInhibited) {
                 document.getElementById('inhibition-overlay').style.display = 'flex';
                 document.getElementById('main-app-container').style.display = 'none';
                 document.getElementById('login-overlay').style.display = 'none';
             } else {
                 document.getElementById('inhibition-overlay').style.display = 'none';
-                // Solo se non è inibita, controlla la password
                 checkAuthStatus();
             }
         });
 
-        // --- 2. CONTROLLO PASSWORD ---
+        // --- 2. CONTROLLO LOGIN ---
         window.checkAppPassword = () => {
             if (document.getElementById('app-password').value === "2026") {
                 sessionStorage.setItem('pc_auth_v3', 'true');
                 checkAuthStatus();
             } else {
-                Swal.fire({ icon: 'error', title: 'Password Errata', timer: 1000, showConfirmButton: false });
+                Swal.fire({ icon: 'error', title: 'ERRORE', text: 'Password errata', timer: 1000, showConfirmButton: false });
             }
         };
 
@@ -178,12 +175,12 @@
                     if (log.squadra === sqId && (log.stato === 'ATTESA' || log.stato === 'RICEVUTO') && log.lat && log.dir === 'SA') {
                         foundActive = true;
                         if (log.stato === 'ATTESA' && !notifiedKeys.has(key)) {
-                            if ("vibrate" in navigator) navigator.vibrate([500, 200, 500]);
+                            if ("vibrate" in navigator) navigator.vibrate([500, 200, 500, 200, 500]);
                             notifiedKeys.add(key);
                         }
                         targetArea.innerHTML = `
                             <div class="p-4 rounded-2xl bg-slate-900 border-2 ${log.stato === 'ATTESA' ? 'pulse-warning bg-red-900/20' : 'border-blue-500 bg-blue-900/10'}">
-                                <p class="text-[9px] font-black uppercase text-blue-400 text-center">Destinazione</p>
+                                <p class="text-[9px] font-black uppercase text-blue-400 text-center">Nuovo Target</p>
                                 <p class="text-sm font-bold text-center uppercase my-2 leading-tight">${log.m1}</p>
                                 ${log.stato === 'ATTESA' ? 
                                     `<button onclick="window.confermaRicezione('${key}')" class="w-full bg-blue-600 font-black py-4 rounded-xl uppercase text-xs">✅ Ricevuto</button>` : 
@@ -199,8 +196,13 @@
             targetArea.classList.toggle('hidden', !foundActive);
         });
 
+        // --- FUNZIONI DI INVIO (TUTTE CON STATO ATTESA) ---
+
         window.confermaRicezione = (key) => {
-            update(ref(db, `brogliaccio/${key}`), { stato: 'RICEVUTO', m2: `✅ RICEVUTO ORE ${new Date().toLocaleTimeString('it-IT').slice(0,5)}` });
+            update(ref(db, `brogliaccio/${key}`), { 
+                stato: 'RICEVUTO', 
+                m2: `✅ RICEVUTO ORE ${new Date().toLocaleTimeString('it-IT').slice(0,5)}` 
+            });
         };
 
         window.confermaArrivo = async (key) => {
@@ -212,25 +214,7 @@
                 data: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }).toUpperCase(),
                 squadra: sqId, m1: "🏁 POSIZIONE RAGGIUNTA", dir: 'SQ', stato: 'ATTESA', lat: pos.lat, lng: pos.lng
             });
-            Swal.fire({ icon:'success', title: 'ARRIVATI', background: '#0f172a', color: '#fff' });
-        };
-
-        window.openNavigator = (lat, lng) => {
-            window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
-        };
-
-        window.confirmStatus = (v, l) => {
-            Swal.fire({ title: 'CONFERMI?', text: l, showCancelButton: true, background: '#0f172a', color: '#fff' }).then(async r => {
-                if(r.isConfirmed) {
-                    const p = await getGPS();
-                    update(ref(db, `anagrafica_squadre/${sqId}`), { stato: v, lat: p.lat, lng: p.lng });
-                    push(ref(db, 'brogliaccio'), { 
-                        ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
-                        data: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }).toUpperCase(),
-                        squadra: sqId, m1: `STATO: ${v.toUpperCase()}`, lat: p.lat, lng: p.lng, dir: 'SQ', stato:'OK' 
-                    });
-                }
-            });
+            Swal.fire({ icon:'success', title: 'SUL POSTO', background: '#0f172a', color: '#fff' });
         };
 
         window.sendGPSOnly = async () => {
@@ -238,7 +222,7 @@
             push(ref(db, 'brogliaccio'), { 
                 ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
                 data: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }).toUpperCase(),
-                squadra: sqId, m1: "📍 AGGIORNAMENTO POSIZIONE", lat: p.lat, lng: p.lng, dir: 'SQ', stato:'OK' 
+                squadra: sqId, m1: "📍 AGGIORNAMENTO POSIZIONE", lat: p.lat, lng: p.lng, dir: 'SQ', stato: 'ATTESA' 
             });
             Swal.fire({ icon:'success', title: 'GPS INVIATO', timer: 1000, showConfirmButton: false });
         };
@@ -249,7 +233,7 @@
             push(ref(db, 'brogliaccio'), { 
                 ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
                 data: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }).toUpperCase(),
-                squadra: sqId, m1: t.toUpperCase(), lat: p.lat, lng: p.lng, dir: 'SQ', stato:'OK' 
+                squadra: sqId, m1: t.toUpperCase(), lat: p.lat, lng: p.lng, dir: 'SQ', stato: 'ATTESA' 
             });
             document.getElementById('msg-text').value = "";
             Swal.fire({ icon:'success', title: 'INVIATO', timer: 1000, showConfirmButton: false });
@@ -264,7 +248,7 @@
                         push(ref(db, 'brogliaccio'), { 
                             ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
                             data: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }).toUpperCase(),
-                            squadra: sqId, m1: "📷 FOTO", mediaUrl: e.target.result, mediaType: 'IMG', lat: p.lat, lng: p.lng, dir: 'SQ', stato:'OK' 
+                            squadra: sqId, m1: "📷 FOTO", mediaUrl: e.target.result, mediaType: 'IMG', lat: p.lat, lng: p.lng, dir: 'SQ', stato: 'ATTESA' 
                         });
                     }
                 });
@@ -284,12 +268,30 @@
                         push(ref(db, 'brogliaccio'), { 
                             ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
                             data: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }).toUpperCase(),
-                            squadra: sqId, m1: "🎤 VOCALE", mediaUrl: r.result, mediaType: 'AUDIO', lat: p.lat, lng: p.lng, dir: 'SQ', stato:'OK' 
+                            squadra: sqId, m1: "🎤 VOCALE", mediaUrl: r.result, mediaType: 'AUDIO', lat: p.lat, lng: p.lng, dir: 'SQ', stato: 'ATTESA' 
                         });
                     };
                 };
                 mediaRecorder.start(); document.getElementById('rec-dot').classList.remove('hidden');
             } else { mediaRecorder.stop(); document.getElementById('rec-dot').classList.add('hidden'); }
+        };
+
+        window.openNavigator = (lat, lng) => {
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+        };
+
+        window.confirmStatus = (v, l) => {
+            Swal.fire({ title: 'CONFERMI?', text: l, showCancelButton: true, background: '#0f172a', color: '#fff' }).then(async r => {
+                if(r.isConfirmed) {
+                    const p = await getGPS();
+                    update(ref(db, `anagrafica_squadre/${sqId}`), { stato: v, lat: p.lat, lng: p.lng });
+                    push(ref(db, 'brogliaccio'), { 
+                        ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
+                        data: new Date().toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }).toUpperCase(),
+                        squadra: sqId, m1: `STATO: ${v.toUpperCase()}`, lat: p.lat, lng: p.lng, dir: 'SQ', stato: 'ATTESA' 
+                    });
+                }
+            });
         };
     </script>
 </body>
