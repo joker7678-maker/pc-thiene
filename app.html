@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - App Operatore V3.7</title>
+    <title>PC THIENE - App Operatore V3.8</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -61,9 +61,12 @@
             </div>
         </header>
 
-        <div id="last-msg-box" class="mb-4 p-3 bg-slate-800/50 border border-slate-700 rounded-xl hidden">
-            <p class="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-1">Dalla Sala Operativa:</p>
-            <div id="last-msg-text" class="text-xs font-bold text-white uppercase italic leading-tight">---</div>
+        <div id="last-msg-box" class="mb-4 p-4 bg-blue-950/30 border-2 border-blue-500/50 rounded-2xl hidden">
+            <div class="flex justify-between items-center mb-1">
+                <p class="text-[8px] font-black text-blue-400 uppercase tracking-widest">Dalla Sala Operativa</p>
+                <p id="last-msg-time" class="text-[8px] font-bold text-slate-500">--:--</p>
+            </div>
+            <div id="last-msg-text" class="text-sm font-bold text-white uppercase italic leading-tight">---</div>
         </div>
 
         <div id="target-area" class="mb-4 space-y-2 hidden"></div>
@@ -111,7 +114,7 @@
         const sqId = (urlParams.get('id') || "SQUADRA_TEST").toUpperCase();
         document.getElementById('sq-name').innerText = "SQUADRA: " + sqId;
 
-        // --- 1. CONTROLLO MASTER SWITCH (SALA) ---
+        // --- 1. CONTROLLO MASTER SWITCH ---
         onValue(ref(db, `anagrafica_squadre/${sqId}`), (snapshot) => {
             const data = snapshot.val();
             const isInhibited = !data || data.attiva === false;
@@ -155,32 +158,37 @@
             });
         }
 
-        // --- MONITORAGGIO MESSAGGI ---
+        // --- MONITORAGGIO MESSAGGI E RISPOSTE SALA ---
         let notifiedKeys = new Set();
-        onValue(query(ref(db, 'brogliaccio'), limitToLast(10)), (snap) => {
+        onValue(query(ref(db, 'brogliaccio'), limitToLast(15)), (snap) => {
             const data = snap.val();
             const targetArea = document.getElementById('target-area');
             const lastMsgBox = document.getElementById('last-msg-box');
-            let foundActive = false;
+            let foundTarget = false;
             
             if (data) {
                 const logsArray = Object.entries(data).reverse();
+
+                // TROVA L'ULTIMO MESSAGGIO DALLA SALA PER QUESTA SQUADRA (QUALSIASI TIPO)
                 const lastSalaMsg = logsArray.find(([k, l]) => l.squadra === sqId && l.dir === 'SA');
+                
                 if(lastSalaMsg) {
                     lastMsgBox.classList.remove('hidden');
                     document.getElementById('last-msg-text').innerText = lastSalaMsg[1].m1;
+                    document.getElementById('last-msg-time').innerText = lastSalaMsg[1].ora || '--:--';
                 }
 
+                // GESTIONE TARGET DI NAVIGAZIONE (SOLO SE C'È LAT/LNG E STATO NON OK)
                 logsArray.forEach(([key, log]) => {
                     if (log.squadra === sqId && (log.stato === 'ATTESA' || log.stato === 'RICEVUTO') && log.lat && log.dir === 'SA') {
-                        foundActive = true;
+                        foundTarget = true;
                         if (log.stato === 'ATTESA' && !notifiedKeys.has(key)) {
-                            if ("vibrate" in navigator) navigator.vibrate([500, 200, 500, 200, 500]);
+                            if ("vibrate" in navigator) navigator.vibrate([500, 200, 500]);
                             notifiedKeys.add(key);
                         }
                         targetArea.innerHTML = `
                             <div class="p-4 rounded-2xl bg-slate-900 border-2 ${log.stato === 'ATTESA' ? 'pulse-warning bg-red-900/20' : 'border-blue-500 bg-blue-900/10'}">
-                                <p class="text-[9px] font-black uppercase text-blue-400 text-center">Nuovo Target</p>
+                                <p class="text-[9px] font-black uppercase text-blue-400 text-center">Nuovo Comando</p>
                                 <p class="text-sm font-bold text-center uppercase my-2 leading-tight">${log.m1}</p>
                                 ${log.stato === 'ATTESA' ? 
                                     `<button onclick="window.confermaRicezione('${key}')" class="w-full bg-blue-600 font-black py-4 rounded-xl uppercase text-xs">✅ Ricevuto</button>` : 
@@ -193,16 +201,12 @@
                     }
                 });
             }
-            targetArea.classList.toggle('hidden', !foundActive);
+            targetArea.classList.toggle('hidden', !foundTarget);
         });
 
-        // --- FUNZIONI DI INVIO (TUTTE CON STATO ATTESA) ---
-
+        // --- FUNZIONI DI INVIO ---
         window.confermaRicezione = (key) => {
-            update(ref(db, `brogliaccio/${key}`), { 
-                stato: 'RICEVUTO', 
-                m2: `✅ RICEVUTO ORE ${new Date().toLocaleTimeString('it-IT').slice(0,5)}` 
-            });
+            update(ref(db, `brogliaccio/${key}`), { stato: 'RICEVUTO', m2: `✅ RICEVUTO ORE ${new Date().toLocaleTimeString('it-IT').slice(0,5)}` });
         };
 
         window.confermaArrivo = async (key) => {
