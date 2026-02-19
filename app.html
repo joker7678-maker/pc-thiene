@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - APP SQUADRA</title>
+    <title>PC THIENE - EVO ULTIMATE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -12,14 +12,10 @@
         body { font-family: 'Inter', sans-serif; background: #020617; color: white; height: 100dvh; overflow: hidden; margin: 0; display: flex; flex-direction: column; }
         .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
         
-        /* TITOLO ALLINEATO A MONITOR/INDEX */
         .monitor-title-pro { 
-            font-weight: 900; 
-            letter-spacing: -0.04em; 
-            text-transform: uppercase; 
+            font-weight: 900; letter-spacing: -0.04em; text-transform: uppercase; 
             background: linear-gradient(to bottom, #ffffff 40%, #94a3b8 100%); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
             filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.4));
         }
 
@@ -28,8 +24,12 @@
         input:checked + .slider { background-color: #10b981; }
         input:checked + .slider:before { transform: translateX(16px); }
         
-        #wrapper-msg { min-height: 160px; max-height: 220px; }
+        /* BADGE RIMPICCIOLITO */
+        #wrapper-msg { min-height: 110px; max-height: 180px; }
         .swal2-popup { border-radius: 2rem !important; background: #1e293b !important; color: white !important; font-family: 'Inter', sans-serif; }
+        
+        .bg-recording { background-color: #ef4444 !important; animation: pulse-red 1.5s infinite; }
+        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
 </head>
 <body class="p-3">
@@ -55,10 +55,10 @@
         </header>
 
         <main class="shrink-0 mb-4 px-1">
-            <div id="wrapper-msg" class="glass p-5 rounded-[2.5rem] border-l-4 border-slate-700 shadow-2xl transition-all duration-300">
-                <p id="label-msg" class="text-[9px] font-bold text-slate-500 uppercase mb-2 tracking-widest">SISTEMA IN ASCOLTO...</p>
+            <div id="wrapper-msg" class="glass p-4 rounded-[2.5rem] border-l-4 border-slate-700 shadow-2xl transition-all duration-300">
+                <p id="label-msg" class="text-[8px] font-bold text-slate-500 uppercase mb-1 tracking-widest italic">SISTEMA IN ASCOLTO...</p>
                 <p id="testo-msg" class="text-sm font-normal text-slate-400 uppercase italic leading-tight">In attesa di comunicazioni</p>
-                <div id="area-pulsanti" class="hidden mt-4 pt-3 border-t border-white/10"></div>
+                <div id="area-pulsanti" class="hidden mt-3 pt-2 border-t border-white/10"></div>
             </div>
         </main>
 
@@ -78,7 +78,7 @@
                     <span class="text-2xl">📷</span><span class="text-[9px] font-black uppercase italic mt-1">Foto</span>
                     <input type="file" id="in-foto" accept="image/*" capture="camera" class="hidden" onchange="upFoto(this.files[0])">
                 </button>
-                <button id="btn-voc" class="bg-slate-800 rounded-2xl py-5 flex flex-col items-center border border-white/5 active:bg-red-600">
+                <button id="btn-voc" class="bg-slate-800 rounded-2xl py-5 flex flex-col items-center border border-white/5 transition-colors">
                     <span class="text-2xl">🎤</span><span id="voc-txt" class="text-[9px] font-black uppercase italic mt-1">Vocale</span>
                 </button>
                 <button onclick="askGPS()" class="bg-emerald-600 rounded-2xl py-5 flex flex-col items-center shadow-xl">
@@ -138,7 +138,6 @@
         return push(ref(db, 'brogliaccio'), { ora, squadra: sqId, m1: testo.toUpperCase(), dir: 'SQ', stato, ...pos, ...extra });
     }
 
-    // --- DOPPI CONTROLLI ---
     window.askStatus = (s, icon) => {
         Swal.fire({ title: 'CAMBIA STATO?', text: `Imposto unità in: ${s}`, icon: 'question', showCancelButton: true }).then((r) => {
             if(r.isConfirmed) {
@@ -151,7 +150,7 @@
     window.askGPS = async () => {
         const gpsOn = document.getElementById('gps-toggle').checked;
         if (!gpsOn) {
-            const { value: via } = await Swal.fire({ title: 'GPS OFF', text: 'Inserisci via manuale:', input: 'text', showCancelButton: true });
+            const { value: via } = await Swal.fire({ title: 'GPS DISATTIVATO', text: 'Inserisci via manuale:', input: 'text', showCancelButton: true });
             if (via) inviaNuovo(`📍 POSIZIONE MANUALE: ${via}`);
         } else {
             Swal.fire({ title: 'INVIARE GPS?', text: 'Aggiorno posizione attuale', icon: 'location', showCancelButton: true }).then((r) => {
@@ -168,7 +167,6 @@
         });
     };
 
-    // --- AZIONI LOG SALA ---
     window.cRic = () => {
         if (!idSalaAttivo) return;
         update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'RICEVUTO', m2: "✅ DESTINAZIONE RICEVUTA" });
@@ -200,7 +198,7 @@
             idSalaAttivo = sala.id; viaAttiva = sala.m1; testo.innerText = sala.m1;
             testo.classList.replace('text-slate-400', 'text-white');
             if (sala.lat && sala.lat !== "" && sala.stato !== 'OK') {
-                wrapper.className = "glass p-5 rounded-[2.5rem] border-l-4 border-red-600 bg-red-900/10 shadow-2xl flex flex-col justify-center min-h-[160px]";
+                wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-red-600 bg-red-900/10 shadow-2xl flex flex-col justify-center min-h-[110px]";
                 label.innerText = "🚨 ORDINE DI INTERVENTO:"; label.style.color = "#ef4444";
                 pulsanti.classList.remove('hidden');
                 if (sala.stato === 'ATTESA') {
@@ -212,8 +210,8 @@
                     </div>`;
                 }
             } else {
-                wrapper.className = "glass p-5 rounded-[2.5rem] border-l-4 border-blue-500 bg-blue-500/10 shadow-2xl flex flex-col justify-center min-h-[160px]";
-                label.innerText = (sala.stato === 'OK') ? "✅ ORDINE COMPLETATO" : "✉️ COMUNICAZIONE DALLA SALA:";
+                wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-blue-500 bg-blue-500/10 shadow-2xl flex flex-col justify-center min-h-[110px]";
+                label.innerText = (sala.stato === 'OK') ? "IN ATTESA DI ORDINI" : "✉️ COMUNICAZIONE DALLA SALA:";
                 label.style.color = "#3b82f6"; pulsanti.classList.add('hidden');
             }
         }
@@ -248,10 +246,10 @@
                 }; r.readAsDataURL(audioBlob);
             };
             mediaRecorder.start();
-            btn.classList.add('bg-red-600', 'animate-pulse'); document.getElementById('voc-txt').innerText = "REC...";
+            btn.classList.add('bg-recording'); document.getElementById('voc-txt').innerText = "REC...";
         } else {
             mediaRecorder.stop();
-            btn.classList.remove('bg-red-600', 'animate-pulse'); document.getElementById('voc-txt').innerText = "VOCALE";
+            btn.classList.remove('bg-recording'); document.getElementById('voc-txt').innerText = "VOCALE";
         }
     };
 </script>
