@@ -12,12 +12,18 @@
         .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
         
         /* TITOLO ALLINEATO INDEX (GRANDE MA NEI BORDI) */
-        .monitor-title-pro { 
-            font-weight: 900 !important; font-size: 1.6rem !important; text-transform: uppercase; 
-            background: linear-gradient(to bottom, #ffffff 40%, #94a3b8 100%); 
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
-            filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.4)); white-space: nowrap;
-        }
+       .monitor-title-pro { 
+    font-weight: 900 !important; 
+    font-size: 1.6rem !important; /* Dimensione perfetta per la sidebar */
+    line-height: 1 !important;
+    letter-spacing: -0.04em !important; 
+    text-transform: uppercase !important; 
+    background: linear-gradient(to bottom, #ffffff 40%, #94a3b8 100%) !important; 
+    -webkit-background-clip: text !important; 
+    -webkit-text-fill-color: transparent !important; 
+    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.4)) !important;
+    white-space: nowrap !important; /* Impedisce di uscire dai bordi */
+}
 
         /* BADGE RIMPICCIOLITO E NO BOLD */
         #wrapper-msg { min-height: 110px; max-height: 170px; font-weight: 400; }
@@ -182,53 +188,54 @@
 
     window.navig = (lat, lng) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank'); };
 
-onValue(query(ref(db, 'brogliaccio'), limitToLast(12)), (snap) => {
+// --- FIX RICEZIONE DEFINITIVO ---
+    onValue(query(ref(db, 'brogliaccio'), limitToLast(12)), (snap) => {
         const data = snap.val(); if (!data) return;
         const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).sort((a, b) => b.id.localeCompare(a.id));
         
-        // Trova l'ultimo messaggio per questa squadra o per tutte
+        // Trova l'ultimo messaggio della sala per questa squadra
         const sala = logs.find(l => l.dir === 'SA' && (l.squadra === sqId || l.squadra === "TUTTE"));
         
         const wrapper = document.getElementById('wrapper-msg');
         const label = document.getElementById('label-msg');
         const testo = document.getElementById('testo-msg');
         const pulsanti = document.getElementById('area-pulsanti');
-
+        
         if (sala) {
-            idSalaAttivo = sala.id; 
+            idSalaAttivo = sala.id;
             viaAttiva = sala.m1 || "DESTINAZIONE"; 
             testo.innerText = viaAttiva;
             testo.classList.replace('text-slate-400', 'text-white');
 
-            // --- IL FIX È QUI: CONTROLLO UNIVERSALE COORDINATE ---
+            // Cerca lat/lng sia minuscolo che maiuscolo
             const tLat = sala.lat || sala.LAT;
             const tLng = sala.lng || sala.LNG;
 
+            // Se esistono coordinate e l'ordine non è chiuso (OK)
             if (tLat && tLng && sala.stato !== 'OK') {
-                // BOX ROSSO - INTERVENTO
+                // BOX ROSSO OPERATIVO
                 wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-red-600 bg-red-900/10 shadow-2xl flex flex-col justify-center min-h-[110px]";
-                label.innerText = "🚨 ORDINE DI INTERVENTO:"; 
+                label.innerText = "🚨 ORDINE DI INTERVENTO:";
                 label.style.color = "#ef4444";
                 pulsanti.classList.remove('hidden');
-
+                
                 if (sala.stato === 'ATTESA') {
                     pulsanti.innerHTML = `<button onclick="cRic()" class="w-full bg-blue-600 py-5 rounded-3xl font-bold uppercase text-lg shadow-lg">✅ RICEVI ORDINE</button>`;
                 } else {
                     pulsanti.innerHTML = `<div class="grid grid-cols-2 gap-3">
-                        <button onclick="window.navig(${tLat}, ${tLng})" class="bg-emerald-600 py-5 rounded-2xl font-bold uppercase text-[10px] shadow-lg">📍 NAVIGA</button>
-                        <button onclick="cArr()" class="bg-red-600 py-5 rounded-2xl font-bold uppercase text-[10px] shadow-lg">🏁 ARRIVATI</button>
+                        <button onclick="window.navig(${tLat}, ${tLng})" class="bg-emerald-600 py-5 rounded-2xl font-bold uppercase text-xs shadow-lg">📍 NAVIGA</button>
+                        <button onclick="cArr()" class="bg-red-600 py-5 rounded-2xl font-bold uppercase text-xs shadow-lg">🏁 ARRIVATI</button>
                     </div>`;
                 }
             } else {
-                // BOX BLU - COMUNICAZIONE O ATTESA
+                // BOX BLU ATTESA
                 wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-blue-500 bg-blue-500/10 shadow-2xl flex flex-col justify-center min-h-[110px]";
                 label.innerText = (sala.stato === 'OK') ? "IN ATTESA DI ORDINI" : "✉️ COMUNICAZIONE DALLA SALA:";
-                label.style.color = "#3b82f6"; 
+                label.style.color = "#3b82f6";
                 pulsanti.classList.add('hidden');
             }
         }
     });
-
     onValue(ref(db, `anagrafica_squadre/${sqId}`), (s) => { if(s.val()) document.getElementById('current-status').innerText = (s.val().stato || "---").toUpperCase(); });
 
     window.upFoto = (f) => {
