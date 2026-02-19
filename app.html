@@ -134,66 +134,35 @@
         if(t) { inviaNuovo(t, 'ATTESA'); document.getElementById('msg-input').value = ""; }
     };
 
-    // --- LOGICA MESSAGGI SALA BLINDATA ---
+    // --- LOGICA MESSAGGI SALA CORRETTA ---
     window.cRic = () => {
         if (!idMessaggioSalaAttivo) return;
+        // Aggiorna m2 del log sala solo con la conferma di ricezione
         update(ref(db, `brogliaccio/${idMessaggioSalaAttivo}`), { 
             stato: 'RICEVUTO',
-            m2: "✅ RICEVUTO DALLA SQUADRA"
+            m2: "✅ RICEVUTO"
         });
     };
 
     window.cArr = (via) => {
         if (!idMessaggioSalaAttivo) return;
-        // 1. Chiudo quello della sala scrivendo in m2
+        
+        // 1. Chiudiamo il log della sala in modo NEUTRO
         update(ref(db, `brogliaccio/${idMessaggioSalaAttivo}`), { 
             stato: 'OK',
-            m2: "🏁 SQUADRA ARRIVATA SUL POSTO"
+            m2: "🏁 MISSIONE CONCLUSA (ARRIVATI)"
         });
-        // 2. Apro un NUOVO log squadra in ATTESA (non modifica quello sala)
-        inviaNuovo(`🏁 ARRIVATI A: ${via}`, 'ATTESA');
+
+        // 2. Creiamo il NUOVO log della squadra che chiede ordini
+        // Questo log NON tocca quello della sala, è un record a parte
+        inviaNuovo(`🏁 ARRIVATI SUL POSTO A: ${via}`, 'ATTESA');
+        
+        // 3. Aggiorniamo lo stato dell'unità nell'anagrafica
         update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
+        
+        // Reset ID attivo per evitare doppie modifiche sullo stesso messaggio
+        idMessaggioSalaAttivo = null; 
     };
-
-    window.navig = (lat, lng) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank'); };
-
-    onValue(query(ref(db, 'brogliaccio'), limitToLast(10)), (snap) => {
-        const data = snap.val(); if (!data) return;
-        const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).sort((a, b) => b.id.localeCompare(a.id));
-        const sala = logs.find(l => l.dir === 'SA' && (l.squadra === sqId || l.squadra === "TUTTE"));
-        
-        const wrapper = document.getElementById('wrapper-msg');
-        const label = document.getElementById('label-msg');
-        const testo = document.getElementById('testo-msg');
-        const pulsanti = document.getElementById('area-pulsanti');
-        
-        if (sala) {
-            idMessaggioSalaAttivo = sala.id;
-            testo.innerText = sala.m1;
-            testo.classList.replace('text-slate-400', 'text-white');
-
-            if (sala.lat && sala.stato !== 'OK') {
-                wrapper.className = "glass p-5 rounded-[2.5rem] border-l-4 border-red-600 bg-red-900/10 shadow-2xl";
-                label.innerText = "🚨 ORDINE DI INTERVENTO:"; label.classList.replace('text-slate-500', 'text-red-500');
-                pulsanti.classList.remove('hidden');
-                
-                if (sala.stato === 'ATTESA') {
-                    pulsanti.innerHTML = `<button onclick="cRic()" class="w-full bg-blue-600 py-6 rounded-3xl font-black uppercase text-lg">✅ RICEVUTO</button>`;
-                } else {
-                    pulsanti.innerHTML = `<div class="grid grid-cols-2 gap-3">
-                        <button onclick="navig(${sala.lat}, ${sala.lng})" class="bg-emerald-600 py-6 rounded-2xl font-black uppercase text-[10px]">📍 NAVIGA</button>
-                        <button onclick="cArr('${sala.m1.replace(/'/g, "\\'")}')" class="bg-red-600 py-6 rounded-2xl font-black uppercase text-[10px]">🏁 ARRIVATI</button>
-                    </div>`;
-                }
-            } else {
-                wrapper.className = "glass p-5 rounded-[2.5rem] border-l-4 border-blue-500 bg-blue-500/5 shadow-2xl";
-                label.innerText = "✉️ COMUNICAZIONE DALLA SALA:"; label.classList.replace('text-slate-500', 'text-blue-500');
-                pulsanti.classList.add('hidden');
-                // Se il log è OK, svuoto id attivo per evitare update accidentali
-                if(sala.stato === 'OK') idMessaggioSalaAttivo = null;
-            }
-        }
-    });
 
     onValue(ref(db, `anagrafica_squadre/${sqId}`), (s) => { 
         if(s.val()) document.getElementById('current-status').innerText = (s.val().stato || "---").toUpperCase(); 
