@@ -100,21 +100,28 @@
             document.getElementById('main-app-container').classList.remove('hidden');
         }
     };
-
-    async function getFinalPos() {
-        return new Promise((r) => {
-            if (!document.getElementById('gps-toggle').checked) r({ lat: '', lng: '' });
-            navigator.geolocation.getCurrentPosition(p => r({ lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) }), () => r({ lat: '', lng: '' }), { timeout: 3000 });
-        });
-    }
-    // Recupera la posizione attuale senza mostrare avvisi
+// Funzione unica e potente per il GPS
 async function getPosForLog() {
     return new Promise((r) => {
-        if (!document.getElementById('gps-toggle').checked) r({ lat: '', lng: '' });
+        // Se il toggle è spento, esce subito
+        if (!document.getElementById('gps-toggle').checked) {
+            r({ lat: '', lng: '' });
+            return;
+        }
+
+        const options = {
+            enableHighAccuracy: true, // Fondamentale per il GPS reale del telefono
+            timeout: 5000,            // Tempo massimo di attesa 5 secondi
+            maximumAge: 0             // Non usare posizioni salvate in cache
+        };
+
         navigator.geolocation.getCurrentPosition(
             p => {
-                const coords = { lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) };
-                // Aggiorna anche la posizione dell'icona sulla mappa della sala
+                const coords = { 
+                    lat: p.coords.latitude.toFixed(6), 
+                    lng: p.coords.longitude.toFixed(6) 
+                };
+                // Aggiorna silenziosamente la posizione sulla mappa della sala
                 update(ref(db, `anagrafica_squadre/${sqId}`), { 
                     lat: coords.lat, 
                     lng: coords.lng, 
@@ -122,11 +129,17 @@ async function getPosForLog() {
                 });
                 r(coords);
             }, 
-            () => r({ lat: '', lng: '' }), 
-            { timeout: 3000 }
+            (error) => {
+                console.error("Errore GPS:", error);
+                r({ lat: '', lng: '' }); // In caso di errore restituisce vuoto per non bloccare l'invio
+            }, 
+            options
         );
     });
 }
+
+// Allinea anche la vecchia funzione getFinalPos per compatibilità con il resto del codice
+window.getFinalPos = getPosForLog;
 
 // MONITORAGGIO UNIFICATO (FIX DEFINITIVO RICEZIONE)
     onValue(query(ref(db, 'brogliaccio'), limitToLast(20)), (snap) => {
@@ -172,8 +185,9 @@ async function getPosForLog() {
         }
     });
 
-    window.openNavigator = (lat, lng) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank'); };
-
+window.openNavigator = (lat, lng) => { 
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank'); 
+};
     window.rispondiRicevuto = (idSala) => {
         update(ref(db, `brogliaccio/${idSala}`), { dir: 'SA', squadra: sqId, stato: 'RICEVUTO', m2: `✅ [SQ] RICEVUTO ORE ${new Date().toLocaleTimeString('it-IT').slice(0,5)}` });
     };
@@ -225,9 +239,15 @@ window.askConfirmText = async () => {
 };
 
 window.askConfirmGPS = () => {
+    // Controllo se il GPS è spento
+    const gpsSpento = !document.getElementById('gps-toggle').checked;
+    const alertTesto = gpsSpento ? 
+        'Il GPS è disattivato. Verrà inviata solo la via testuale.' : 
+        'Inserisci la via o il luogo attuale:';
+
     Swal.fire({
         title: 'INVIA POSIZIONE',
-        text: 'Inserisci la via o il luogo attuale:',
+        text: alertTesto,
         input: 'text',
         inputPlaceholder: 'es. VIA ROMA, 10...',
         showCancelButton: true,
