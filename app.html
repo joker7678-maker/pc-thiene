@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - EMERGENCY APP</title>
+    <title>PC THIENE - EVO ULTIMATE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -31,7 +31,7 @@
         
         <header class="flex justify-between items-center mb-4 shrink-0 px-1">
             <div class="border-l-4 border-blue-600 pl-4">
-                <span class="monitor-title text-lg leading-none">PROTEZIONE CIVILE THIENE</span>
+                <span class="monitor-title text-lg leading-none text-white">PROTEZIONE CIVILE THIENE</span>
                 <span id="sq-name" class="text-[8px] font-bold text-blue-400 uppercase mt-1 italic tracking-widest leading-none">UNITÀ: ---</span>
             </div>
             <div class="bg-slate-900/50 p-2 rounded-2xl border border-white/5 flex items-center gap-2">
@@ -42,7 +42,7 @@
 
         <main class="flex-1 overflow-y-auto mb-4 px-1">
             <div id="wrapper-msg" class="glass p-6 rounded-[2.5rem] border-l-4 border-slate-700 min-h-[140px] flex flex-col justify-center transition-all duration-300 shadow-2xl">
-                <p id="label-msg" class="text-[9px] font-bold text-slate-500 uppercase mb-2 italic tracking-widest">SISTEMA IN ASCOLTO...</p>
+                <p id="label-msg" class="text-[9px] font-bold text-slate-500 uppercase mb-2 italic tracking-widest tracking-widest">SISTEMA IN ASCOLTO...</p>
                 <p id="testo-msg" class="text-sm font-normal text-slate-400 uppercase italic leading-tight">In attesa di comunicazioni dalla sala</p>
                 <div id="area-pulsanti" class="hidden mt-6 pt-4 border-t border-white/10"></div>
             </div>
@@ -52,10 +52,10 @@
             <div class="glass rounded-[2rem] p-3 shadow-2xl border border-white/5">
                 <div id="current-status" class="text-2xl font-black text-blue-500 italic mb-3 uppercase text-center leading-none tracking-tighter">---</div>
                 <div class="grid grid-cols-4 gap-2">
-                    <button onclick="window.askStato('Sede', '🏠')" class="bg-slate-800/80 py-4 rounded-xl text-[9px] font-bold uppercase">SEDE</button>
-                    <button onclick="window.askStato('Uscita', '🚚')" class="bg-amber-500 text-black py-4 rounded-xl text-[9px] font-bold uppercase">USCITA</button>
-                    <button onclick="window.askStato('Intervento', '🚨')" class="bg-red-600 text-white py-4 rounded-xl text-[9px] font-bold uppercase">POSTO</button>
-                    <button onclick="window.askStato('Rientro', '🔙')" class="bg-blue-600 text-white py-4 rounded-xl text-[9px] font-bold uppercase">RIENTRO</button>
+                    <button onclick="window.askStato('Sede', '🏠')" class="bg-slate-800/80 py-4 rounded-xl text-[9px] font-bold uppercase">Sede</button>
+                    <button onclick="window.askStato('Uscita', '🚚')" class="bg-amber-500 text-black py-4 rounded-xl text-[9px] font-bold uppercase">Uscita</button>
+                    <button onclick="window.askStato('Intervento', '🚨')" class="bg-red-600 text-white py-4 rounded-xl text-[9px] font-bold uppercase">Posto</button>
+                    <button onclick="window.askStato('Rientro', '🔙')" class="bg-blue-600 text-white py-4 rounded-xl text-[9px] font-bold uppercase">Rientro</button>
                 </div>
             </div>
 
@@ -73,8 +73,8 @@
             </div>
 
             <div class="glass rounded-[2rem] p-3 border border-white/5">
-                <textarea id="msg-input" class="w-full bg-slate-900/50 rounded-xl p-3 text-xs text-white mb-2 h-14 outline-none uppercase resize-none focus:border-blue-500" placeholder="SCRIVI ALLA SALA..."></textarea>
-                <button onclick="window.askMsg()" class="w-full bg-blue-600 text-white font-black py-3 rounded-2xl uppercase text-[11px] italic tracking-widest shadow-lg">Invia Messaggio</button>
+                <textarea id="msg-input" class="w-full bg-slate-900/50 rounded-xl p-3 text-xs text-white mb-2 h-14 outline-none uppercase resize-none" placeholder="SCRIVI ALLA SALA..."></textarea>
+                <button onclick="window.askMsg()" class="w-full bg-blue-600 text-white font-black py-3 rounded-2xl uppercase text-[11px] italic tracking-widest shadow-lg">Invia</button>
             </div>
         </section>
 
@@ -135,7 +135,7 @@
         } catch { return { lat: '', lng: '' }; }
     }
 
-    async function inviaNuovoLog(testo, stato = 'OK', extra = {}) {
+    async function inviaLog(testo, stato = 'OK', extra = {}) {
         const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
         const pos = await getPos();
         const log = { ora, squadra: sqId, m1: testo.toUpperCase(), dir: 'SQ', stato, ...pos, ...extra };
@@ -143,12 +143,12 @@
         return push(ref(db, 'brogliaccio'), log);
     }
 
-    // DOPPI CONTROLLI
+    // --- AZIONI ---
     window.askStato = (s, icon) => {
-        Swal.fire({ title: 'CONFERMI CAMBIO STATO?', text: `Imposto unità in: ${s}`, icon: 'question', showCancelButton: true }).then((r) => {
+        Swal.fire({ title: 'CONFERMI?', text: `Imposto unità in: ${s}`, icon: 'question', showCancelButton: true }).then((r) => {
             if (r.isConfirmed) {
                 update(ref(db, `anagrafica_squadre/${sqId}`), { stato: s });
-                inviaNuovoLog(`STATO: ${icon} ${s}`);
+                inviaLog(`STATO: ${icon} ${s}`);
             }
         });
     };
@@ -156,11 +156,11 @@
     window.sendGPS = async () => {
         const gpsOn = document.getElementById('gps-toggle').checked;
         if (!gpsOn) {
-            const { value: via } = await Swal.fire({ title: 'GPS DISATTIVATO', text: 'Inserisci via manualmente:', input: 'text', showCancelButton: true });
-            if (via) inviaNuovoLog(`📍 POSIZIONE MANUALE: ${via}`);
+            const { value: v } = await Swal.fire({ title: 'GPS DISATTIVATO', text: 'Inserisci via:', input: 'text', showCancelButton: true });
+            if (v) inviaLog(`📍 POSIZIONE: ${v}`);
         } else {
             Swal.fire({ title: 'INVIARE POSIZIONE GPS?', icon: 'location', showCancelButton: true }).then((r) => {
-                if (r.isConfirmed) inviaNuovoLog("📍 POSIZIONE GPS AGGIORNATA");
+                if (r.isConfirmed) inviaLog("📍 AGGIORNAMENTO GPS");
             });
         }
     };
@@ -168,21 +168,21 @@
     window.askMsg = () => {
         const t = document.getElementById('msg-input').value.trim();
         if (!t) return;
-        Swal.fire({ title: 'INVIARE MESSAGGIO?', text: t.toUpperCase(), icon: 'info', showCancelButton: true }).then((r) => {
-            if (r.isConfirmed) { inviaNuovoLog(t, 'ATTESA'); document.getElementById('msg-input').value = ""; }
+        Swal.fire({ title: 'INVIARE?', text: t.toUpperCase(), showCancelButton: true }).then((r) => {
+            if (r.isConfirmed) { inviaLog(t, 'ATTESA'); document.getElementById('msg-input').value = ""; }
         });
     };
 
-    // AZIONI SU LOG SALA
+    // --- LOGICA RICEVUTO / ARRIVATI ---
     window.cRic = (id) => {
-        update(ref(db, `brogliaccio/${id}`), { stato: 'RICEVUTO', m2: "✅ PRESO IN CARICO" });
+        update(ref(db, `brogliaccio/${id}`), { stato: 'RICEVUTO' });
     };
 
     window.cArr = (idSala, via) => {
-        Swal.fire({ title: 'CONFERMI ARRIVO?', text: `Siete a: ${via}`, icon: 'warning', showCancelButton: true }).then(async (r) => {
+        Swal.fire({ title: 'ARRIVATI?', text: via, icon: 'warning', showCancelButton: true }).then(async (r) => {
             if (r.isConfirmed) {
-                await update(ref(db, `brogliaccio/${idSala}`), { stato: 'OK', m2: "🏁 ARRIVATI" });
-                await inviaNuovoLog(`🏁 ARRIVATI A: ${via}`, 'ATTESA');
+                await update(ref(db, `brogliaccio/${idSala}`), { stato: 'OK' });
+                await inviaLog(`🏁 ARRIVATI A: ${via}`, 'ATTESA');
                 update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
             }
         });
@@ -196,7 +196,7 @@
         const reader = new FileReader();
         reader.onload = (e) => {
             Swal.fire({ title: 'INVIARE FOTO?', html: `<img src="${e.target.result}" class="w-full rounded-2xl">`, showCancelButton: true }).then((r) => {
-                if (r.isConfirmed) inviaNuovoLog("📷 FOTO ALLEGATA", 'OK', { mediaUrl: e.target.result, mediaType: 'IMG' });
+                if (r.isConfirmed) inviaLog("📷 FOTO ALLEGATA", 'OK', { mediaUrl: e.target.result, mediaType: 'IMG' });
             });
         }; reader.readAsDataURL(f);
     };
@@ -213,7 +213,7 @@
                 const r = new FileReader();
                 r.onload = (e) => {
                     Swal.fire({ title: 'INVIARE VOCALE?', html: `<audio controls class="w-full mt-2"><source src="${e.target.result}"></audio>`, showCancelButton: true }).then((res) => {
-                        if(res.isConfirmed) inviaNuovoLog("🎤 VOCALE ALLEGATO", 'OK', { mediaUrl: e.target.result, mediaType: 'AUDIO' });
+                        if(res.isConfirmed) inviaLog("🎤 VOCALE ALLEGATO", 'OK', { mediaUrl: e.target.result, mediaType: 'AUDIO' });
                     });
                 }; r.readAsDataURL(audioBlob);
             };
@@ -225,31 +225,33 @@
         }
     };
 
-    // ASCOLTO
+    // --- ASCOLTO REALTIME ---
     onValue(query(ref(db, 'brogliaccio'), limitToLast(12)), (snap) => {
         const data = snap.val(); if (!data) return;
         const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).sort((a, b) => b.id.localeCompare(a.id));
         const sala = logs.find(l => l.dir === 'SA' && (l.squadra === sqId || l.squadra === "TUTTE"));
+        
         const wrapper = document.getElementById('wrapper-msg');
         const label = document.getElementById('label-msg');
         const testo = document.getElementById('testo-msg');
         const pulsanti = document.getElementById('area-pulsanti');
+        
         if (sala) {
             testo.innerText = sala.m1; testo.classList.replace('text-slate-400', 'text-white');
             if (sala.lat && sala.stato !== 'OK') {
-                wrapper.className = "glass p-6 rounded-[2.5rem] border-l-4 border-red-600 bg-red-900/10 shadow-2xl transition-all";
+                wrapper.className = "glass p-6 rounded-[2.5rem] border-l-4 border-red-600 bg-red-900/10 shadow-2xl transition-all duration-300";
                 label.innerText = "🚨 ORDINE DI INTERVENTO:"; label.classList.replace('text-slate-500', 'text-red-500');
                 pulsanti.classList.remove('hidden');
                 if (sala.stato === 'ATTESA') {
                     pulsanti.innerHTML = `<button onclick="window.cRic('${sala.id}')" class="w-full bg-blue-600 py-6 rounded-3xl font-black uppercase text-lg shadow-lg">✅ Conferma Ricezione</button>`;
                 } else {
                     pulsanti.innerHTML = `<div class="grid grid-cols-2 gap-3">
-                        <button onclick="window.navig(${sala.lat}, ${sala.lng})" class="bg-emerald-600 py-6 rounded-2xl font-black uppercase text-xs">📍 Naviga</button>
-                        <button onclick="window.cArr('${sala.id}', '${sala.m1.replace(/'/g, "\\'")}')" class="bg-red-600 py-6 rounded-2xl font-black uppercase text-xs">🏁 Arrivati</button>
+                        <button onclick="window.navig(${sala.lat}, ${sala.lng})" class="bg-emerald-600 py-6 rounded-2xl font-black uppercase text-xs shadow-lg">📍 Naviga</button>
+                        <button onclick="window.cArr('${sala.id}', '${sala.m1.replace(/'/g, "\\'")}')" class="bg-red-600 py-6 rounded-2xl font-black uppercase text-xs shadow-lg">🏁 Arrivati</button>
                     </div>`;
                 }
             } else {
-                wrapper.className = "glass p-6 rounded-[2.5rem] border-l-4 border-blue-500 bg-blue-500/5 shadow-2xl transition-all";
+                wrapper.className = "glass p-6 rounded-[2.5rem] border-l-4 border-blue-500 bg-blue-500/5 shadow-2xl transition-all duration-300";
                 label.innerText = "✉️ COMUNICAZIONE DALLA SALA:"; label.classList.replace('text-slate-500', 'text-blue-500');
                 pulsanti.classList.add('hidden');
             }
