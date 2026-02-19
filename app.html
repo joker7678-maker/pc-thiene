@@ -163,31 +163,29 @@
         inviaNuovo(t, 'ATTESA').then(() => { document.getElementById('msg-input').value = ""; });
     };
 
-    // --- RICEZIONE CON LOG RISPOSTA (DASHBOARD) ---
+    // --- 1. RICEZIONE: AGGIORNA STESSO LOG ---
     window.cRic = () => { 
         if (idSalaAttivo) {
-            update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'RICEVUTO' }); 
-            // Invia log NUOVO per la Dash
-            inviaNuovo("✅ POSIZIONE RICEVUTA: IN MOVIMENTO", 'ATTESA');
+            update(ref(db, `brogliaccio/${idSalaAttivo}`), { 
+                stato: 'RICEVUTO', 
+                m2: "✅ POSIZIONE RICEVUTA" 
+            }); 
             Swal.fire({ icon: 'success', title: 'RICEVUTO', timer: 800, showConfirmButton: false });
         }
     };
 
-    // --- ARRIVATI CON LOG NUOVO (COME PRIMA) ---
+    // --- 2. ARRIVATI: GENERA NUOVO LOG IN ATTESA ---
     window.cArr = () => {
         if (!idSalaAttivo) return;
         Swal.fire({ title: 'ARRIVATI SUL POSTO?', icon: 'warning', showCancelButton: true }).then(async (r) => {
             if(r.isConfirmed) {
-                // 1. Chiude il log della sala
+                // Chiude log della sala
                 await update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'OK' });
-                
-                // 2. SPARA LOG NUOVO IN ATTESA (FLUSSO ORIGINALE)
+                // CREA NUOVO LOG DA CONFERMARE (ROSSO IN DASH)
                 await inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, 'ATTESA');
-                
-                // 3. Aggiorna anagrafica e sblocca
+                // Aggiorna anagrafica
                 update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
                 idSalaAttivo = null;
-                Swal.fire({ icon: 'success', title: 'ARRIVO COMUNICATO', timer: 1000, showConfirmButton: false });
             }
         });
     };
