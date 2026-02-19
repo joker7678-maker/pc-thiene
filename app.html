@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - App Operatore V5.2</title>
+    <title>PC THIENE - App Operatore V5.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -77,10 +77,10 @@
         <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 mb-6 text-center shadow-2xl">
             <div id="current-status" class="text-3xl font-black text-blue-500 italic mb-4 uppercase tracking-tighter">---</div>
             <div class="grid grid-cols-2 gap-2">
-                <button onclick="window.askConfirmStatus('Sede', '🏠 In Sede')" class="bg-slate-700 text-white font-black py-4 rounded-xl text-[11px] uppercase">🏠 Sede</button>
-                <button onclick="window.askConfirmStatus('Uscita', '🚚 Uscita')" class="bg-amber-500 text-black font-black py-4 rounded-xl text-[11px] uppercase">🚚 Uscita</button>
-                <button onclick="window.askConfirmStatus('Intervento', '🚨 Posto')" class="bg-red-600 text-white font-black py-4 rounded-xl text-[11px] uppercase">🚨 Posto</button>
-                <button onclick="window.askConfirmStatus('Rientro', '🔙 Rientro')" class="bg-blue-600 text-white font-black py-4 rounded-xl text-[11px] uppercase">🔙 Rientro</button>
+                <button onclick="window.askConfirmStatus('Sede', '🏠 In Sede')" class="bg-slate-700 text-white font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🏠 Sede</button>
+                <button onclick="window.askConfirmStatus('Uscita', '🚚 Uscita')" class="bg-amber-500 text-black font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🚚 Uscita</button>
+                <button onclick="window.askConfirmStatus('Intervento', '🚨 Posto')" class="bg-red-600 text-white font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🚨 Posto</button>
+                <button onclick="window.askConfirmStatus('Rientro', '🔙 Rientro')" class="bg-blue-600 text-white font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🔙 Rientro</button>
             </div>
         </div>
 
@@ -114,7 +114,7 @@
         const sqId = (urlParams.get('id') || "SQUADRA_TEST").toUpperCase();
         document.getElementById('sq-name').innerText = "SQUADRA: " + sqId;
 
-        // --- AUTH & STATUS SQUADRA ---
+        // --- AUTH & STATUS ---
         onValue(ref(db, `anagrafica_squadre/${sqId}`), (snapshot) => {
             const data = snapshot.val();
             if (!data || data.attiva === false) {
@@ -135,7 +135,7 @@
                 sessionStorage.setItem('pc_auth_v3', 'true');
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('main-app-container').style.display = 'block';
-            } else { Swal.fire({ icon:'error', title:'Errato' }); }
+            } else { Swal.fire({ icon:'error', title:'Errato', background: '#0f172a', color: '#fff' }); }
         };
 
         async function getGPS() {
@@ -148,7 +148,7 @@
             });
         }
 
-        // --- GESTIONE LOG E TARGET ---
+        // --- RICEZIONE LOG E TARGET ---
         onValue(query(ref(db, 'brogliaccio'), limitToLast(15)), (snap) => {
             const data = snap.val();
             if (!data) return;
@@ -159,14 +159,14 @@
 
             const logs = Object.entries(data).reverse();
             
-            // 1. Ultimo Messaggio Sala
+            // 1. Visualizza ultimo messaggio testuale della Sala
             const lastText = logs.find(([k, l]) => (l.squadra === sqId || l.squadra === "COMUNICAZIONE GENERALE") && l.dir === 'SA');
             if (lastText) {
                 boxMsgSala.classList.remove('hidden');
                 textMsgSala.innerText = lastText[1].m2 || lastText[1].m1;
             }
 
-            // 2. Navigazione Target
+            // 2. Gestione Target GPS
             const lastTarget = logs.find(([k, l]) => l.squadra === sqId && l.dir === 'SA' && l.lat);
             if (lastTarget) {
                 const [key, log] = lastTarget;
@@ -182,14 +182,14 @@
                         sessionStorage.setItem('alert_'+key, 'true');
                     }
                     targetArea.innerHTML = `
-                        <div class="p-5 rounded-3xl bg-slate-900 border-4 ${log.stato === 'ATTESA' ? 'pulse-warning border-red-600' : 'border-blue-600'}">
-                            <p class="text-[9px] font-black uppercase text-blue-400 text-center mb-1">Target dalla Sala</p>
-                            <h3 class="text-xl font-black text-center uppercase text-white mb-4 italic">${log.m1}</h3>
+                        <div class="p-5 rounded-3xl bg-slate-900 border-4 ${log.stato === 'ATTESA' ? 'pulse-warning border-red-600' : 'border-blue-600 shadow-lg'}">
+                            <p class="text-[9px] font-black uppercase text-blue-400 text-center mb-1 tracking-widest">Target dalla Sala</p>
+                            <h3 class="text-xl font-black text-center uppercase text-white mb-4 italic leading-tight">${log.m1}</h3>
                             ${log.stato === 'ATTESA' ? 
-                                `<button onclick="window.confermaRicezione('${key}')" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl uppercase">✅ Conferma Ricezione</button>` : 
+                                `<button onclick="window.confermaRicezione('${key}')" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl uppercase shadow-lg active:scale-95">✅ Conferma Ricezione</button>` : 
                                 `<div class="flex flex-col gap-3">
-                                    <button onclick="window.openNavigator(${log.lat}, ${log.lng})" class="w-full bg-emerald-600 text-white font-black py-5 rounded-2xl uppercase">🗺️ Navigatore</button>
-                                    <button onclick="window.askConfirmArrivo('${key}')" class="w-full bg-red-600 text-white font-black py-4 rounded-2xl uppercase text-[10px]">🏁 Arrivo sul Posto</button>
+                                    <button onclick="window.openNavigator(${log.lat}, ${log.lng})" class="w-full bg-emerald-600 text-white font-black py-5 rounded-2xl uppercase flex items-center justify-center gap-2 shadow-lg active:scale-95">🗺️ Avvia Navigatore</button>
+                                    <button onclick="window.askConfirmArrivo('${key}')" class="w-full bg-red-600 text-white font-black py-4 rounded-2xl uppercase text-[10px] opacity-90 active:scale-95">🏁 Arrivo sul Posto</button>
                                 </div>`
                             }
                         </div>`;
@@ -197,15 +197,21 @@
             }
         });
 
+        // --- CONFERMA RICEZIONE (INTESTATA ALLA SQUADRA - GIALLO) ---
         window.confermaRicezione = async (k) => {
             const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-            await update(ref(db, `brogliaccio/${k}`), { stato: 'RICEVUTO', m2: `CONFERMATO ORE ${ora}` });
+            await update(ref(db, `brogliaccio/${k}`), { 
+                stato: 'RICEVUTO', 
+                m2: `CONFERMA RICEZIONE SQUADRA ORE ${ora}` // Il testo 'SQUADRA' attiva il colore giallo sulla Dashboard
+            });
+            Swal.fire({ icon:'success', title:'CONFERMATO', toast:true, position:'top', timer:2000, showConfirmButton:false });
         };
 
         window.openNavigator = (lat, lng) => {
             window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank');
         };
 
+        // --- CONFERMA ARRIVO (CHIUDE TARGET E APRE NUOVO LOG IN ATTESA) ---
         window.askConfirmArrivo = (key) => {
             Swal.fire({ 
                 title: 'CONFERMI ARRIVO?', 
@@ -221,18 +227,18 @@
                     // 1. Chiude il log Target della Sala
                     update(ref(db, `brogliaccio/${key}`), { 
                         stato: 'OK', 
-                        m2: `TARGET RAGGIUNTO ORE ${ora}` 
+                        m2: `SQUADRA ARRIVATA SUL POSTO ORE ${ora}` 
                     });
 
-                    // 2. Aggiorna anagrafica
+                    // 2. Aggiorna anagrafica squadra
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: p.lat, lng: p.lng });
 
-                    // 3. Crea il log di arrivo in ATTESA (m2 vuoto per la Sala)
+                    // 3. Crea il log di arrivo effettivo in ATTESA (m2 vuoto per la Sala)
                     push(ref(db, 'brogliaccio'), { 
                         ora: ora, 
                         data: new Date().toLocaleDateString('it-IT'),
                         squadra: sqId, 
-                        m1: "🏁 ARRIVO SUL POSTO / OPERATIVI", 
+                        m1: "🏁 ARRIVO SUL POSTO / TARGET RAGGIUNTO", 
                         m2: "", 
                         dir: 'SQ', 
                         stato: 'ATTESA', 
@@ -243,6 +249,7 @@
             });
         };
 
+        // --- FUNZIONI DI INVIO MESSAGGI/STATUS ---
         window.askConfirmStatus = (v, label) => {
             Swal.fire({ title:'CAMBIA STATO?', text:label, showCancelButton:true, background:'#0f172a', color:'#fff' }).then(async (r) => {
                 if(r.isConfirmed) {
@@ -269,7 +276,7 @@
             Swal.fire({ title:'INVIA GPS?', showCancelButton:true, background:'#0f172a', color:'#fff' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getGPS();
-                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "📍 POSIZIONE GPS", m2: "", lat: p.lat, lng: p.lng, dir: 'SQ', stato: 'ATTESA' });
+                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "📍 POSIZIONE GPS ATTUALE", m2: "", lat: p.lat, lng: p.lng, dir: 'SQ', stato: 'ATTESA' });
                 }
             });
         };
@@ -280,12 +287,13 @@
                 Swal.fire({ title:'INVIA FOTO?', imageUrl:e.target.result, showCancelButton:true, background:'#0f172a', color:'#fff' }).then(async (res) => {
                     if(res.isConfirmed) {
                         const p = await getGPS();
-                        push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "📷 FOTO", mediaUrl:e.target.result, mediaType:'IMG', m2: "", lat:p.lat, lng:p.lng, dir:'SQ', stato:'ATTESA' });
+                        push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "📷 FOTO INVIATA", mediaUrl:e.target.result, mediaType:'IMG', m2: "", lat:p.lat, lng:p.lng, dir:'SQ', stato:'ATTESA' });
                     }
                 });
             };
         };
 
+        // --- GESTIONE VOCALE ---
         let mediaRecorder; let audioChunks = [];
         const btnAudio = document.getElementById('btn-audio');
         btnAudio.onclick = async () => {
@@ -303,7 +311,7 @@
                             Swal.fire({ title:'INVIA VOCALE?', html:`<audio src="${r.result}" controls class="w-full mt-2"></audio>`, showCancelButton:true, background:'#0f172a', color:'#fff' }).then(async (res) => {
                                 if(res.isConfirmed) {
                                     const p = await getGPS();
-                                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "🎤 VOCALE", m2: "", mediaUrl:r.result, mediaType:'AUDIO', lat:p.lat, lng:p.lng, dir:'SQ', stato:'ATTESA' });
+                                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "🎤 VOCALE INVIATA", m2: "", mediaUrl:r.result, mediaType:'AUDIO', lat:p.lat, lng:p.lng, dir:'SQ', stato:'ATTESA' });
                                 }
                             });
                         };
