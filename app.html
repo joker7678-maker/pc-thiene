@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - V7.4</title>
+    <title>PC THIENE - V7.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -20,7 +20,7 @@
 </head>
 <body class="p-3 flex flex-col h-full">
 
-    <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-950 flex items-center justify-center p-6 text-center">
+    <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-950 flex items-center justify-center p-6">
         <div class="w-full max-w-sm bg-slate-900 p-8 rounded-[3rem] border border-slate-800 shadow-2xl text-center">
             <h2 class="text-3xl font-black italic text-blue-500 mb-6 uppercase">PC THIENE</h2>
             <input type="password" id="app-password" class="w-full bg-slate-950 border-2 border-slate-800 rounded-xl p-4 text-center text-4xl mb-6 text-white outline-none" placeholder="••••" inputmode="numeric">
@@ -42,7 +42,7 @@
 
         <div id="nav-channel" class="mb-2 hidden">
             <div id="nav-card" class="glass p-3 rounded-2xl border-l-8 shadow-xl">
-                <p class="text-[9px] font-black text-blue-400 uppercase mb-1">Destinazione Inviata dalla Sala</p>
+                <p class="text-[9px] font-black text-blue-400 uppercase mb-1 italic">Target Attivo</p>
                 <div id="nav-text" class="text-base font-black text-white uppercase leading-tight mb-2"></div>
                 <div id="nav-btns"></div>
             </div>
@@ -50,7 +50,7 @@
 
         <div id="msg-channel" class="mb-2 hidden">
             <div class="glass p-3 rounded-2xl border-l-8 border-amber-500 shadow-lg">
-                <p class="text-[9px] font-black text-amber-500 uppercase mb-1 tracking-widest">Ultima Disposizione Sala</p>
+                <p class="text-[9px] font-black text-amber-500 uppercase mb-1 tracking-widest italic">Dalla Sala Operativa</p>
                 <div id="msg-text-sala" class="text-sm font-bold text-white uppercase leading-tight"></div>
             </div>
         </div>
@@ -118,13 +118,12 @@
             } else return { lat: '', lng: '', note };
         }
 
-        // --- LOGICA SINCRONIZZAZIONE (FILTRI RIGIDI) ---
+        // --- LOGICA SINCRONIZZAZIONE MIGLIORATA (V7.5) ---
         onValue(query(ref(db, 'brogliaccio'), limitToLast(50)), (snap) => {
             const data = snap.val(); if (!data) return;
-            // Ordiniamo dal più recente
             const logs = Object.entries(data).sort((a,b) => b[0].localeCompare(a[0]));
 
-            // 1. FILTRO NAVIGAZIONE: Ultimo log della Sala (SA) con coordinata GPS e stato NON ancora concluso
+            // 1. CANALE NAVIGAZIONE: Mostra solo se stato non è OK e c'è una coordinata
             const activeTarget = logs.find(([k, l]) => l.squadra === sqId && l.dir === 'SA' && l.lat && l.stato !== 'OK');
             const navChannel = document.getElementById('nav-channel');
             if (activeTarget) {
@@ -133,21 +132,23 @@
                 document.getElementById('nav-text').innerText = log.m1;
                 document.getElementById('nav-card').className = `glass p-3 rounded-2xl border-l-8 shadow-xl ${log.stato === 'ATTESA' ? 'pulse-red border-red-600' : 'border-blue-600'}`;
                 document.getElementById('nav-btns').innerHTML = log.stato === 'ATTESA' ? 
-                    `<button onclick="window.confermaRicezione('${key}')" class="w-full bg-blue-600 py-4 rounded-xl text-xs font-black uppercase mt-1">✅ CONFERMA RICEZIONE</button>` :
-                    `<div class="grid grid-cols-2 gap-2 mt-1"><button onclick="window.openNav(${log.lat}, ${log.lng})" class="bg-emerald-600 py-3 rounded-xl text-[10px] font-black uppercase">NAVIGA</button><button onclick="window.askArrivo('${key}')" class="bg-red-600 py-3 rounded-xl text-[10px] font-black uppercase">ARRIVATI</button></div>`;
+                    `<button onclick="window.confermaRicezione('${key}')" class="w-full bg-blue-600 py-4 rounded-xl text-xs font-black uppercase mt-1">✅ OK RICEVUTO SQUADRA</button>` :
+                    `<div class="grid grid-cols-2 gap-2 mt-1"><button onclick="window.openNav(${log.lat}, ${log.lng})" class="bg-emerald-600 py-3 rounded-xl text-[10px] font-black uppercase">MAPPA</button><button onclick="window.askArrivo('${key}')" class="bg-red-600 py-3 rounded-xl text-[10px] font-black uppercase">ARRIVATI</button></div>`;
             } else { navChannel.classList.add('hidden'); }
 
-            // 2. FILTRO MESSAGGI: Ultimo log della Sala (SA) escludendo categoricamente i log della Squadra (SQ)
+            // 2. CANALE MESSAGGI: Mostra l'ultimo messaggio della SALA che NON ha una conferma squadra nel campo m2
+            // Questo evita che il box rimanga bloccato su "ARRIVATI ORE..."
             const lastLogSala = logs.find(([k, l]) => 
                 (l.squadra === sqId || l.squadra === "TUTTE" || l.squadra === "COMUNICAZIONE GENERALE") && 
-                l.dir === 'SA' // <--- QUESTA È LA CHIAVE: ignora tutto ciò che non è SA
+                l.dir === 'SA' && 
+                (!l.m2 || !l.m2.includes("CONFERMA-SQ")) // <--- FILTRO CHIAVE V7.5
             );
             
             const msgChannel = document.getElementById('msg-channel');
             if (lastLogSala) {
                 msgChannel.classList.remove('hidden');
                 const log = lastLogSala[1];
-                // Mostra la risposta m2 se la sala ha commentato, altrimenti il messaggio originale m1
+                // Se m2 esiste ed è una risposta vera della sala (non una conferma automatica), mostra m2
                 document.getElementById('msg-text-sala').innerText = (log.m2 && log.m2 !== '---') ? log.m2 : log.m1;
             } else { msgChannel.classList.add('hidden'); }
         });
@@ -161,10 +162,11 @@
         window.openNav = (lat, lng) => window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank');
 
         window.askArrivo = (key) => {
-            Swal.fire({ title: 'CONFERMI ARRIVO?', showCancelButton: true, background: '#1e293b', color: '#fff', confirmButtonText: 'SÌ, ARRIVATI' }).then(async (r) => {
+            Swal.fire({ title: 'ARRIVATI?', showCancelButton: true, background: '#1e293b', color: '#fff' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getFinalPos();
                     const ora = new Date().toLocaleTimeString().slice(0,5);
+                    // Update m2 con tag CONFERMA-SQ così il filtro sopra lo ignora nel box messaggi
                     await update(ref(db, `brogliaccio/${key}`), { stato: 'OK', m2: `[CONFERMA-SQ] ARRIVATI ORE ${ora}` });
                     await update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: p.lat, lng: p.lng });
                     await push(ref(db, 'brogliaccio'), { ora, data: new Date().toLocaleDateString(), squadra: sqId, m1: `🏁 ARRIVO SUL POSTO [SQUADRA] ${p.note}`, m2: "", dir: 'SQ', stato: 'ATTESA', lat: p.lat, lng: p.lng });
@@ -174,7 +176,7 @@
         };
 
         window.askConfirmStatus = (v, label) => {
-            Swal.fire({ title:'CAMBIA STATO?', text:label, showCancelButton:true, background:'#1e293b', color:'#fff' }).then(async (r) => {
+            Swal.fire({ title:label, showCancelButton:true, background:'#1e293b', color:'#fff' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getFinalPos();
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: v, lat: p.lat, lng: p.lng });
@@ -186,7 +188,7 @@
 
         window.askConfirmText = () => {
             const t = document.getElementById('msg-input').value.trim(); if(!t) return;
-            Swal.fire({ title:'INVIARE MESSAGGIO?', text: t.toUpperCase(), showCancelButton:true, background:'#1e293b', color:'#fff', confirmButtonText: 'SÌ, INVIA' }).then(async (r) => {
+            Swal.fire({ title:'INVIARE?', text: t.toUpperCase(), showCancelButton:true, background:'#1e293b', color:'#fff' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getFinalPos();
                     push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: `${t.toUpperCase()} [SQUADRA] ${p.note}`, m2: "", dir: 'SQ', stato: 'ATTESA', lat: p.lat, lng: p.lng });
