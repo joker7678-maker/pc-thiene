@@ -163,30 +163,31 @@
         inviaNuovo(t, 'ATTESA').then(() => { document.getElementById('msg-input').value = ""; });
     };
 
-    // --- AGGIORNAMENTO STESSO LOG (RICEVUTO) ---
+    // --- RICEZIONE CON LOG RISPOSTA (DASHBOARD) ---
     window.cRic = () => { 
         if (idSalaAttivo) {
-            // Aggiorna la riga esistente della sala aggiungendo la risposta
-            update(ref(db, `brogliaccio/${idSalaAttivo}`), { 
-                stato: 'RICEVUTO', 
-                m2: "✅ POSIZIONE RICEVUTA: IN MOVIMENTO" 
-            }); 
+            update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'RICEVUTO' }); 
+            // Invia log NUOVO per la Dash
+            inviaNuovo("✅ POSIZIONE RICEVUTA: IN MOVIMENTO", 'ATTESA');
             Swal.fire({ icon: 'success', title: 'RICEVUTO', timer: 800, showConfirmButton: false });
         }
     };
 
-    // --- AGGIORNAMENTO STESSO LOG (ARRIVATI) ---
+    // --- ARRIVATI CON LOG NUOVO (COME PRIMA) ---
     window.cArr = () => {
         if (!idSalaAttivo) return;
         Swal.fire({ title: 'ARRIVATI SUL POSTO?', icon: 'warning', showCancelButton: true }).then(async (r) => {
             if(r.isConfirmed) {
-                // Aggiorna la riga esistente indicando l'arrivo
-                await update(ref(db, `brogliaccio/${idSalaAttivo}`), { 
-                    stato: 'OK', 
-                    m2: "🏁 ARRIVATI SUL POSTO" 
-                });
+                // 1. Chiude il log della sala
+                await update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'OK' });
+                
+                // 2. SPARA LOG NUOVO IN ATTESA (FLUSSO ORIGINALE)
+                await inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, 'ATTESA');
+                
+                // 3. Aggiorna anagrafica e sblocca
                 update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
                 idSalaAttivo = null;
+                Swal.fire({ icon: 'success', title: 'ARRIVO COMUNICATO', timer: 1000, showConfirmButton: false });
             }
         });
     };
