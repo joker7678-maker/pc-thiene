@@ -68,10 +68,10 @@
         <h1 class="monitor-title-pro">PC THIENE</h1>
         <span id="sq-name" class="block text-[8px] font-medium text-blue-400 uppercase tracking-widest opacity-70">---</span>
     </div>
-    <div id="off-screen" class="fixed inset-0 z-[10000] bg-slate-950 flex flex-col items-center justify-center p-6 text-center hidden">
-    <div class="text-slate-500 text-6xl mb-4">🌑</div>
-    <h1 class="monitor-title-pro text-2xl mb-2">APP DISATTIVATA</h1>
-    <p class="text-slate-400 text-xs uppercase tracking-widest">Contattare la Sala Operativa per l'attivazione</p>
+ <div id="off-screen" class="fixed inset-0 z-[99999] bg-slate-950 flex flex-col items-center justify-center p-6 text-center hidden">
+    <div class="text-slate-700 text-6xl mb-4">🌑</div>
+    <h1 class="monitor-title-pro !text-2xl mb-2">APP DISATTIVATA</h1>
+    <p class="text-slate-500 text-[10px] uppercase tracking-[0.2em]">Contattare la Sala Operativa per l'attivazione</p>
 </div>
     </header>
 
@@ -222,30 +222,25 @@ window.cArr = () => {
     if (!idSalaAttivo) return;
     Swal.fire({ 
         title: 'ARRIVATI SUL POSTO?', 
-        text: 'Verrà inviato il log di arrivo alla Sala Operativa',
         icon: 'warning', 
         showCancelButton: true,
         confirmButtonText: 'CONFERMA'
     }).then(async (r) => {
         if(r.isConfirmed) {
-            // 1. Chiude il comando precedente della sala
+            // 1. Chiude il comando rosso della sala (lo mette in grigio)
             update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'OK' });
             
-            // 2. APRE UN NUOVO LOG DI ARRIVO E LO METTE IN 'ATTESA'
-            // Questo forzerà la riga a diventare rossa/gialla in Dashboard
+            // 2. APRE UN NUOVO LOG DI ARRIVO IN STATO 'ATTESA'
+            // Questo farà apparire una NUOVA riga in Dashboard da confermare
             await inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, 'ATTESA');
             
-            // 3. Aggiorna lo stato della squadra nell'anagrafica
+            // 3. Aggiorna l'anagrafica
             update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
             
-            // 4. Resetta la variabile e sblocca l'app
-            idSalaAttivo = null;
-            
-            Swal.fire({ icon: 'success', title: 'LOG INVIATO', timer: 1000, showConfirmButton: false });
+            idSalaAttivo = null; // Resetta per il prossimo ordine
         }
     });
 };
-
     window.navig = (lat, lng) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank'); };
 
 // --- FIX RICEZIONE DEFINITIVO ---
@@ -296,16 +291,22 @@ window.cArr = () => {
             }
         }
     });
-  onValue(ref(db, `anagrafica_squadre/${sqId}`), (s) => {
+// CONTROLLO ATTIVAZIONE REMOTA DA DASHBOARD
+onValue(ref(db, `anagrafica_squadre/${sqId}`), (s) => {
     const d = s.val();
     if(!d) return;
+    
+    // Aggiorna lo stato nel badge blu dell'app
     document.getElementById('current-status').innerText = (d.stato || "---").toUpperCase();
     
-    // Se lo stato nell'anagrafica è "DISATTIVATA" (o simile), blocca tutto
-    if(d.attiva === false || d.stato === 'DISATTIVATA') {
-        document.getElementById('off-screen').classList.remove('hidden');
-    } else {
-        document.getElementById('off-screen').classList.add('hidden');
+    // Se lo stato è DISATTIVATA o il flag attiva è false, mostra lo schermo nero
+    const offScreen = document.getElementById('off-screen');
+    if(offScreen) {
+        if(d.stato === 'DISATTIVATA' || d.attiva === false) {
+            offScreen.classList.remove('hidden');
+        } else {
+            offScreen.classList.add('hidden');
+        }
     }
 });
 
