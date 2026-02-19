@@ -192,33 +192,48 @@
 
     window.navig = (lat, lng) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank'); };
 
-    onValue(query(ref(db, 'brogliaccio'), limitToLast(12)), (snap) => {
+onValue(query(ref(db, 'brogliaccio'), limitToLast(12)), (snap) => {
         const data = snap.val(); if (!data) return;
         const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).sort((a, b) => b.id.localeCompare(a.id));
+        
+        // Trova l'ultimo messaggio della sala per questa squadra
         const sala = logs.find(l => l.dir === 'SA' && (l.squadra === sqId || l.squadra === "TUTTE"));
+        
         const wrapper = document.getElementById('wrapper-msg');
         const label = document.getElementById('label-msg');
         const testo = document.getElementById('testo-msg');
         const pulsanti = document.getElementById('area-pulsanti');
+        
         if (sala) {
-            idSalaAttivo = sala.id; viaAttiva = sala.m1; testo.innerText = sala.m1;
-            testo.classList.replace('text-slate-400', 'text-white');
-            if (sala.lat && sala.lat !== "" && sala.stato !== 'OK') {
+            idSalaAttivo = sala.id;
+            viaAttiva = sala.m1 || "Via non specificata"; // SALVATAGGIO TESTO PER INVIO SUCCESSIVO
+            testo.innerText = viaAttiva;
+            testo.classList.remove('text-slate-400');
+            testo.classList.add('text-white');
+
+            // Se il messaggio ha una latitudine (quindi è un comando di posizione) e non è ancora stato chiuso (OK)
+            if (sala.lat && sala.stato !== 'OK') {
                 wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-red-600 bg-red-900/10 shadow-2xl flex flex-col justify-center min-h-[110px]";
-                label.innerText = "🚨 ORDINE DI INTERVENTO:"; label.style.color = "#ef4444";
+                label.innerText = "🚨 ORDINE DI INTERVENTO:";
+                label.style.color = "#ef4444";
+                label.style.fontWeight = "600"; // Senza Bold pesante
                 pulsanti.classList.remove('hidden');
+                
                 if (sala.stato === 'ATTESA') {
-                    pulsanti.innerHTML = `<button onclick="cRic()" class="w-full bg-blue-600 py-6 rounded-3xl font-bold uppercase text-lg shadow-lg">✅ RICEVI ORDINE</button>`;
+                    pulsanti.innerHTML = `<button onclick="cRic()" class="w-full bg-blue-600 py-6 rounded-3xl font-medium uppercase text-lg shadow-lg">✅ RICEVI ORDINE</button>`;
                 } else {
                     pulsanti.innerHTML = `<div class="grid grid-cols-2 gap-3">
-                        <button onclick="navig(${sala.lat}, ${sala.lng})" class="bg-emerald-600 py-6 rounded-2xl font-bold uppercase text-xs shadow-lg">📍 NAVIGA</button>
-                        <button onclick="cArr()" class="bg-red-600 py-6 rounded-2xl font-bold uppercase text-xs shadow-lg">🏁 ARRIVATI</button>
+                        <button onclick="navig(${sala.lat}, ${sala.lng})" class="bg-emerald-600 py-6 rounded-2xl font-medium uppercase text-xs shadow-lg">📍 NAVIGA</button>
+                        <button onclick="cArr()" class="bg-red-600 py-6 rounded-2xl font-medium uppercase text-xs shadow-lg">🏁 ARRIVATI</button>
                     </div>`;
                 }
             } else {
+                // Messaggio semplice o ordine già completato
                 wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-blue-500 bg-blue-500/10 shadow-2xl flex flex-col justify-center min-h-[110px]";
                 label.innerText = (sala.stato === 'OK') ? "IN ATTESA DI ORDINI" : "✉️ COMUNICAZIONE DALLA SALA:";
-                label.style.color = "#3b82f6"; pulsanti.classList.add('hidden');
+                label.style.color = "#3b82f6";
+                label.style.fontWeight = "600";
+                pulsanti.classList.add('hidden');
             }
         }
     });
@@ -261,3 +276,4 @@
 </script>
 </body>
 </html>
+
