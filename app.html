@@ -3,25 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - App Operatore V4.4</title>
+    <title>PC THIENE - App Operatore V4.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; touch-action: manipulation; overflow-x: hidden; }
+        
+        /* Slide Switch GPS */
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 20px; }
         .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #10b981; }
         input:checked + .slider:before { transform: translateX(20px); }
         
+        /* Animazione Allarme Target */
         @keyframes pulse-red {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); transform: scale(1); }
-            50% { transform: scale(1.05); }
+            50% { transform: scale(1.02); }
             70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); transform: scale(1); }
         }
-        .pulse-warning { animation: pulse-red 1.5s infinite; border: 4px solid #ef4444; }
-        .recording-active { animation: pulse-red 0.8s infinite; background-color: #dc2626 !important; scale: 1.05; z-index: 50; }
+        .pulse-warning { animation: pulse-red 1.5s infinite; border: 4px solid #ef4444 !important; }
+        .recording-active { animation: pulse-red 0.8s infinite; background-color: #dc2626 !important; scale: 1.05; }
         
         #main-app-container, #inhibition-overlay { display: none; }
     </style>
@@ -30,8 +33,8 @@
 
     <div id="inhibition-overlay" class="fixed inset-0 z-[10000] bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
         <div class="text-6xl mb-4">🚫</div>
-        <h2 class="text-2xl font-black text-white uppercase italic">Accesso Disattivato</h2>
-        <p class="text-red-500 font-bold mt-2 uppercase text-xs">Terminale inibito dalla Sala Operativa</p>
+        <h2 class="text-2xl font-black text-white uppercase italic">Terminale Inibito</h2>
+        <p class="text-red-500 font-bold mt-2 uppercase text-xs">Accesso disattivato dalla Sala Operativa</p>
     </div>
 
     <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-900 flex flex-col items-center justify-center p-6">
@@ -58,13 +61,12 @@
             </div>
         </header>
 
-        <div id="target-area" class="mb-6 space-y-2 hidden">
-            </div>
+        <div id="target-area" class="mb-6 space-y-2 hidden"></div>
 
         <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 mb-6 text-center shadow-2xl">
             <div id="current-status" class="text-3xl font-black text-blue-500 italic mb-4 uppercase tracking-tighter">---</div>
             <div class="grid grid-cols-2 gap-2">
-                <button onclick="window.askConfirmStatus('Sede', '🏠 In Sede')" class="bg-slate-700 text-white font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🏠 In Sede</button>
+                <button onclick="window.askConfirmStatus('Sede', '🏠 In Sede')" class="bg-slate-700 text-white font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🏠 Sede</button>
                 <button onclick="window.askConfirmStatus('Uscita', '🚚 Uscita')" class="bg-amber-500 text-black font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🚚 Uscita</button>
                 <button onclick="window.askConfirmStatus('Intervento', '🚨 Posto')" class="bg-red-600 text-white font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🚨 Posto</button>
                 <button onclick="window.askConfirmStatus('Rientro', '🔙 Rientro')" class="bg-blue-600 text-white font-black py-4 rounded-xl text-[11px] uppercase active:scale-95">🔙 Rientro</button>
@@ -76,7 +78,7 @@
                 <span class="text-2xl">📷</span><span class="font-black text-[9px] uppercase">Foto</span>
                 <input type="file" id="input-foto" accept="image/*" capture="camera" class="hidden" onchange="window.handleImage(this.files[0])">
             </div>
-            <div id="btn-audio" class="bg-red-600 text-white rounded-xl p-4 flex flex-col items-center justify-center gap-1 active:scale-95 shadow-lg relative cursor-pointer text-center transition-all">
+            <div id="btn-audio" class="bg-red-600 text-white rounded-xl p-4 flex flex-col items-center justify-center gap-1 active:scale-95 shadow-lg relative cursor-pointer text-center">
                 <span id="audio-icon" class="text-2xl">🎤</span><span id="audio-label" class="font-black text-[9px] uppercase">Vocale</span>
             </div>
             <div onclick="window.askConfirmGPS()" class="bg-emerald-600 text-white rounded-xl p-4 flex flex-col items-center justify-center gap-1 active:scale-95 shadow-lg cursor-pointer text-center">
@@ -108,7 +110,7 @@
         const sqId = (urlParams.get('id') || "SQUADRA_TEST").toUpperCase();
         document.getElementById('sq-name').innerText = "SQUADRA: " + sqId;
 
-        // --- GESTIONE AUTH ---
+        // --- AUTH & INHIBITION ---
         onValue(ref(db, `anagrafica_squadre/${sqId}`), (snapshot) => {
             const data = snapshot.val();
             if (!data || data.attiva === false) {
@@ -116,6 +118,7 @@
                 document.getElementById('main-app-container').style.display = 'none';
             } else {
                 document.getElementById('inhibition-overlay').style.display = 'none';
+                document.getElementById('current-status').innerText = data.stato ? data.stato.toUpperCase() : "---";
                 if (sessionStorage.getItem('pc_auth_v3') === 'true') {
                     document.getElementById('login-overlay').style.display = 'none';
                     document.getElementById('main-app-container').style.display = 'block';
@@ -143,53 +146,69 @@
             });
         }
 
-        // --- GESTIONE TARGET OPERATIVO (POSIZIONE DA RAGGIUNGERE) ---
-        onValue(query(ref(db, 'brogliaccio'), limitToLast(30)), (snap) => {
+        // --- RICEZIONE TARGET GPS DA SALA OPERATIVA ---
+        onValue(query(ref(db, 'brogliaccio'), limitToLast(20)), (snap) => {
             const data = snap.val();
             const targetArea = document.getElementById('target-area');
-            const replyBox = document.getElementById('reply-box');
-            const replyText = document.getElementById('reply-text');
-            
             if (data) {
-                const logsArray = Object.entries(data).reverse();
-
-                // Cerchiamo l'ultimo target inviato dalla sala con coordinate
-                const lastTarget = logsArray.find(([k, l]) => l.squadra === sqId && l.dir === 'SA' && l.lat && (l.stato === 'ATTESA' || l.stato === 'RICEVUTO'));
+                const logs = Object.entries(data).reverse();
+                // Filtro: Messaggio Sala (dir SA) per questa squadra con coordinate, stato ATTESA o RICEVUTO
+                const lastTarget = logs.find(([k, l]) => l.squadra === sqId && l.dir === 'SA' && l.lat && (l.stato === 'ATTESA' || l.stato === 'RICEVUTO'));
                 
                 if (lastTarget) {
                     const [key, log] = lastTarget;
-                    targetFound = true;
+                    
+                    // Allarme se nuovo messaggio in ATTESA
+                    if (log.stato === 'ATTESA' && !sessionStorage.getItem('alert_'+key)) {
+                        if(navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
+                        sessionStorage.setItem('alert_'+key, 'true');
+                    }
+
                     targetArea.innerHTML = `
-                        <div class="p-5 rounded-3xl bg-slate-900 border-4 ${log.stato === 'ATTESA' ? 'pulse-warning border-red-600' : 'border-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.4)]'}">
-                            <p class="text-[10px] font-black uppercase text-blue-400 text-center tracking-widest mb-2">POSIZIONE DA RAGGIUNGERE</p>
-                            <h3 class="text-xl font-black text-center uppercase leading-tight text-white mb-4 italic">"${log.m1}"</h3>
-                            
+                        <div class="p-5 rounded-3xl bg-slate-900 border-4 ${log.stato === 'ATTESA' ? 'pulse-warning border-red-600' : 'border-blue-600 shadow-lg'}">
+                            <p class="text-[9px] font-black uppercase text-blue-400 text-center tracking-widest mb-1">Target Inviato dalla Sala</p>
+                            <h3 class="text-xl font-black text-center uppercase leading-tight text-white mb-4 italic">${log.m1}</h3>
                             ${log.stato === 'ATTESA' ? 
-                                `<button onclick="window.confermaRicezione('${key}')" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl uppercase text-sm shadow-lg active:scale-95">✅ Conferma Ricezione</button>` : 
+                                `<button onclick="window.confermaRicezione('${key}')" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl uppercase shadow-lg active:scale-95">✅ Conferma Ricezione</button>` : 
                                 `<div class="flex flex-col gap-3">
-                                    <button onclick="window.openNavigator(${log.lat}, ${log.lng})" class="w-full bg-emerald-600 text-white font-black py-5 rounded-2xl uppercase text-sm flex items-center justify-center gap-2 shadow-lg active:scale-95">🗺️ Avvia Navigatore</button>
-                                    <button onclick="window.askConfirmArrivo('${key}')" class="w-full bg-red-600 text-white font-black py-4 rounded-2xl uppercase text-[11px] opacity-80 active:scale-95">🏁 Arrivo sul Posto</button>
+                                    <button onclick="window.openNavigator(${log.lat}, ${log.lng})" class="w-full bg-emerald-600 text-white font-black py-5 rounded-2xl uppercase flex items-center justify-center gap-2 active:scale-95">🗺️ Avvia Navigatore</button>
+                                    <button onclick="window.askConfirmArrivo('${key}')" class="w-full bg-red-600 text-white font-black py-4 rounded-2xl uppercase text-[10px] opacity-90 active:scale-95">🏁 Arrivo sul Posto</button>
                                 </div>`
                             }
                         </div>`;
                     targetArea.classList.remove('hidden');
-                } else {
-                    targetArea.classList.add('hidden');
-                }
+                } else { targetArea.classList.add('hidden'); }
 
-                // Ultima nota dalla sala
-                const lastReply = Object.values(data).reverse().find(l => l.squadra === sqId && l.dir === 'SQ' && l.m2);
+                // Gestione Risposte Note Sala
+                const lastReply = logs.find(l => l[1].squadra === sqId && l[1].dir === 'SQ' && l[1].m2);
                 if (lastReply) {
-                    replyBox.classList.remove('hidden');
-                    replyText.innerText = lastReply.m2;
-                } else { replyBox.classList.add('hidden'); }
+                    document.getElementById('reply-box').classList.remove('hidden');
+                    document.getElementById('reply-text').innerText = lastReply[1].m2;
+                } else { document.getElementById('reply-box').classList.add('hidden'); }
             }
         });
 
-        // --- AZIONI CON DOPPIA CONFERMA ---
+        window.confermaRicezione = (k) => update(ref(db, `brogliaccio/${k}`), { stato: 'RICEVUTO' });
+        
+        window.openNavigator = (lat, lng) => {
+            const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+            window.open(url, '_blank');
+        };
 
+        window.askConfirmArrivo = (key) => {
+            Swal.fire({ title:'CONFERMI ARRIVO?', icon:'success', showCancelButton:true, background:'#0f172a', color:'#fff' }).then(async (r) => {
+                if(r.isConfirmed) {
+                    const p = await getGPS();
+                    update(ref(db, `brogliaccio/${key}`), { stato: 'OK' });
+                    update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: p.lat, lng: p.lng });
+                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "🏁 ARRIVATI SUL POSTO", dir: 'SQ', stato: 'OK', lat: p.lat, lng: p.lng });
+                }
+            });
+        };
+
+        // --- INVIO STATI & MESSAGGI ---
         window.askConfirmStatus = (v, label) => {
-            Swal.fire({ title: 'CAMBIARE STATO?', text: label.toUpperCase(), icon: 'question', showCancelButton: true, confirmButtonText: 'SI', background: '#0f172a', color: '#fff' }).then(async (r) => {
+            Swal.fire({ title:'CAMBIA STATO?', text:label, showCancelButton:true, background:'#0f172a', color:'#fff' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getGPS();
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: v, lat: p.lat, lng: p.lng });
@@ -198,21 +217,9 @@
             });
         };
 
-        window.handleImage = (f) => {
-            if(!f) return; const r = new FileReader(); r.readAsDataURL(f);
-            r.onload = (e) => {
-                Swal.fire({ title: 'INVIARE FOTO?', imageUrl: e.target.result, showCancelButton: true, confirmButtonText: 'INVIA', background: '#0f172a', color: '#fff' }).then(async (res) => {
-                    if(res.isConfirmed) {
-                        const p = await getGPS();
-                        push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "📷 FOTO", mediaUrl: e.target.result, mediaType: 'IMG', lat: p.lat, lng: p.lng, dir: 'SQ', stato: 'ATTESA' });
-                    }
-                });
-            };
-        };
-
         window.askConfirmText = () => {
             const t = document.getElementById('msg-text').value.trim(); if(!t) return;
-            Swal.fire({ title: 'INVIARE MESSAGGIO?', text: t.toUpperCase(), showCancelButton: true, confirmButtonText: 'INVIA', background: '#0f172a', color: '#fff' }).then(async (r) => {
+            Swal.fire({ title:'INVIARE?', text:t.toUpperCase(), showCancelButton:true, background:'#0f172a', color:'#fff' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getGPS();
                     push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: t.toUpperCase(), lat: p.lat, lng: p.lng, dir: 'SQ', stato: 'ATTESA' });
@@ -222,67 +229,53 @@
         };
 
         window.askConfirmGPS = () => {
-            Swal.fire({ title: 'INVIARE GPS?', text: 'Comunica la tua posizione attuale', icon:'info', showCancelButton: true, background: '#0f172a', color: '#fff' }).then(async (r) => {
+            Swal.fire({ title:'INVIA GPS?', showCancelButton:true, background:'#0f172a', color:'#fff' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getGPS();
-                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "📍 POSIZIONE GPS", lat: p.lat, lng: p.lng, dir: 'SQ', stato: 'ATTESA' });
+                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "📍 POSIZIONE GPS ATTUALE", lat: p.lat, lng: p.lng, dir: 'SQ', stato: 'ATTESA' });
                 }
             });
         };
 
-        // --- AUDIO ---
+        window.handleImage = (f) => {
+            if(!f) return; const reader = new FileReader(); reader.readAsDataURL(f);
+            reader.onload = (e) => {
+                Swal.fire({ title:'INVIA FOTO?', imageUrl:e.target.result, showCancelButton:true, background:'#0f172a', color:'#fff' }).then(async (res) => {
+                    if(res.isConfirmed) {
+                        const p = await getGPS();
+                        push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "📷 FOTO INVIATA", mediaUrl:e.target.result, mediaType:'IMG', lat:p.lat, lng:p.lng, dir:'SQ', stato:'ATTESA' });
+                    }
+                });
+            };
+        };
+
+        // --- GESTIONE VOCALE ---
         let mediaRecorder; let audioChunks = [];
         const btnAudio = document.getElementById('btn-audio');
-        const audioLabel = document.getElementById('audio-label');
-
         btnAudio.onclick = async () => {
             if (!mediaRecorder || mediaRecorder.state === "inactive") {
                 try {
                     const s = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(s);
-                    audioChunks = [];
+                    mediaRecorder = new MediaRecorder(s); audioChunks = [];
                     mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
                     mediaRecorder.onstop = () => {
                         btnAudio.classList.remove('recording-active');
-                        audioLabel.innerText = "Vocale";
+                        document.getElementById('audio-label').innerText = "Vocale";
                         const b = new Blob(audioChunks, { type: 'audio/mp3' });
-                        const reader = new FileReader();
-                        reader.readAsDataURL(b);
-                        reader.onloadend = () => {
-                            Swal.fire({
-                                title: 'INVIARE AUDIO?',
-                                html: `<audio src="${reader.result}" controls class="w-full mt-4"></audio>`,
-                                showCancelButton: true,
-                                confirmButtonText: 'INVIA 🎤',
-                                background: '#0f172a',
-                                color: '#fff'
-                            }).then(async (res) => {
+                        const r = new FileReader(); r.readAsDataURL(b);
+                        r.onloadend = () => {
+                            Swal.fire({ title:'INVIA VOCALE?', html:`<audio src="${r.result}" controls class="w-full mt-2"></audio>`, showCancelButton:true, background:'#0f172a', color:'#fff' }).then(async (res) => {
                                 if(res.isConfirmed) {
                                     const p = await getGPS();
-                                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "🎤 VOCALE", mediaUrl: reader.result, mediaType: 'AUDIO', lat: p.lat, lng: p.lng, dir: 'SQ', stato: 'ATTESA' });
+                                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "🎤 MESSAGGIO VOCALE", mediaUrl:r.result, mediaType:'AUDIO', lat:p.lat, lng:p.lng, dir:'SQ', stato:'ATTESA' });
                                 }
                             });
                         };
                     };
-                    mediaRecorder.start();
-                    btnAudio.classList.add('recording-active');
-                    audioLabel.innerText = "STOP ⏹️";
+                    mediaRecorder.start(); btnAudio.classList.add('recording-active'); document.getElementById('audio-label').innerText = "STOP ⏹️";
                 } catch (err) { Swal.fire('Errore microfono'); }
             } else { mediaRecorder.stop(); }
         };
-
-        window.confermaRicezione = (k) => update(ref(db, `brogliaccio/${k}`), { stato: 'RICEVUTO' });
-        window.askConfirmArrivo = (key) => {
-            Swal.fire({ title: 'CONFERMI ARRIVO?', icon: 'success', showCancelButton: true, background: '#0f172a', color: '#fff' }).then(async (r) => {
-                if(r.isConfirmed) {
-                    const p = await getGPS();
-                    update(ref(db, `brogliaccio/${key}`), { stato: 'OK' });
-                    update(ref(db, `anagrafica_squadre/${sqId}`), { lat: p.lat, lng: p.lng, stato: 'Intervento' });
-                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "🏁 SUL POSTO", dir: 'SQ', stato: 'ATTESA', lat: p.lat, lng: p.lng });
-                }
-            });
-        };
-        window.openNavigator = (lat, lng) => window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
     </script>
 </body>
 </html>
