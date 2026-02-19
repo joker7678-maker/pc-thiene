@@ -142,7 +142,6 @@
         return push(ref(db, 'brogliaccio'), { ora, squadra: sqId, m1: testo.toUpperCase(), dir: 'SQ', stato, ...pos, ...extra });
     }
 
-    // --- DOPPIA CONFERMA STATI ---
     window.askStatus = (s, icon) => {
         Swal.fire({ title: 'CAMBIA STATO?', text: `Unità in: ${s}`, icon: 'question', showCancelButton: true }).then((r) => {
             if(r.isConfirmed) { 
@@ -164,21 +163,25 @@
         inviaNuovo(t, 'ATTESA').then(() => { document.getElementById('msg-input').value = ""; });
     };
 
-    // --- LOG RICEVUTO (DOPPIA CONFERMA) ---
+    // --- RICEZIONE ORDINE CON LOG AUTOMATICO ---
     window.cRic = () => { 
         if (idSalaAttivo) {
+            // 1. Aggiorna lo stato nel messaggio della sala
             update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'RICEVUTO' }); 
+            // 2. INVIA LOG AUTOMATICO DI RISPOSTA IN ATTESA
             inviaNuovo("✅ ORDINE RICEVUTO: IN MOVIMENTO", 'ATTESA');
             Swal.fire({ icon: 'success', title: 'RICEVUTO', timer: 800, showConfirmButton: false });
         }
     };
 
-    // --- LOG ARRIVATI (DOPPIA CONFERMA) ---
+    // --- ARRIVATI SUL POSTO CON LOG AUTOMATICO ---
     window.cArr = () => {
         if (!idSalaAttivo) return;
         Swal.fire({ title: 'ARRIVATI SUL POSTO?', icon: 'warning', showCancelButton: true }).then(async (r) => {
             if(r.isConfirmed) {
+                // Chiude comando sala
                 await update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'OK' });
+                // Invia log di arrivo in attesa
                 await inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, 'ATTESA');
                 update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
                 idSalaAttivo = null;
@@ -186,13 +189,13 @@
         });
     };
 
-    window.navig = (lat, lng) => { window.open(`http://maps.google.com/maps?q=${lat},${lng}&travelmode=driving`, '_blank'); };
+    window.navig = (lat, lng) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank'); };
 
-    // --- RICEZIONE E BLOCCO ---
     onValue(query(ref(db, 'brogliaccio'), limitToLast(12)), (snap) => {
         const data = snap.val(); if (!data) return;
         const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).sort((a, b) => b.id.localeCompare(a.id));
         const sala = logs.find(l => l.dir === 'SA' && (l.squadra === sqId || l.squadra === "TUTTE"));
+        
         const wrapper = document.getElementById('wrapper-msg');
         const label = document.getElementById('label-msg');
         const testo = document.getElementById('testo-msg');
@@ -210,6 +213,7 @@
                 wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-red-600 bg-red-900/10 shadow-2xl flex flex-col justify-center min-h-[110px] relative z-[50]";
                 label.innerText = "🚨 ORDINE DI INTERVENTO:"; label.style.color = "#ef4444";
                 pulsanti.classList.remove('hidden');
+                
                 if (sala.stato === 'ATTESA') {
                     pulsanti.innerHTML = `<button onclick="cRic()" class="w-full bg-blue-600 py-5 rounded-3xl font-bold uppercase text-lg shadow-lg">✅ RICEVI ORDINE</button>`;
                 } else {
@@ -228,7 +232,6 @@
         }
     });
 
-    // --- DISATTIVAZIONE REMOTA ---
     onValue(ref(db, `anagrafica_squadre/${sqId}`), (s) => {
         const d = s.val(); if(!d) return;
         document.getElementById('current-status').innerText = (d.stato || "---").toUpperCase();
@@ -236,7 +239,6 @@
         else document.getElementById('off-screen').classList.add('hidden');
     });
 
-    // --- INVIO FOTO/VOCALI CON DOPPIA CONFERMA ---
     window.upFoto = (f) => {
         if (!f) return;
         const reader = new FileReader();
@@ -258,7 +260,7 @@
                 const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                 const r = new FileReader();
                 r.onload = (e) => {
-                    Swal.fire({ title: 'INVIARE VOCALE?', html: `<audio controls class="w-full"><source src="${e.target.result}"></audio>`, showCancelButton: true }).then((res) => {
+                    Swal.fire({ title: 'INVIARE VOCALE?', html: `<audio controls class="w-full mt-2"><source src="${e.target.result}"></audio>`, showCancelButton: true }).then((res) => {
                         if(res.isConfirmed) inviaNuovo("🎤 VOCALE ALLEGATO", 'ATTESA', { mediaUrl: e.target.result, mediaType: 'AUDIO' });
                     });
                 }; r.readAsDataURL(audioBlob);
