@@ -184,7 +184,7 @@
 
     window.sendGPSMan = () => { invia("📍 AGGIORNAMENTO POSIZIONE"); };
 
-    // --- RICEZIONE DOPPIA CONFERMA ---
+// --- RICEZIONE E GESTIONE MESSAGGI SALA ---
     onValue(query(ref(db, 'brogliaccio'), limitToLast(8)), (snap) => {
         const data = snap.val(); if (!data) return;
         const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).sort((a, b) => b.id.localeCompare(a.id));
@@ -196,7 +196,6 @@
         if (sala) {
             box.classList.remove('hidden');
             document.getElementById('testo-ultimo-messaggio').innerText = sala.m1;
-            document.getElementById('text-msg-sala').innerText = sala.m1;
             
             if (sala.lat && sala.stato !== 'OK') {
                 tArea.classList.remove('hidden');
@@ -213,13 +212,55 @@
         } else { box.classList.add('hidden'); }
     });
 
-    window.cRic = (id) => { update(ref(db, `brogliaccio/${id}`), { stato: 'RICEVUTO' }); };
-    window.cArr = (id, via) => {
-        update(ref(db, `brogliaccio/${id}`), { stato: 'OK' });
-        invia(`🏁 ARRIVATI A: ${via}`);
-        update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
+    // --- FUNZIONI OPERATIVE ---
+
+    window.cRic = (id) => {
+        Swal.fire({
+            title: 'CONFERMI RICEZIONE?',
+            text: "La Sala saprà che sei partito",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'SÌ, RICEVUTO'
+        }).then((res) => {
+            if (res.isConfirmed) {
+                update(ref(db, `brogliaccio/${id}`), { stato: 'RICEVUTO' });
+                invia("✅ MESSAGGIO RICEVUTO - IN MOVIMENTO");
+            }
+        });
     };
-    window.navig = (lat, lng) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank'); };
+
+    window.cArr = (id, via) => {
+        Swal.fire({
+            title: 'ARRIVATI SUL POSTO?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'SÌ, ARRIVATI'
+        }).then((res) => {
+            if (res.isConfirmed) {
+                update(ref(db, `brogliaccio/${id}`), { stato: 'OK' });
+                invia(`🏁 ARRIVATI A: ${via}`, { stato: 'ATTESA' }); // Forza riga rossa in Dash
+                update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
+            }
+        });
+    };
+
+    window.navig = (lat, lng) => {
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank');
+    };
+
+    window.sendGPSMan = () => {
+        Swal.fire({
+            title: 'INVIARE GPS?',
+            icon: 'location',
+            showCancelButton: true,
+            confirmButtonText: 'INVIA POSIZIONE'
+        }).then((res) => {
+            if (res.isConfirmed) {
+                invia("📍 AGGIORNAMENTO POSIZIONE GPS");
+                Swal.fire({ icon: 'success', title: 'GPS INVIATO', toast: true, position: 'top', timer: 1500 });
+            }
+        });
+    };
 
     onValue(ref(db, `anagrafica_squadre/${sqId}`), (snap) => {
         const val = snap.val(); if (val) document.getElementById('current-status').innerText = (val.stato || "---").toUpperCase();
