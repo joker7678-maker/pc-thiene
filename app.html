@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; touch-action: manipulation; overflow: hidden; height: 100vh; }
+        body { font-family: 'Inter', sans-serif; background: #020617; color: white; touch-action: manipulation; overflow: hidden; height: 100vh; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 20px; }
         .slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
@@ -23,7 +23,7 @@
 
     <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-950 flex items-center justify-center p-6 text-center">
         <div class="w-full max-w-sm glass p-8 rounded-[2.5rem]">
-            <h2 class="text-2xl font-black text-white mb-6 uppercase italic">Sblocco 2026</h2>
+            <h2 class="text-2xl font-black text-white mb-6 uppercase italic">Sblocco</h2>
             <input type="password" id="app-password" class="w-full bg-slate-900 border-2 border-slate-700 rounded-2xl p-4 text-center text-4xl mb-6 text-white outline-none" placeholder="••••" inputmode="numeric">
             <button onclick="window.checkAppPassword()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl uppercase">Accedi</button>
         </div>
@@ -31,9 +31,9 @@
 
     <div id="main-app-container" class="flex-1 flex flex-col hidden overflow-hidden">
         <header class="flex justify-between items-center mb-4 px-1">
-            <div class="flex flex-col">
-                <h1 class="text-lg font-black italic text-white uppercase leading-none">PC <span class="text-blue-500">Thiene</span></h1>
-                <p id="sq-name" class="text-blue-400 font-bold text-[10px] uppercase mt-1 tracking-widest italic">---</p>
+            <div class="flex flex-col border-l-4 border-blue-600 pl-3">
+                <h1 class="text-lg font-black italic text-white uppercase leading-none tracking-tighter">PC <span class="text-blue-500">Thiene</span></h1>
+                <p id="sq-name" class="text-blue-400 font-bold text-[9px] uppercase mt-1 tracking-widest italic">---</p>
             </div>
             <div class="flex items-center gap-3 bg-slate-900/50 p-2 rounded-2xl">
                 <span class="text-[9px] font-black text-slate-400 uppercase italic">GPS</span>
@@ -49,7 +49,6 @@
                     <div id="target-area" class="hidden mt-4 pt-4 border-t border-white/5"></div>
                 </div>
             </div>
-            <div id="text-msg-sala" class="hidden"></div>
         </div>
 
         <div class="glass rounded-[2rem] p-3 mb-3 shadow-2xl">
@@ -57,8 +56,8 @@
             <div class="grid grid-cols-4 gap-2">
                 <button onclick="window.askStato('Sede', '🏠')" class="bg-slate-800 py-4 rounded-2xl text-[10px] font-black uppercase">SEDE</button>
                 <button onclick="window.askStato('Uscita', '🚚')" class="bg-amber-500 text-black py-4 rounded-2xl text-[10px] font-black uppercase shadow-lg">USCITA</button>
-                <button onclick="window.askStato('Intervento', '🚨')" class="bg-red-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase shadow-lg tracking-tighter">POSTO</button>
-                <button onclick="window.askStato('Rientro', '🔙')" class="bg-blue-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase shadow-lg tracking-tighter">RIENTRO</button>
+                <button onclick="window.askStato('Intervento', '🚨')" class="bg-red-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase shadow-lg">POSTO</button>
+                <button onclick="window.askStato('Rientro', '🔙')" class="bg-blue-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase shadow-lg">RIENTRO</button>
             </div>
         </div>
 
@@ -77,7 +76,7 @@
 
         <div class="glass rounded-[2rem] p-3 shadow-2xl">
             <textarea id="msg-text" class="w-full bg-slate-900/50 border border-slate-700 rounded-2xl p-3 text-xs font-normal text-white mb-2 h-16 outline-none uppercase resize-none" placeholder="SCRIVI..."></textarea>
-            <button onclick="window.askMsg()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl uppercase text-[11px] italic tracking-widest">Invia Messaggio</button>
+            <button onclick="window.askMsg()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl uppercase text-[11px] italic tracking-widest">Invia</button>
         </div>
     </div>
 
@@ -91,67 +90,59 @@
     const sqId = (urlParams.get('id') || "SQUADRA_TEST").toUpperCase();
     document.getElementById('sq-name').innerText = "UNITÀ: " + sqId;
 
+    // AUTO-LOGIN
+    if (localStorage.getItem('logged_pc') === 'true') {
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('main-app-container').classList.remove('hidden');
+    }
+
     window.checkAppPassword = () => {
         if (document.getElementById('app-password').value === "2026") {
+            localStorage.setItem('logged_pc', 'true');
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('main-app-container').classList.remove('hidden');
+        } else {
+            Swal.fire('Errore', 'Password errata', 'error');
         }
     };
 
-    // --- LOGICA CORE INVIO ---
     function invia(testo, extra = {}) {
         const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
         let log = { ora, squadra: sqId, m1: testo.toUpperCase(), dir: 'SQ', stato: 'OK', lat: '', lng: '', ...extra };
-
         if (navigator.geolocation && document.getElementById('gps-toggle').checked) {
             navigator.geolocation.getCurrentPosition((p) => {
-                log.lat = p.coords.latitude.toFixed(6);
-                log.lng = p.coords.longitude.toFixed(6);
+                log.lat = p.coords.latitude.toFixed(6); log.lng = p.coords.longitude.toFixed(6);
                 update(ref(db, `anagrafica_squadre/${sqId}`), { lat: log.lat, lng: log.lng, ultimo_contatto: ora });
                 push(ref(db, 'brogliaccio'), log);
             }, () => { push(ref(db, 'brogliaccio'), log); }, { timeout: 4000 });
         } else { push(ref(db, 'brogliaccio'), log); }
     }
 
-    // --- GESTIONE FOTO CON ANTEPRIMA ---
     window.handleFoto = (file) => {
         if (!file) return;
         const reader = new FileReader();
         reader.onload = (e) => {
-            Swal.fire({
-                title: 'INVIARE FOTO?',
-                html: `<img src="${e.target.result}" class="w-full rounded-2xl">`,
-                showCancelButton: true, confirmButtonText: 'INVIA', cancelButtonText: 'ANNULLA'
-            }).then((res) => {
-                if(res.isConfirmed) {
-                    invia("📷 FOTO ALLEGATA", { mediaUrl: e.target.result, mediaType: 'IMG' });
-                }
+            Swal.fire({ title: 'INVIARE FOTO?', html: `<img src="${e.target.result}" class="w-full rounded-2xl">`, showCancelButton: true }).then((res) => {
+                if(res.isConfirmed) invia("📷 FOTO ALLEGATA", { mediaUrl: e.target.result, mediaType: 'IMG' });
             });
         }; reader.readAsDataURL(file);
     };
 
-    // --- GESTIONE AUDIO CON REGISTRAZIONE ---
+    // AUDIO
     let mediaRecorder; let audioChunks = [];
     const btnAudio = document.getElementById('btn-audio');
-
     btnAudio.onclick = async () => {
         if (!mediaRecorder || mediaRecorder.state === "inactive") {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorder = new MediaRecorder(stream);
             audioChunks = [];
             mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = async () => {
+            mediaRecorder.onstop = () => {
                 const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    Swal.fire({
-                        title: 'INVIARE VOCALE?',
-                        html: `<audio controls class="w-full mt-2"><source src="${e.target.result}" type="audio/webm"></audio>`,
-                        showCancelButton: true, confirmButtonText: 'INVIA'
-                    }).then((res) => {
-                        if(res.isConfirmed) {
-                            invia("🎤 VOCALE ALLEGATO", { mediaUrl: e.target.result, mediaType: 'AUDIO' });
-                        }
+                    Swal.fire({ title: 'INVIARE VOCALE?', html: `<audio controls class="w-full"><source src="${e.target.result}"></audio>`, showCancelButton: true }).then((res) => {
+                        if(res.isConfirmed) invia("🎤 VOCALE ALLEGATO", { mediaUrl: e.target.result, mediaType: 'AUDIO' });
                     });
                 }; reader.readAsDataURL(audioBlob);
             };
@@ -165,14 +156,9 @@
         }
     };
 
-    // --- STATI E TESTO ---
     window.askStato = (s, icona) => {
-        Swal.fire({ title: 'CONFERMI?', text: `Cambio stato in ${s}`, showCancelButton: true }).then((r) => {
-            if(r.isConfirmed) {
-                update(ref(db, `anagrafica_squadre/${sqId}`), { stato: s });
-                invia(`STATO: ${icona} ${s}`);
-            }
-        });
+        update(ref(db, `anagrafica_squadre/${sqId}`), { stato: s });
+        invia(`STATO: ${icona} ${s}`);
     };
 
     window.askMsg = () => {
@@ -182,89 +168,38 @@
         document.getElementById('msg-text').value = "";
     };
 
-    window.sendGPSMan = () => { invia("📍 AGGIORNAMENTO POSIZIONE"); };
-
-// --- RICEZIONE E GESTIONE MESSAGGI SALA ---
+    // --- RICEZIONE E RISPOSTE ---
     onValue(query(ref(db, 'brogliaccio'), limitToLast(8)), (snap) => {
         const data = snap.val(); if (!data) return;
         const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).sort((a, b) => b.id.localeCompare(a.id));
         const sala = logs.find(l => l.dir === 'SA' && (l.squadra === sqId || l.squadra === "TUTTE"));
-
         const box = document.getElementById('box-ultimo-messaggio');
         const tArea = document.getElementById('target-area');
 
         if (sala) {
             box.classList.remove('hidden');
             document.getElementById('testo-ultimo-messaggio').innerText = sala.m1;
-            
             if (sala.lat && sala.stato !== 'OK') {
                 tArea.classList.remove('hidden');
                 if (sala.stato === 'ATTESA') {
-                    tArea.innerHTML = `<button onclick="window.cRic('${sala.id}')" class="w-full bg-blue-600 py-6 rounded-3xl font-black uppercase italic shadow-lg">✅ Ricevuto</button>`;
+                    tArea.innerHTML = `<button onclick="window.cRic('${sala.id}')" class="w-full bg-blue-600 py-6 rounded-3xl font-black uppercase shadow-lg">✅ Ricevuto</button>`;
                 } else {
-                    tArea.innerHTML = `
-                    <div class="grid grid-cols-2 gap-3">
-                        <button onclick="window.navig(${sala.lat}, ${sala.lng})" class="bg-emerald-600 py-6 rounded-2xl font-black uppercase italic shadow-lg">📍 Naviga</button>
-                        <button onclick="window.cArr('${sala.id}', '${sala.m1.replace(/'/g, "\\'")}')" class="bg-red-600 py-6 rounded-2xl font-black uppercase italic shadow-lg">🏁 Arrivati</button>
-                    </div>`;
+                    tArea.innerHTML = `<div class="grid grid-cols-2 gap-3"><button onclick="window.navig(${sala.lat}, ${sala.lng})" class="bg-emerald-600 py-6 rounded-2xl font-black uppercase shadow-lg">📍 Naviga</button><button onclick="window.cArr('${sala.id}', '${sala.m1.replace(/'/g, "\\'")}')" class="bg-red-600 py-6 rounded-2xl font-black uppercase shadow-lg">🏁 Arrivati</button></div>`;
                 }
             } else { tArea.classList.add('hidden'); }
         } else { box.classList.add('hidden'); }
     });
 
-    // --- FUNZIONI OPERATIVE ---
-
- // 1. Quando la squadra preme "RICEVUTO"
     window.cRic = (id) => {
-        Swal.fire({
-            title: 'CONFERMI RICEZIONE?',
-            text: "La risposta verrà inserita nel log della Sala",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'SÌ, RICEVUTO'
-        }).then((res) => {
-            if (res.isConfirmed) {
-                // Aggiorna lo STESSO LOG inserendo la risposta nel campo m2
-                update(ref(db, `brogliaccio/${id}`), { 
-                    stato: 'RICEVUTO',
-                    m2: "✅ PRESO IN CARICO - IN MOVIMENTO"
-                });
-            }
-        });
-    };
-
-    // 2. Quando la squadra preme "ARRIVATI"
-    window.cArr = (id, via) => {
-        Swal.fire({
-            title: 'ARRIVATI SUL POSTO?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'SÌ, ARRIVATI'
-        }).then((res) => {
-            if (res.isConfirmed) {
-                // Aggiorna lo STESSO LOG: m2 diventa la conferma di arrivo
-                // stato 'ATTESA' fa diventare la riga ROSSA in Dashboard
-                update(ref(db, `brogliaccio/${id}`), { 
-                    stato: 'ATTESA', 
-                    m2: "🏁 ARRIVATI SUL POSTO"
-                });
-                
-                // Aggiorna lo stato della squadra per la mappa
-                update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
-            }
+        Swal.fire({ title: 'RICEVUTO?', icon: 'question', showCancelButton: true }).then((res) => {
+            if (res.isConfirmed) update(ref(db, `brogliaccio/${id}`), { stato: 'RICEVUTO', m2: "✅ PRESO IN CARICO - IN MOVIMENTO" });
         });
     };
 
     window.cArr = (id, via) => {
-        Swal.fire({
-            title: 'ARRIVATI SUL POSTO?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'SÌ, ARRIVATI'
-        }).then((res) => {
+        Swal.fire({ title: 'ARRIVATI SUL POSTO?', icon: 'warning', showCancelButton: true }).then((res) => {
             if (res.isConfirmed) {
-                update(ref(db, `brogliaccio/${id}`), { stato: 'OK' });
-                invia(`🏁 ARRIVATI A: ${via}`, { stato: 'ATTESA' }); // Forza riga rossa in Dash
+                update(ref(db, `brogliaccio/${id}`), { stato: 'ATTESA', m2: "🏁 ARRIVATI SUL POSTO" });
                 update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
             }
         });
@@ -275,16 +210,8 @@
     };
 
     window.sendGPSMan = () => {
-        Swal.fire({
-            title: 'INVIARE GPS?',
-            icon: 'location',
-            showCancelButton: true,
-            confirmButtonText: 'INVIA POSIZIONE'
-        }).then((res) => {
-            if (res.isConfirmed) {
-                invia("📍 AGGIORNAMENTO POSIZIONE GPS");
-                Swal.fire({ icon: 'success', title: 'GPS INVIATO', toast: true, position: 'top', timer: 1500 });
-            }
+        Swal.fire({ title: 'INVIARE GPS?', icon: 'location', showCancelButton: true }).then((res) => {
+            if (res.isConfirmed) invia("📍 AGGIORNAMENTO POSIZIONE GPS");
         });
     };
 
