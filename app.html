@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - V8.2</title>
+    <title>PC THIENE - V8.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -11,72 +11,73 @@
         body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; touch-action: manipulation; overflow: hidden; height: 100vh; }
         .glass { background: rgba(30, 41, 59, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
         .pulse-recording { animation: pulse-red 1s infinite; background-color: #ef4444 !important; border-color: #fca5a5 !important; }
-        @keyframes pulse-red { 0% { transform: scale(1); } 50% { transform: scale(1.03); box-shadow: 0 0 25px rgba(239, 68, 68, 0.7); } 100% { transform: scale(1); } }
-        .swal2-popup { border-radius: 2rem !important; background: #1e293b !important; color: white !important; border: 1px solid rgba(255,255,255,0.1); }
+        @keyframes pulse-red { 0% { transform: scale(1); } 50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(239, 68, 68, 0.8); } 100% { transform: scale(1); } }
+        .swal2-popup { border-radius: 2.5rem !important; background: #1e293b !important; color: white !important; border: 1px solid rgba(255,255,255,0.2); }
+        .swal2-title { font-weight: 900 !important; text-transform: uppercase !important; font-style: italic !important; }
     </style>
 </head>
-<body class="p-3 flex flex-col h-full">
+<body class="p-4 flex flex-col h-full">
 
     <div id="inhibition-overlay" class="fixed inset-0 z-[10000] bg-slate-950 flex flex-col items-center justify-center p-6 text-center" style="display:none;">
-        <div class="text-7xl mb-6">🚫</div>
-        <h2 class="text-2xl font-black text-white uppercase italic">Accesso Disattivato</h2>
-        <p class="text-slate-400 mt-2 uppercase text-[10px] tracking-widest">Contattare la Sala Operativa</p>
+        <div class="text-8xl mb-6">🚫</div>
+        <h2 class="text-3xl font-black text-white uppercase italic tracking-tighter">Accesso Disattivato</h2>
+        <p class="text-slate-400 mt-4 uppercase text-xs tracking-[0.3em]">Rivolgersi alla Sala Operativa</p>
     </div>
 
     <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-950 flex items-center justify-center p-6 text-center">
-        <div class="w-full max-w-sm bg-slate-900 p-8 rounded-[3rem] border border-slate-800 shadow-2xl">
-            <h2 class="text-3xl font-black italic text-blue-500 mb-6 uppercase tracking-tighter leading-none">PC <span class="text-white">THIENE</span></h2>
-            <input type="password" id="app-password" class="w-full bg-slate-950 border-2 border-slate-800 rounded-xl p-4 text-center text-4xl mb-6 text-white outline-none" placeholder="••••" inputmode="numeric">
-            <button onclick="window.checkAppPassword()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl uppercase shadow-lg active:scale-95">Entra</button>
+        <div class="w-full max-w-sm bg-slate-900 p-10 rounded-[4rem] border border-slate-800 shadow-2xl">
+            <h2 class="text-4xl font-black italic text-blue-500 mb-8 uppercase tracking-tighter leading-none">PC <span class="text-white">THIENE</span></h2>
+            <input type="password" id="app-password" class="w-full bg-slate-950 border-2 border-slate-800 rounded-2xl p-5 text-center text-5xl mb-8 text-white outline-none" placeholder="••••" inputmode="numeric">
+            <button onclick="window.checkAppPassword()" class="w-full bg-blue-600 text-white font-black py-6 rounded-[2rem] uppercase text-xl shadow-lg active:scale-95">Entra</button>
         </div>
     </div>
 
     <div id="main-app-container" class="hidden flex flex-col h-full">
-        <header class="flex justify-between items-center mb-4">
+        <header class="flex justify-between items-end mb-6">
             <div>
-                <h1 class="text-xl font-black italic text-white leading-none tracking-tighter uppercase">Protezione <span class="text-blue-500">Civile</span></h1>
-                <p id="sq-name" class="text-blue-400 font-black text-[10px] uppercase mt-1 tracking-widest">---</p>
+                <h1 class="text-3xl font-black italic text-white leading-none tracking-tighter uppercase">PC <span class="text-blue-500">THIENE</span></h1>
+                <p id="sq-name" class="text-blue-400 font-black text-sm uppercase mt-1 tracking-widest italic opacity-80">---</p>
             </div>
             <div class="flex items-center gap-2">
-                <span class="text-[9px] font-black text-slate-500 uppercase px-2 py-1 bg-slate-800 rounded-md">V8.2 Operativa</span>
+                <span class="text-[10px] font-black text-slate-500 uppercase px-3 py-1 bg-slate-800/50 border border-white/5 rounded-full">V8.3 Live</span>
             </div>
         </header>
 
-        <div id="nav-channel" class="mb-4 hidden">
+        <div id="nav-channel" class="mb-6 hidden">
             </div>
 
-        <div class="glass rounded-[2.5rem] p-4 mb-4 text-center border border-white/5 shadow-2xl">
-            <div id="current-status" class="text-3xl font-black text-blue-500 italic mb-4 uppercase leading-none tracking-tighter">---</div>
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="window.askConfirmStatus('Sede', '🏠 SEDE')" class="bg-slate-800 py-5 rounded-2xl text-[11px] font-black uppercase">🏠 Sede</button>
-                <button onclick="window.askConfirmStatus('Uscita', '🚚 USCITA')" class="bg-amber-500 text-black py-5 rounded-2xl text-[11px] font-black uppercase">🚚 Uscita</button>
-                <button onclick="window.askConfirmStatus('Intervento', '🚨 POSTO')" class="bg-red-600 py-5 rounded-2xl text-[11px] font-black uppercase">🚨 Posto</button>
-                <button onclick="window.askConfirmStatus('Rientro', '🔙 RIENTRO')" class="bg-blue-600 py-5 rounded-2xl text-[11px] font-black uppercase">🔙 Rientro</button>
+        <div class="glass rounded-[3rem] p-6 mb-6 text-center border border-white/10 shadow-2xl">
+            <div id="current-status" class="text-4xl font-black text-blue-500 italic mb-6 uppercase leading-none tracking-tighter">---</div>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="window.askConfirmStatus('Sede', '🏠 SEDE')" class="bg-slate-800 py-6 rounded-3xl text-sm font-black uppercase shadow-lg border border-white/5 active:bg-slate-700">🏠 Sede</button>
+                <button onclick="window.askConfirmStatus('Uscita', '🚚 USCITA')" class="bg-amber-500 text-black py-6 rounded-3xl text-sm font-black uppercase shadow-lg active:bg-amber-400">🚚 Uscita</button>
+                <button onclick="window.askConfirmStatus('Intervento', '🚨 POSTO')" class="bg-red-600 py-6 rounded-3xl text-sm font-black uppercase shadow-lg active:bg-red-500">🚨 Posto</button>
+                <button onclick="window.askConfirmStatus('Rientro', '🔙 RIENTRO')" class="bg-blue-600 py-6 rounded-3xl text-sm font-black uppercase shadow-lg active:bg-blue-500">🔙 Rientro</button>
             </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-3 mb-4">
-            <button onclick="document.getElementById('input-foto').click()" class="bg-white text-black rounded-[2rem] py-5 flex flex-col items-center gap-1 active:scale-90 shadow-xl">
-                <span class="text-3xl">📷</span>
-                <span class="font-black text-[10px]">FOTO</span>
+        <div class="grid grid-cols-3 gap-4 mb-6">
+            <button onclick="document.getElementById('input-foto').click()" class="bg-white text-black rounded-[2.5rem] py-6 flex flex-col items-center gap-2 active:scale-90 shadow-2xl">
+                <span class="text-4xl">📷</span>
+                <span class="font-black text-[11px] uppercase tracking-tighter">Foto</span>
                 <input type="file" id="input-foto" accept="image/*" capture="camera" class="hidden" onchange="window.previewImage(this)">
             </button>
 
-            <button id="btn-audio" class="bg-slate-800 text-white rounded-[2rem] py-5 flex flex-col items-center gap-1 active:scale-90 shadow-xl border border-white/5 transition-all">
-                <span id="audio-icon" class="text-3xl">🎤</span>
-                <span id="audio-label" class="font-black text-[10px]">VOCALE</span>
-                <span id="audio-timer" class="hidden text-xs font-black mt-1">00:00</span>
+            <button id="btn-audio" class="bg-slate-800 text-white rounded-[2.5rem] py-6 flex flex-col items-center gap-2 active:scale-90 shadow-2xl border border-white/10 transition-all">
+                <span id="audio-icon" class="text-4xl">🎤</span>
+                <span id="audio-label" class="font-black text-[11px] uppercase tracking-tighter">Vocale</span>
+                <span id="audio-timer" class="hidden text-sm font-black mt-1 text-red-400">00:00</span>
             </button>
 
-            <button onclick="window.askConfirmGPS()" class="bg-emerald-600 text-white rounded-[2rem] py-5 flex flex-col items-center gap-1 active:scale-90 shadow-xl">
-                <span class="text-3xl">📍</span>
-                <span class="font-black text-[10px]">GPS</span>
+            <button onclick="window.askConfirmGPS()" class="bg-emerald-600 text-white rounded-[2.5rem] py-6 flex flex-col items-center gap-2 active:scale-90 shadow-2xl">
+                <span class="text-4xl">📍</span>
+                <span class="font-black text-[11px] uppercase tracking-tighter">Gps</span>
             </button>
         </div>
 
-        <div class="glass rounded-[2rem] p-4 mt-auto shadow-2xl border border-white/10">
-            <textarea id="msg-input" class="w-full bg-slate-950/50 border border-slate-700 rounded-2xl p-4 text-sm font-bold text-white mb-3 h-20 outline-none uppercase placeholder:text-slate-600" placeholder="SCRIVI ALLA SALA..."></textarea>
-            <button onclick="window.askConfirmText()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl uppercase text-sm tracking-widest shadow-lg active:scale-95">Invia Messaggio</button>
+        <div class="glass rounded-[3rem] p-5 mt-auto shadow-2xl border border-white/10">
+            <textarea id="msg-input" class="w-full bg-slate-950/50 border border-slate-700 rounded-[2rem] p-5 text-lg font-bold text-white mb-4 h-24 outline-none uppercase placeholder:text-slate-700" placeholder="SCRIVI ALLA SALA..."></textarea>
+            <button onclick="window.askConfirmText()" class="w-full bg-blue-600 text-white font-black py-6 rounded-[2rem] uppercase text-lg tracking-widest shadow-xl active:scale-95">Invia Messaggio</button>
         </div>
     </div>
 
@@ -90,7 +91,7 @@
         const sqId = (urlParams.get('id') || "SQUADRA_TEST").toUpperCase();
         document.getElementById('sq-name').innerText = "UNITÀ: " + sqId;
 
-        const notifySala = () => Swal.fire({ icon:'success', title:'INVIATO', toast:true, position:'top', timer:2000, showConfirmButton:false });
+        const notifySala = () => Swal.fire({ icon:'success', title:'INVIATO', toast:true, position:'top', timer:2500, showConfirmButton:false });
 
         window.checkAppPassword = () => {
             if (document.getElementById('app-password').value === "2026") {
@@ -130,14 +131,14 @@
             if (activeTarget) {
                 nav.classList.remove('hidden');
                 nav.innerHTML = `
-                    <div class="glass p-4 rounded-3xl border-l-8 shadow-xl ${activeTarget.stato === 'ATTESA' ? 'pulse-red border-red-600' : 'border-blue-600'}">
-                        <p class="text-[10px] font-black text-blue-400 uppercase mb-1 italic">Destinazione</p>
-                        <div class="text-lg font-black text-white uppercase leading-tight mb-3">${activeTarget.m1}</div>
+                    <div class="glass p-6 rounded-[3rem] border-l-[12px] shadow-2xl ${activeTarget.stato === 'ATTESA' ? 'pulse-red border-red-600' : 'border-blue-600'}">
+                        <p class="text-xs font-black text-blue-400 uppercase mb-2 italic">Destinazione Inviata dalla Sala</p>
+                        <div class="text-2xl font-black text-white uppercase leading-tight mb-5">${activeTarget.m1}</div>
                         ${activeTarget.stato === 'ATTESA' ? 
-                          `<button onclick="window.confermaRicezione('${activeTarget.id}')" class="w-full bg-blue-600 py-4 rounded-2xl text-xs font-black uppercase">✅ Conferma Ricezione</button>` :
-                          `<div class="grid grid-cols-2 gap-3">
-                             <button onclick="window.openNav(${activeTarget.lat}, ${activeTarget.lng})" class="bg-emerald-600 py-4 rounded-2xl text-[10px] font-black uppercase">Naviga</button>
-                             <button onclick="window.askArrivo('${activeTarget.id}')" class="bg-red-600 py-4 rounded-2xl text-[10px] font-black uppercase">Arrivati</button>
+                          `<button onclick="window.confermaRicezione('${activeTarget.id}')" class="w-full bg-blue-600 py-5 rounded-[2rem] text-sm font-black uppercase shadow-xl active:bg-blue-500">✅ Conferma Ricezione</button>` :
+                          `<div class="grid grid-cols-2 gap-4">
+                             <button onclick="window.openNav(${activeTarget.lat}, ${activeTarget.lng})" class="bg-emerald-600 py-5 rounded-[2rem] text-xs font-black uppercase shadow-xl active:bg-emerald-500">Mappa</button>
+                             <button onclick="window.askArrivo('${activeTarget.id}')" class="bg-red-600 py-5 rounded-[2rem] text-xs font-black uppercase shadow-xl active:bg-red-500">Arrivati</button>
                            </div>`}
                     </div>`;
             } else { nav.classList.add('hidden'); }
@@ -151,7 +152,7 @@
         window.openNav = (lat, lng) => window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank');
 
         window.askArrivo = (key) => {
-            Swal.fire({ title: 'CONFERMI ARRIVO?', showCancelButton: true, confirmButtonText: 'ARRIVATI' }).then(async (r) => {
+            Swal.fire({ title: 'Siete Arrivati?', showCancelButton: true, confirmButtonText: 'SÌ, ARRIVATI' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getFinalPos();
                     await update(ref(db, `brogliaccio/${key}`), { stato: 'OK', m2: `ARRIVATI ORE ${new Date().toLocaleTimeString().slice(0,5)}` });
@@ -168,8 +169,8 @@
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     Swal.fire({
-                        title: 'INVIARE FOTO?',
-                        html: `<img src="${e.target.result}" style="width:100%; border-radius:1.5rem; margin-top:10px;">`,
+                        title: 'Inviare Foto?',
+                        html: `<img src="${e.target.result}" style="width:100%; border-radius:2rem; margin-top:10px; border:2px solid #334155;">`,
                         showCancelButton: true, confirmButtonText: 'INVIA', cancelButtonText: 'ANNULLA'
                     }).then(async (result) => {
                         if (result.isConfirmed) {
@@ -205,8 +206,8 @@
                     const blob = new Blob(audioChunks, { type: 'audio/webm' });
                     const audioUrl = URL.createObjectURL(blob);
                     Swal.fire({
-                        title: 'INVIARE VOCALE?',
-                        html: `<audio controls src="${audioUrl}" style="width:100%; margin-top:10px;"></audio>`,
+                        title: 'Inviare Vocale?',
+                        html: `<audio controls src="${audioUrl}" style="width:100%; margin-top:20px;"></audio>`,
                         showCancelButton: true, confirmButtonText: 'INVIA'
                     }).then(async (result) => {
                         if (result.isConfirmed) {
@@ -224,7 +225,7 @@
         };
 
         window.askConfirmStatus = (v, label) => {
-            Swal.fire({ title: 'CONFERMI STATO?', text: label, showCancelButton: true }).then(async (r) => {
+            Swal.fire({ title: 'Cambiare Stato?', text: label, showCancelButton: true }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getFinalPos();
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: v, lat: p.lat, lng: p.lng });
@@ -236,7 +237,7 @@
 
         window.askConfirmText = () => {
             const t = document.getElementById('msg-input').value.trim(); if(!t) return;
-            Swal.fire({ title: 'INVIARE MESSAGGIO?', text: t.toUpperCase(), showCancelButton: true }).then(async (r) => {
+            Swal.fire({ title: 'Inviare Messaggio?', text: t.toUpperCase(), showCancelButton: true }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getFinalPos();
                     push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: t.toUpperCase(), dir: 'SQ', lat: p.lat, lng: p.lng });
@@ -248,7 +249,7 @@
 
         window.askConfirmGPS = async () => {
             const p = await getFinalPos();
-            push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: `📍 POSIZIONE GPS`, lat: p.lat, lng: p.lng, dir: 'SQ' });
+            push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: `📍 POSIZIONE AGGIORNATA`, lat: p.lat, lng: p.lng, dir: 'SQ' });
             notifySala();
         };
     </script>
