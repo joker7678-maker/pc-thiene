@@ -218,16 +218,16 @@
     window.cRic = (id) => {
         Swal.fire({
             title: 'CONFERMI RICEZIONE?',
-            text: "Il log verrà aggiornato con la presa in carico",
+            text: "La risposta verrà inserita nel log della Sala",
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'SÌ, RICEVUTO'
         }).then((res) => {
             if (res.isConfirmed) {
-                // AGGIORNA LO STESSO LOG: cambia lo stato e aggiunge la nota al messaggio
+                // Aggiorna lo STESSO LOG inserendo la risposta nel campo m2
                 update(ref(db, `brogliaccio/${id}`), { 
                     stato: 'RICEVUTO',
-                    m1: document.getElementById('testo-ultimo-messaggio').innerText + " - ✅ PRESO IN CARICO"
+                    m2: "✅ PRESO IN CARICO - IN MOVIMENTO"
                 });
             }
         });
@@ -242,13 +242,14 @@
             confirmButtonText: 'SÌ, ARRIVATI'
         }).then((res) => {
             if (res.isConfirmed) {
-                // AGGIORNA LO STESSO LOG: imposta lo stato su ATTESA per far diventare la riga ROSSA in Dash
+                // Aggiorna lo STESSO LOG: m2 diventa la conferma di arrivo
+                // stato 'ATTESA' fa diventare la riga ROSSA in Dashboard
                 update(ref(db, `brogliaccio/${id}`), { 
                     stato: 'ATTESA', 
-                    m1: via + " - 🏁 ARRIVATI SUL POSTO"
+                    m2: "🏁 ARRIVATI SUL POSTO"
                 });
                 
-                // Aggiorna lo stato della squadra nel pannello anagrafica
+                // Aggiorna lo stato della squadra per la mappa
                 update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
             }
         });
