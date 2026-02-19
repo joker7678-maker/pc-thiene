@@ -107,6 +107,26 @@
             navigator.geolocation.getCurrentPosition(p => r({ lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) }), () => r({ lat: '', lng: '' }), { timeout: 3000 });
         });
     }
+    // Recupera la posizione attuale senza mostrare avvisi
+async function getPosForLog() {
+    return new Promise((r) => {
+        if (!document.getElementById('gps-toggle').checked) r({ lat: '', lng: '' });
+        navigator.geolocation.getCurrentPosition(
+            p => {
+                const coords = { lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) };
+                // Aggiorna anche la posizione dell'icona sulla mappa della sala
+                update(ref(db, `anagrafica_squadre/${sqId}`), { 
+                    lat: coords.lat, 
+                    lng: coords.lng, 
+                    ultimo_contatto: new Date().toLocaleTimeString('it-IT').slice(0,5) 
+                });
+                r(coords);
+            }, 
+            () => r({ lat: '', lng: '' }), 
+            { timeout: 3000 }
+        );
+    });
+}
 
 // MONITORAGGIO UNIFICATO (FIX DEFINITIVO RICEZIONE)
     onValue(query(ref(db, 'brogliaccio'), limitToLast(20)), (snap) => {
@@ -182,26 +202,63 @@ let via = document.getElementById('text-msg-sala').innerText
             }
         });
     };
+// Esempio per l'invio del messaggio di testo
+window.askConfirmText = async () => {
+    const t = document.getElementById('msg-text').value.trim(); 
+    if(!t) return;
+    
+    // Prende la posizione in automatico mentre invia il messaggio
+    const p = await getPosForLog();
+    
+    push(ref(db, 'brogliaccio'), { 
+        ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
+        squadra: sqId, 
+        m1: t.toUpperCase(), 
+        dir: 'SQ', 
+        stato: 'ATTESA',
+        lat: p.lat,
+        lng: p.lng
+    });
+    
+    document.getElementById('msg-text').value = "";
+    Swal.fire({ icon: 'success', title: 'Inviato', toast: true, position: 'top', timer: 1000, showConfirmButton: false });
+};
 
-    window.askConfirmText = () => {
-        const t = document.getElementById('msg-text').value.trim(); if(!t) return;
-        Swal.fire({ title: 'INVIARE?', text: t.toUpperCase(), showCancelButton: true }).then(async (r) => {
-            if(r.isConfirmed) {
-                const p = await getFinalPos();
-                push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: t.toUpperCase(), dir: 'SQ', stato: 'ATTESA', lat: p.lat, lng: p.lng });
-                document.getElementById('msg-text').value = "";
+window.askConfirmGPS = () => {
+    Swal.fire({
+        title: 'INVIA POSIZIONE',
+        text: 'Inserisci la via o il luogo attuale:',
+        input: 'text',
+        inputPlaceholder: 'es. VIA ROMA, 10...',
+        showCancelButton: true,
+        confirmButtonText: 'INVIA 📍',
+        background: '#0f172a',
+        color: '#fff',
+        preConfirm: (value) => {
+            if (!value) {
+                Swal.showValidationMessage('Inserisci una via!');
             }
-        });
-    };
-
-    window.askConfirmGPS = () => {
-        Swal.fire({ title: 'INVIARE GPS?', showCancelButton: true }).then(async (r) => {
-            if(r.isConfirmed) {
-                const p = await getFinalPos();
-                push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "📍 POSIZIONE GPS SQUADRA", dir: 'SQ', stato: 'ATTESA', lat: p.lat, lng: p.lng });
-            }
-        });
-    };
+            return value;
+        }
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            const p = await getPosForLog();
+            const via = result.value.toUpperCase();
+            
+            push(ref(db, 'brogliaccio'), { 
+                ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
+                squadra: sqId, 
+                m1: `📍 POSIZIONE: ${via}`, 
+                dir: 'SQ', 
+                stato: 'OK',
+                lat: p.lat,
+                lng: p.lng
+            });
+            
+            Swal.fire({ icon: 'success', title: 'GPS INVIATO', toast: true, position: 'top', timer: 1500, showConfirmButton: false });
+        }
+    });
+};
 
     window.handleImagePreview = (file) => {
         if (!file) return;
