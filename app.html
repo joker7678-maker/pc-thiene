@@ -148,53 +148,38 @@
         } else { targetArea.classList.add('hidden'); }
     });
 
-   window.rispondiRicevuto = (id, msgOrig) => {
+window.rispondiRicevuto = (idSala, msgOrig) => {
     const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
-    const dataOggi = new Date().toLocaleDateString('it-IT');
-
-    // Usiamo SET invece di UPDATE per sovrascrivere l'intera identità del record
-    // Questo "pulisce" il record da ogni traccia del mittente Sala
-    import("https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js").then((mod) => {
-        mod.set(mod.ref(db, `brogliaccio/${id}`), { 
-            ora: ora,
-            data: dataOggi,
-            squadra: sqId,        // Tuo ID (es. SQUADRA 1)
-            m1: msgOrig,          // Testo originale (es. VIA ROMA 10)
-            m2: `RICEVUTO ORE ${ora}`,
-            stato: 'RICEVUTO',
-            dir: 'SQ'             // Forza GIALLO e polarità SQUADRA
-        }).then(() => {
-            Swal.fire({ icon:'success', title:'CONFERMATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
-        });
+    
+    // AGGIORNAMENTO CHIRURGICO PER DASHBOARD
+    update(ref(db, `brogliaccio/${idSala}`), { 
+        dir: 'SA',             // Manteniamo SA così il testo della sala (m1) resta azzurro a sinistra
+        squadra: sqId,         // Riaffermiamo la squadra
+        stato: 'RICEVUTO',
+        m2: `[CONFERMA SQ] RICEVUTO ORE ${ora}` // In m2 mettiamo la firma squadra
+    }).then(() => {
+        Swal.fire({ icon:'success', title:'CONFERMATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
     });
 };
 
-window.rispondiArrivo = (id) => {
+window.rispondiArrivo = (idSala) => {
     Swal.fire({ title: 'CONFERMI ARRIVO?', showCancelButton: true, confirmButtonText: 'SÌ' }).then(async (r) => {
         if(r.isConfirmed) {
             const p = await getFinalPos();
             const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
-            const dataOggi = new Date().toLocaleDateString('it-IT');
             
-            // Troviamo il messaggio originale per non perdere il testo m1
-            const testoOriginale = document.getElementById('text-msg-sala').innerText;
-
-            import("https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js").then((mod) => {
-                mod.set(mod.ref(db, `brogliaccio/${id}`), { 
-                    ora: ora,
-                    data: dataOggi,
-                    squadra: sqId,
-                    m1: testoOriginale,
-                    m2: `ARRIVATI ORE ${ora}`,
-                    stato: 'OK',      
-                    dir: 'SQ',        
-                    lat: p.lat, 
-                    lng: p.lng
-                });
+            // AGGIORNAMENTO CHIRURGICO PER DASHBOARD
+            await update(ref(db, `brogliaccio/${idSala}`), { 
+                dir: 'SA',             // Lasciamo SA per non invertire i nomi graficamente
+                stato: 'OK',           // Fa sparire il box blu dall'app
+                squadra: sqId,
+                m2: `[SQUADRA] ARRIVATI SUL POSTO ORE ${ora}`, // La squadra scrive in m2
+                lat: p.lat, 
+                lng: p.lng
             });
 
             update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: p.lat, lng: p.lng });
-            Swal.fire({ icon:'success', title:'ARRIVO SEGNALATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
+            Swal.fire({ icon:'success', title:'ARRIVO INVIATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
         }
     });
 };
