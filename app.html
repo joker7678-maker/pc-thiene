@@ -172,28 +172,35 @@ window.rispondiArrivo = (idSala) => {
             const p = await getFinalPos();
             const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
             
-            // 1. Recuperiamo ESATTAMENTE la via (escludendo l'icona se già presente)
+            // 1. Recuperiamo SOLO la via dall'elemento text-msg-sala
+            // Usiamo innerText per prendere il contenuto testuale pulito
             let viaOriginale = document.getElementById('text-msg-sala').innerText;
-            // Pulizia: togliamo l'icona 📍 se l'app la legge nel testo
-            viaOriginale = viaOriginale.replace('📍', '').trim();
+            
+            // 2. Pulizia profonda del testo
+            // Rimuoviamo "DESTINAZIONE", "📍" e spazi doppi se presenti
+            viaOriginale = viaOriginale
+                .replace(/DESTINAZIONE/gi, '')
+                .replace(/📍/g, '')
+                .replace(/:/g, '')
+                .trim();
 
-            // 2. Chiudiamo il log della sala (Azzurro)
+            // 3. Chiudiamo il log della sala (Azzurro)
             await update(ref(db, `brogliaccio/${idSala}`), { stato: 'OK' });
 
-            // 3. Creiamo il NUOVO log Squadra (Giallo) con il testo richiesto
+            // 4. Creiamo il NUOVO log Squadra (Giallo)
+            // Risultato: 🏁 ARRIVATI A: VIA ROMA 10
             await push(ref(db, 'brogliaccio'), {
                 ora: ora,
                 data: new Date().toLocaleDateString('it-IT'),
                 squadra: sqId,
-                // Risultato finale in Dashboard: 🏁 ARRIVATI A: VIA ROMA 10
                 m1: `🏁 Arrivati a ${viaOriginale}`, 
                 dir: 'SQ', 
-                stato: 'ATTESA', // Resta in attesa per la conferma della sala
+                stato: 'ATTESA', 
                 lat: p.lat,
                 lng: p.lng
             });
 
-            // 4. Aggiorna stato anagrafica
+            // 5. Aggiorna stato anagrafica
             update(ref(db, `anagrafica_squadre/${sqId}`), { 
                 stato: 'Intervento', 
                 lat: p.lat, 
