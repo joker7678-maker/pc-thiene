@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - V7.3</title>
+    <title>PC THIENE - V7.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -42,7 +42,7 @@
 
         <div id="nav-channel" class="mb-2 hidden">
             <div id="nav-card" class="glass p-3 rounded-2xl border-l-8 shadow-xl">
-                <p class="text-[9px] font-black text-blue-400 uppercase mb-1">Target Navigazione</p>
+                <p class="text-[9px] font-black text-blue-400 uppercase mb-1">Destinazione Inviata dalla Sala</p>
                 <div id="nav-text" class="text-base font-black text-white uppercase leading-tight mb-2"></div>
                 <div id="nav-btns"></div>
             </div>
@@ -50,7 +50,7 @@
 
         <div id="msg-channel" class="mb-2 hidden">
             <div class="glass p-3 rounded-2xl border-l-8 border-amber-500 shadow-lg">
-                <p class="text-[9px] font-black text-amber-500 uppercase mb-1 tracking-widest">Comunicazione dalla Sala</p>
+                <p class="text-[9px] font-black text-amber-500 uppercase mb-1 tracking-widest">Ultima Disposizione Sala</p>
                 <div id="msg-text-sala" class="text-sm font-bold text-white uppercase leading-tight"></div>
             </div>
         </div>
@@ -66,9 +66,9 @@
         </div>
 
         <div class="grid grid-cols-3 gap-2 mb-2">
-            <button onclick="document.getElementById('input-foto').click()" class="bg-white text-black rounded-xl py-3 flex flex-col items-center gap-1 shadow-lg active:scale-90"><span class="text-2xl">📷</span><span class="font-black text-[9px]">FOTO</span><input type="file" id="input-foto" accept="image/*" capture="camera" class="hidden" onchange="window.handleImage(this.files[0])"></button>
-            <button id="btn-audio" class="bg-red-600 text-white rounded-xl py-3 flex flex-col items-center gap-1 shadow-lg active:scale-90"><span id="audio-icon" class="text-2xl">🎤</span><span id="audio-label" class="font-black text-[9px]">VOCALE</span></button>
-            <button onclick="window.askConfirmGPS()" class="bg-emerald-600 text-white rounded-xl py-3 flex flex-col items-center gap-1 shadow-lg active:scale-90"><span class="text-2xl">📍</span><span class="font-black text-[9px]">GPS</span></button>
+            <button onclick="document.getElementById('input-foto').click()" class="bg-white text-black rounded-xl py-3 flex flex-col items-center gap-1 active:scale-90 shadow-lg"><span class="text-2xl">📷</span><span class="font-black text-[9px]">FOTO</span><input type="file" id="input-foto" accept="image/*" capture="camera" class="hidden" onchange="window.handleImage(this.files[0])"></button>
+            <button id="btn-audio" class="bg-red-600 text-white rounded-xl py-3 flex flex-col items-center gap-1 active:scale-90 shadow-lg"><span id="audio-icon" class="text-2xl">🎤</span><span id="audio-label" class="font-black text-[9px]">VOCALE</span></button>
+            <button onclick="window.askConfirmGPS()" class="bg-emerald-600 text-white rounded-xl py-3 flex flex-col items-center gap-1 active:scale-90 shadow-lg"><span class="text-2xl">📍</span><span class="font-black text-[9px]">GPS</span></button>
         </div>
 
         <div class="glass rounded-2xl p-3 mt-auto shadow-2xl">
@@ -118,12 +118,13 @@
             } else return { lat: '', lng: '', note };
         }
 
-        // --- FILTRO SOLO SALA ---
-        onValue(query(ref(db, 'brogliaccio'), limitToLast(20)), (snap) => {
+        // --- LOGICA SINCRONIZZAZIONE (FILTRI RIGIDI) ---
+        onValue(query(ref(db, 'brogliaccio'), limitToLast(50)), (snap) => {
             const data = snap.val(); if (!data) return;
+            // Ordiniamo dal più recente
             const logs = Object.entries(data).sort((a,b) => b[0].localeCompare(a[0]));
 
-            // NAVIGAZIONE: Ultimo SA con lat e stato non OK
+            // 1. FILTRO NAVIGAZIONE: Ultimo log della Sala (SA) con coordinata GPS e stato NON ancora concluso
             const activeTarget = logs.find(([k, l]) => l.squadra === sqId && l.dir === 'SA' && l.lat && l.stato !== 'OK');
             const navChannel = document.getElementById('nav-channel');
             if (activeTarget) {
@@ -136,17 +137,22 @@
                     `<div class="grid grid-cols-2 gap-2 mt-1"><button onclick="window.openNav(${log.lat}, ${log.lng})" class="bg-emerald-600 py-3 rounded-xl text-[10px] font-black uppercase">NAVIGA</button><button onclick="window.askArrivo('${key}')" class="bg-red-600 py-3 rounded-xl text-[10px] font-black uppercase">ARRIVATI</button></div>`;
             } else { navChannel.classList.add('hidden'); }
 
-            // MESSAGGI: Ultimo log in assoluto dove la DIREZIONE è SA (SALA)
-            const lastLogSala = logs.find(([k, l]) => (l.squadra === sqId || l.squadra === "TUTTE" || l.squadra === "COMUNICAZIONE GENERALE") && l.dir === 'SA');
+            // 2. FILTRO MESSAGGI: Ultimo log della Sala (SA) escludendo categoricamente i log della Squadra (SQ)
+            const lastLogSala = logs.find(([k, l]) => 
+                (l.squadra === sqId || l.squadra === "TUTTE" || l.squadra === "COMUNICAZIONE GENERALE") && 
+                l.dir === 'SA' // <--- QUESTA È LA CHIAVE: ignora tutto ciò che non è SA
+            );
+            
             const msgChannel = document.getElementById('msg-channel');
             if (lastLogSala) {
-                const [key, log] = lastLogSala;
                 msgChannel.classList.remove('hidden');
-                // Mostra m2 se presente (risposta specifica), altrimenti m1 (messaggio originale)
+                const log = lastLogSala[1];
+                // Mostra la risposta m2 se la sala ha commentato, altrimenti il messaggio originale m1
                 document.getElementById('msg-text-sala').innerText = (log.m2 && log.m2 !== '---') ? log.m2 : log.m1;
             } else { msgChannel.classList.add('hidden'); }
         });
 
+        // --- AZIONI ---
         window.confermaRicezione = (k) => {
             update(ref(db, `brogliaccio/${k}`), { stato: 'RICEVUTO', m2: `[CONFERMA-SQ] RICEVUTO ORE ${new Date().toLocaleTimeString().slice(0,5)}` });
             notifySala();
@@ -155,12 +161,12 @@
         window.openNav = (lat, lng) => window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank');
 
         window.askArrivo = (key) => {
-            Swal.fire({ title:'ARRIVATI?', showCancelButton:true, background:'#1e293b', color:'#fff' }).then(async (r) => {
+            Swal.fire({ title: 'CONFERMI ARRIVO?', showCancelButton: true, background: '#1e293b', color: '#fff', confirmButtonText: 'SÌ, ARRIVATI' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getFinalPos();
                     const ora = new Date().toLocaleTimeString().slice(0,5);
-                    await update(ref(db, `brogliaccio/${key}`), { stato:'OK', m2: `[CONFERMA-SQ] ARRIVATI ORE ${ora}` });
-                    await update(ref(db, `anagrafica_squadre/${sqId}`), { stato:'Intervento', lat:p.lat, lng:p.lng });
+                    await update(ref(db, `brogliaccio/${key}`), { stato: 'OK', m2: `[CONFERMA-SQ] ARRIVATI ORE ${ora}` });
+                    await update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: p.lat, lng: p.lng });
                     await push(ref(db, 'brogliaccio'), { ora, data: new Date().toLocaleDateString(), squadra: sqId, m1: `🏁 ARRIVO SUL POSTO [SQUADRA] ${p.note}`, m2: "", dir: 'SQ', stato: 'ATTESA', lat: p.lat, lng: p.lng });
                     notifySala();
                 }
@@ -168,7 +174,7 @@
         };
 
         window.askConfirmStatus = (v, label) => {
-            Swal.fire({ title:label, showCancelButton:true, background:'#1e293b', color:'#fff' }).then(async (r) => {
+            Swal.fire({ title:'CAMBIA STATO?', text:label, showCancelButton:true, background:'#1e293b', color:'#fff' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getFinalPos();
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: v, lat: p.lat, lng: p.lng });
@@ -180,7 +186,7 @@
 
         window.askConfirmText = () => {
             const t = document.getElementById('msg-input').value.trim(); if(!t) return;
-            Swal.fire({ title:'INVIARE MESSAGGIO?', text: t.toUpperCase(), showCancelButton:true, background:'#1e293b', color:'#fff' }).then(async (r) => {
+            Swal.fire({ title:'INVIARE MESSAGGIO?', text: t.toUpperCase(), showCancelButton:true, background:'#1e293b', color:'#fff', confirmButtonText: 'SÌ, INVIA' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getFinalPos();
                     push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: `${t.toUpperCase()} [SQUADRA] ${p.note}`, m2: "", dir: 'SQ', stato: 'ATTESA', lat: p.lat, lng: p.lng });
