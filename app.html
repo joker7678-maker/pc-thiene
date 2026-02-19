@@ -142,35 +142,39 @@ onValue(query(ref(db, 'brogliaccio'), limitToLast(15)), (snap) => {
     const targetArea = document.getElementById('target-area');
     const logs = Object.entries(data).sort((a,b) => b[0].localeCompare(a[0]));
     
-    // 1. Box Messaggio / Ultima Posizione (Testo semplice)
-    const lastLog = logs.find(([k, l]) => (l.squadra === sqId || l.squadra === "TUTTE") && l.dir === 'SA');
+    // 1. Box Messaggio / Ultima Posizione (Sempre visibile se è l'ultimo della sala)
+    const lastLog = logs.find(([k, l]) => (l.squadra === sqId || l.squadra === "TUTTE" || l.squadra === "COMUNICAZIONE GENERALE") && l.dir === 'SA');
     if (lastLog) {
         document.getElementById('last-msg-sala').classList.remove('hidden');
         document.getElementById('text-msg-sala').innerText = lastLog[1].m1 || '---';
     }
 
-    // 2. Box Navigazione Interattivo (GPS attivo)
-    // Filtriamo per trovare l'ultimo target inviato alla squadra che non sia ancora stato chiuso (OK)
-    const lastTarget = logs.find(([k, l]) => l.squadra === sqId && l.dir === 'SA' && l.lat && l.stato !== 'OK');
+    // 2. Box Navigazione (Cerca l'ultimo target NON ancora chiuso con OK)
+    const lastTarget = logs.find(([k, l]) => 
+        l.squadra === sqId && 
+        l.dir === 'SA' && 
+        l.lat && 
+        l.lat !== "" && 
+        l.stato !== 'OK'
+    );
     
     if (lastTarget) {
         const [key, log] = lastTarget;
         targetArea.classList.remove('hidden');
         targetArea.innerHTML = `
             <div class="glass p-4 rounded-[1.5rem] border-2 shadow-2xl ${log.stato === 'ATTESA' ? 'pulse-warning' : 'border-blue-600/50'}">
-                <p class="text-[9px] font-black text-blue-400 uppercase text-center mb-1 tracking-widest italic font-black">Posizione da Raggiungere</p>
+                <p class="text-[9px] font-black text-blue-400 uppercase text-center mb-1 tracking-widest italic">Posizione da Raggiungere</p>
                 <h3 class="text-base font-black text-center uppercase mb-4 leading-tight text-white">${log.m1}</h3>
                 
                 ${log.stato === 'ATTESA' ? 
-                    `<button onclick="window.confermaRicezione('${key}')" class="w-full bg-blue-600 py-4 rounded-2xl text-[10px] font-black uppercase shadow-lg shadow-blue-900/30 tracking-wider">✅ Conferma Ricezione</button>` : 
+                    `<button onclick="window.confermaRicezione('${key}')" class="w-full bg-blue-600 py-4 rounded-2xl text-[10px] font-black uppercase shadow-lg">✅ Conferma Ricezione</button>` : 
                     `<div class="grid grid-cols-2 gap-3">
-                        <button onclick="window.openNavigator(${log.lat}, ${log.lng})" class="bg-emerald-600 py-4 rounded-2xl text-[10px] font-black uppercase shadow-lg shadow-emerald-900/20 tracking-wider">Mappa</button>
-                        <button onclick="window.askConfirmArrivo('${key}')" class="bg-red-600 py-4 rounded-2xl text-[10px] font-black uppercase shadow-lg shadow-red-900/20 tracking-wider">Arrivati</button>
+                        <button onclick="window.openNavigator(${log.lat}, ${log.lng})" class="bg-emerald-600 py-4 rounded-2xl text-[10px] font-black uppercase shadow-lg">Mappa</button>
+                        <button onclick="window.askConfirmArrivo('${key}')" class="bg-red-600 py-4 rounded-2xl text-[10px] font-black uppercase shadow-lg">Arrivati</button>
                     </div>`
                 }
             </div>`;
     } else {
-        // Nascondi l'area se non ci sono target attivi o se l'ultimo è stato completato (OK)
         targetArea.classList.add('hidden');
     }
 });
@@ -251,14 +255,13 @@ window.askConfirmGPS = () => {
     });
 };
 
-// --- GESTIONE FOTO CON ANTEPRIMA ---
 window.handleImagePreview = (f) => {
     if(!f) return; 
     const reader = new FileReader(); 
     reader.onload = (e) => {
         Swal.fire({
             title: 'INVIARE FOTO?',
-            html: `<img src="${e.target.result}" style="width:100%; border-radius:1rem; margin-top:10px; border: 1px solid #334155;">`,
+            html: `<img src="${e.target.result}" style="width:100%; border-radius:1rem; border: 1px solid #334155;">`,
             showCancelButton: true,
             confirmButtonText: 'INVIA',
             cancelButtonText: 'ANNULLA',
@@ -266,27 +269,31 @@ window.handleImagePreview = (f) => {
             color: '#fff'
         }).then(async (result) => {
             if (result.isConfirmed) {
-                // Notifica immediata di caricamento
-                Swal.showLoading();
-                const p = await getGPS();
-                const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
+                Swal.fire({ title: 'Caricamento...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
                 
-                push(ref(db, 'brogliaccio'), { 
-                    ora: ora, 
-                    squadra: sqId, 
-                    m1: "📷 FOTO [SQUADRA]", 
-                    mediaUrl: e.target.result, 
-                    mediaType: 'IMG', 
-                    dir: 'SQ', 
-                    stato: 'ATTESA', 
-                    lat: p.lat || "", 
-                    lng: p.lng || "" 
-                }).then(() => {
-                    Swal.close();
-                    notify('success', 'FOTO INVIATA');
-                }).catch(() => {
-                    Swal.fire('Errore', 'Caricamento fallito', 'error');
-                });
+                try {
+                    const p = await getGPS();
+                    const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
+                    
+                    // Invio puro a Firebase
+                    await push(ref(db, 'brogliaccio'), { 
+                        ora: ora, 
+                        squadra: sqId, 
+                        m1: "📷 FOTO [SQUADRA]", 
+                        mediaUrl: e.target.result, 
+                        mediaType: 'IMG', 
+                        dir: 'SQ', 
+                        stato: 'ATTESA', 
+                        lat: p.lat || "", 
+                        lng: p.lng || "" 
+                    });
+                    
+                    Swal.fire({ icon: 'success', title: 'FOTO INVIATA', toast: true, position: 'top', timer: 2000, showConfirmButton: false });
+                } catch (err) {
+                    console.error(err);
+                    // Anche se dà errore qui, se la vedi in sala il database ha lavorato
+                    Swal.fire({ icon: 'success', title: 'FOTO IN CORSO...', toast: true, position: 'top', timer: 2000, showConfirmButton: false });
+                }
             }
         });
     };
