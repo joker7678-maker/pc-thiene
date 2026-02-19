@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - V7.6</title>
+    <title>PC THIENE - V7.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -20,18 +20,24 @@
 </head>
 <body class="p-3 flex flex-col h-full">
 
-    <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-950 flex items-center justify-center p-6">
-        <div class="w-full max-w-sm bg-slate-900 p-8 rounded-[3rem] border border-slate-800 shadow-2xl text-center">
+    <div id="inhibition-overlay" class="fixed inset-0 z-[10000] bg-slate-950 flex flex-col items-center justify-center p-6 text-center" style="display:none;">
+        <div class="text-6xl mb-4">🚫</div>
+        <h2 class="text-2xl font-black text-white uppercase italic">Accesso Disattivato</h2>
+        <p class="text-slate-400 mt-2 uppercase text-xs">Contattare la Sala Operativa</p>
+    </div>
+
+    <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-950 flex items-center justify-center p-6 text-center">
+        <div class="w-full max-w-sm bg-slate-900 p-8 rounded-[3rem] border border-slate-800 shadow-2xl">
             <h2 class="text-3xl font-black italic text-blue-500 mb-6 uppercase tracking-tighter">PC THIENE</h2>
             <input type="password" id="app-password" class="w-full bg-slate-950 border-2 border-slate-800 rounded-xl p-4 text-center text-4xl mb-6 text-white outline-none" placeholder="••••" inputmode="numeric">
-            <button onclick="window.checkAppPassword()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl uppercase text-lg shadow-lg">Sblocca</button>
+            <button onclick="window.checkAppPassword()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl uppercase text-lg shadow-lg active:scale-95">Sblocca</button>
         </div>
     </div>
 
     <div id="main-app-container" class="hidden flex flex-col h-full">
         <header class="flex justify-between items-center mb-2">
             <div>
-                <h1 class="text-xl font-black italic text-white leading-none">PC <span class="text-blue-500">THIENE</span></h1>
+                <h1 class="text-xl font-black italic text-white leading-none tracking-tighter">PC <span class="text-blue-500">THIENE</span></h1>
                 <p id="sq-name" class="text-blue-400 font-black text-[10px] uppercase mt-1 tracking-widest">---</p>
             </div>
             <div class="flex items-center gap-2">
@@ -74,7 +80,7 @@
         <div class="glass rounded-2xl p-3 mt-auto shadow-2xl">
             <div id="manual-gps-area" class="hidden"><input type="text" id="manual-via" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white uppercase mb-2 font-bold" placeholder="VIA / LOCALITÀ (MANUALE)"></div>
             <textarea id="msg-input" class="w-full bg-slate-950/50 border border-slate-700 rounded-xl p-2 text-sm font-bold text-white mb-2 h-14 outline-none uppercase" placeholder="SCRIVI MESSAGGIO..."></textarea>
-            <button onclick="window.askConfirmText()" class="w-full bg-blue-600 text-white font-black py-3.5 rounded-xl uppercase text-xs shadow-lg">Invia Messaggio</button>
+            <button onclick="window.askConfirmText()" class="w-full bg-blue-600 text-white font-black py-3.5 rounded-xl uppercase text-xs shadow-lg active:scale-95">Invia Messaggio</button>
         </div>
     </div>
 
@@ -88,6 +94,10 @@
         const urlParams = new URLSearchParams(window.location.search);
         const sqId = (urlParams.get('id') || "SQUADRA_TEST").toUpperCase();
         document.getElementById('sq-name').innerText = "UNITÀ: " + sqId;
+
+        const notifySala = () => {
+            Swal.fire({ icon:'success', title:'INVIATO A SALA', toast:true, position:'top', timer:2000, showConfirmButton:false, background:'#1e293b', color:'#fff' });
+        };
 
         window.checkAppPassword = () => {
             if (document.getElementById('app-password').value === "2026") {
@@ -114,16 +124,25 @@
             } else return { lat: '', lng: '', note };
         }
 
-        const notifySala = () => {
-            Swal.fire({ icon:'success', title:'INVIATO A SALA', toast:true, position:'top', timer:2000, showConfirmButton:false, background:'#1e293b', color:'#fff' });
-        };
+        onValue(ref(db, `anagrafica_squadre/${sqId}`), (snapshot) => {
+            const data = snapshot.val();
+            const overlay = document.getElementById('inhibition-overlay');
+            if (data && data.attiva === false) {
+                overlay.style.display = 'flex';
+                document.getElementById('main-app-container').style.display = 'none';
+            } else {
+                overlay.style.display = 'none';
+                if (sessionStorage.getItem('pc_auth_v3') === 'true') {
+                    document.getElementById('main-app-container').style.display = 'flex';
+                }
+                document.getElementById('current-status').innerText = data.stato ? data.stato.toUpperCase() : "---";
+            }
+        });
 
-        // --- LOGICA SINCRONIZZAZIONE V7.6 (ROBUSTA) ---
         onValue(query(ref(db, 'brogliaccio'), limitToLast(50)), (snap) => {
             const data = snap.val(); if (!data) return;
             const logs = Object.entries(data).sort((a,b) => b[0].localeCompare(a[0]));
 
-            // 1. CANALE NAVIGAZIONE
             const activeTarget = logs.find(([k, l]) => l.squadra === sqId && l.dir === 'SA' && l.lat && l.stato !== 'OK');
             const navChannel = document.getElementById('nav-channel');
             if (activeTarget) {
@@ -136,17 +155,7 @@
                     `<div class="grid grid-cols-2 gap-2 mt-1"><button onclick="window.openNav(${log.lat}, ${log.lng})" class="bg-emerald-600 py-3 rounded-xl text-[10px] font-black uppercase">NAVIGA</button><button onclick="window.askArrivo('${key}')" class="bg-red-600 py-3 rounded-xl text-[10px] font-black uppercase">ARRIVATI</button></div>`;
             } else { navChannel.classList.add('hidden'); }
 
-            // 2. CANALE MESSAGGI (FILTRO ANTI-BLOCCO)
-            const lastLogSala = logs.find(([k, l]) => {
-                const isSala = (l.squadra === sqId || l.squadra === "TUTTE" || l.squadra === "COMUNICAZIONE GENERALE") && l.dir === 'SA';
-                if (!isSala) return false;
-                
-                // Ignoriamo i messaggi che contengono conferme automatiche della squadra nel campo m2
-                const m2Text = l.m2 ? l.m2.toUpperCase() : "";
-                const isConfermaAutomatica = m2Text.includes("RICEVUTO") || m2Text.includes("ARRIVATI") || m2Text.includes("CONFERMA");
-                
-                return !isConfermaAutomatica;
-            });
+            const lastLogSala = logs.find(([k, l]) => (l.squadra === sqId || l.squadra === "TUTTE" || l.squadra === "COMUNICAZIONE GENERALE") && l.dir === 'SA' && (!l.m2 || !l.m2.toUpperCase().includes("CONFERMA")));
             
             const msgChannel = document.getElementById('msg-channel');
             if (lastLogSala) {
@@ -156,7 +165,6 @@
             } else { msgChannel.classList.add('hidden'); }
         });
 
-        // --- AZIONI ---
         window.confermaRicezione = (k) => {
             update(ref(db, `brogliaccio/${k}`), { stato: 'RICEVUTO', m2: `CONFERMA RICEVUTO ORE ${new Date().toLocaleTimeString().slice(0,5)}` });
             notifySala();
@@ -165,7 +173,7 @@
         window.openNav = (lat, lng) => window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank');
 
         window.askArrivo = (key) => {
-            Swal.fire({ title: 'ARRIVATI?', showCancelButton: true, background: '#1e293b', color: '#fff' }).then(async (r) => {
+            Swal.fire({ title: 'ARRIVATI SUL POSTO?', showCancelButton: true, background: '#1e293b', color: '#fff', confirmButtonText: 'SÌ, ARRIVATI' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getFinalPos();
                     const ora = new Date().toLocaleTimeString().slice(0,5);
@@ -178,7 +186,7 @@
         };
 
         window.askConfirmStatus = (v, label) => {
-            Swal.fire({ title:label, showCancelButton:true, background:'#1e293b', color:'#fff' }).then(async (r) => {
+            Swal.fire({ title: 'CAMBIARE STATO?', text: label, showCancelButton: true, background: '#1e293b', color: '#fff' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getFinalPos();
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: v, lat: p.lat, lng: p.lng });
@@ -190,7 +198,7 @@
 
         window.askConfirmText = () => {
             const t = document.getElementById('msg-input').value.trim(); if(!t) return;
-            Swal.fire({ title:'INVIARE?', text: t.toUpperCase(), showCancelButton:true, background:'#1e293b', color:'#fff' }).then(async (r) => {
+            Swal.fire({ title: 'INVIARE MESSAGGIO?', text: t.toUpperCase(), showCancelButton: true, background: '#1e293b', color: '#fff', confirmButtonText: 'SÌ, INVIA' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getFinalPos();
                     push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: `${t.toUpperCase()} [SQUADRA] ${p.note}`, m2: "", dir: 'SQ', stato: 'ATTESA', lat: p.lat, lng: p.lng });
@@ -233,11 +241,6 @@
                 mediaRecorder.start(); document.getElementById('btn-audio').classList.add('pulse-red');
             } else { mediaRecorder.stop(); document.getElementById('btn-audio').classList.remove('pulse-red'); }
         };
-
-        onValue(ref(db, `anagrafica_squadre/${sqId}`), (snapshot) => {
-            const data = snapshot.val(); if (!data) return;
-            document.getElementById('current-status').innerText = data.stato ? data.stato.toUpperCase() : "---";
-        });
     </script>
 </body>
 </html>
