@@ -294,18 +294,20 @@ window.askConfirmStatus = (v, label) => {
     });
 };
 
-// --- MESSAGGIO TESTO (LOG NUOVO) ---
+// --- 1. INVIO MESSAGGIO TESTO ---
 window.askConfirmText = () => {
-    const t = document.getElementById('msg-text').value.trim(); if(!t) return;
+    const t = document.getElementById('msg-text').value.trim(); 
+    if(!t) return;
     Swal.fire({ title: 'INVIARE?', text: t.toUpperCase(), showCancelButton: true }).then(async (r) => {
         if(r.isConfirmed) {
             const p = await getFinalPos();
             push(ref(db, 'brogliaccio'), { 
                 ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
                 squadra: sqId, 
-                m1: `[SQ] ${t.toUpperCase()}`, 
-                dir: 'SA', 
-                lat: p.lat, lng: p.lng, 
+                m1: t.toUpperCase(), 
+                dir: 'SQ', // <--- CAMBIATO IN SQ
+                lat: p.lat, 
+                lng: p.lng, 
                 stato: 'ATTESA' 
             });
             document.getElementById('msg-text').value = "";
@@ -313,7 +315,7 @@ window.askConfirmText = () => {
     });
 };
 
-// --- INVIO GPS (LOG NUOVO) ---
+// --- 2. INVIO POSIZIONE GPS ---
 window.askConfirmGPS = () => {
     Swal.fire({ title: 'INVIARE GPS?', showCancelButton: true }).then(async (r) => {
         if(r.isConfirmed) {
@@ -321,38 +323,34 @@ window.askConfirmGPS = () => {
             push(ref(db, 'brogliaccio'), { 
                 ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
                 squadra: sqId, 
-                m1: "📍 [SQ] POSIZIONE GPS SQUADRA", 
-                lat: p.lat, lng: p.lng, 
-                dir: 'SA',
+                m1: "📍 POSIZIONE GPS SQUADRA", 
+                lat: p.lat, 
+                lng: p.lng, 
+                dir: 'SQ', // <--- CAMBIATO IN SQ
                 stato: 'ATTESA' 
             });
         }
     });
 };
 
-    let mediaRecorder; let audioChunks = [];
-    document.getElementById('btn-audio').onclick = async () => {
-        const btn = document.getElementById('btn-audio'); const label = document.getElementById('audio-label');
-        if (!mediaRecorder || mediaRecorder.state === "inactive") {
-            const s = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(s); audioChunks = [];
-            mediaRecorder.onstart = () => { btn.classList.add('recording-active'); label.innerText = "REGISTRO..."; };
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = () => {
-                btn.classList.remove('recording-active'); label.innerText = "VOCALE";
-                const b = new Blob(audioChunks, { type: 'audio/webm' });
-                Swal.fire({ title: 'INVIARE?', html: `<audio controls src="${URL.createObjectURL(b)}" style="width:100%"></audio>`, showCancelButton: true }).then(async (res) => {
-                    if (res.isConfirmed) {
-                        const r = new FileReader(); r.readAsDataURL(b);
-                        r.onloadend = async () => {
-                            const p = await getFinalPos();
-                            push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "🎤 VOCALE", mediaUrl: r.result, mediaType: 'AUDIO', dir: 'SQ', lat: p.lat, lng: p.lng, stato: 'ATTESA' });
-                        };
-                    }
-                });
-            }; mediaRecorder.start();
-        } else { mediaRecorder.stop(); }
-    };
+// --- 3. CAMBIO STATO (Sede, Arrivo, ecc.) ---
+window.askConfirmStatus = (v, label) => {
+    Swal.fire({ title: 'CAMBIARE STATO?', text: label, showCancelButton:true }).then(async (r) => {
+        if(r.isConfirmed) {
+            const p = await getFinalPos();
+            update(ref(db, `anagrafica_squadre/${sqId}`), { stato: v, lat: p.lat, lng: p.lng });
+            push(ref(db, 'brogliaccio'), { 
+                ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
+                squadra: sqId, 
+                m1: `STATO: ${v.toUpperCase()}`, 
+                dir: 'SQ', // <--- CAMBIATO IN SQ
+                lat: p.lat, 
+                lng: p.lng, 
+                stato: 'OK' 
+            });
+        }
+    });
+};
 </script>
 </body>
 </html>
