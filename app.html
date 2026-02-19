@@ -144,102 +144,73 @@
         } else { targetArea.classList.add('hidden'); }
     });
 
+// --- CONFERMA RICEZIONE (LOG ESISTENTE) ---
 window.rispondiRicevuto = (idSala, msgOrig) => {
     const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
-    
     update(ref(db, `brogliaccio/${idSala}`), { 
-        // 1. Cambiamo la direzione in SQ per avere il colore GIALLO e il prefisso [SQ]
-        dir: 'SQ', 
-        
-        // 2. SCAMBIAMO I CAMPI: Questo è il trucco per ingannare la Dashboard 
-        // e farle scrivere i nomi nel posto giusto nonostante il cambio direzione
+        dir: 'SA', // Manteniamo SA per non invertire i nomi a video
         squadra: sqId, 
-        
-        // 3. Manteniamo il testo originale e aggiungiamo la conferma
-        m1: msgOrig,
-        m2: `✅ RICEVUTO ORE ${ora}`,
-        
-        stato: 'RICEVUTO'
+        stato: 'RICEVUTO',
+        m2: `✅ [SQ] RICEVUTO ORE ${ora}` 
     }).then(() => {
         Swal.fire({ icon:'success', title:'CONFERMATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
     });
 };
 
-// --- ARRIVO SUL POSTO (NUOVO LOG INDIPENDENTE) ---
-window.rispondiArrivo = (idSala) => {
-    Swal.fire({ 
-        title: 'CONFERMI ARRIVO?', 
-        showCancelButton: true, 
-        confirmButtonText: 'SÌ',
-        background: '#1e293b',
-        color: '#fff' 
-    }).then(async (r) => {
+// --- CAMBIO STATO (LOG NUOVO) ---
+window.askConfirmStatus = (v, label) => {
+    Swal.fire({ title: 'CAMBIARE STATO?', text: label, showCancelButton:true }).then(async (r) => {
         if(r.isConfirmed) {
             const p = await getFinalPos();
-            const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
-            
-            // Recuperiamo la via dal box info
-            let via = document.getElementById('text-msg-sala').innerText;
-            via = via.replace(/DESTINAZIONE/gi, '').replace(/📍/g, '').replace(/:/g, '').trim();
-
-            // 1. Chiudiamo il log della sala (Azzurro)
-            await update(ref(db, `brogliaccio/${idSala}`), { stato: 'OK' });
-
-            // 2. Creiamo un NUOVO log Squadra (Giallo)
-            // Questo non si inverte perché nasce già come SQ
-            await push(ref(db, 'brogliaccio'), {
-                ora: ora,
-                data: new Date().toLocaleDateString('it-IT'),
-                squadra: sqId,
-                m1: `🏁 Arrivati a ${via}`, 
-                dir: 'SQ',       // GIALLO
-                stato: 'ATTESA', // Aspetta conferma dalla sala
-                lat: p.lat,
-                lng: p.lng
+            update(ref(db, `anagrafica_squadre/${sqId}`), { stato: v, lat: p.lat, lng: p.lng });
+            // Usiamo SA e prefisso [SQ] per evitare inversioni grafiche
+            push(ref(db, 'brogliaccio'), { 
+                ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
+                squadra: sqId, 
+                m1: `[SQ] STATO: ${v.toUpperCase()}`, 
+                dir: 'SA', 
+                lat: p.lat, lng: p.lng, 
+                stato: 'OK' 
             });
-
-            update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: p.lat, lng: p.lng });
-            Swal.fire({ icon:'success', title:'ARRIVO INVIATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
         }
     });
 };
 
-    onValue(ref(db, `anagrafica_squadre/${sqId}`), (snap) => {
-        const val = snap.val(); 
-        if (val) document.getElementById('current-status').innerText = val.stato ? val.stato.toUpperCase() : "---";
+// --- MESSAGGIO TESTO (LOG NUOVO) ---
+window.askConfirmText = () => {
+    const t = document.getElementById('msg-text').value.trim(); if(!t) return;
+    Swal.fire({ title: 'INVIARE?', text: t.toUpperCase(), showCancelButton: true }).then(async (r) => {
+        if(r.isConfirmed) {
+            const p = await getFinalPos();
+            push(ref(db, 'brogliaccio'), { 
+                ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
+                squadra: sqId, 
+                m1: `[SQ] ${t.toUpperCase()}`, 
+                dir: 'SA', 
+                lat: p.lat, lng: p.lng, 
+                stato: 'ATTESA' 
+            });
+            document.getElementById('msg-text').value = "";
+        }
     });
+};
 
-    window.openNavigator = (lat, lng) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank'); };
-
-    window.askConfirmStatus = (v, label) => {
-        Swal.fire({ title: 'CAMBIARE STATO?', text: label, showCancelButton:true }).then(async (r) => {
-            if(r.isConfirmed) {
-                const p = await getFinalPos();
-                update(ref(db, `anagrafica_squadre/${sqId}`), { stato: v, lat: p.lat, lng: p.lng });
-                push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: `STATO: ${v.toUpperCase()}`, dir: 'SQ', lat: p.lat, lng: p.lng, stato: 'OK' });
-            }
-        });
-    };
-
-    window.askConfirmText = () => {
-        const t = document.getElementById('msg-text').value.trim(); if(!t) return;
-        Swal.fire({ title: 'INVIARE?', text: t.toUpperCase(), showCancelButton: true }).then(async (r) => {
-            if(r.isConfirmed) {
-                const p = await getFinalPos();
-                push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: t.toUpperCase(), dir: 'SQ', lat: p.lat, lng: p.lng, stato: 'ATTESA' });
-                document.getElementById('msg-text').value = "";
-            }
-        });
-    };
-
-    window.askConfirmGPS = () => {
-        Swal.fire({ title: 'INVIARE GPS?', showCancelButton: true }).then(async (r) => {
-            if(r.isConfirmed) {
-                const p = await getFinalPos();
-                push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "📍 POSIZIONE GPS SQUADRA", lat: p.lat, lng: p.lng, dir: 'SQ', stato: 'ATTESA' });
-            }
-        });
-    };
+// --- INVIO GPS (LOG NUOVO) ---
+window.askConfirmGPS = () => {
+    Swal.fire({ title: 'INVIARE GPS?', showCancelButton: true }).then(async (r) => {
+        if(r.isConfirmed) {
+            const p = await getFinalPos();
+            push(ref(db, 'brogliaccio'), { 
+                ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
+                squadra: sqId, 
+                m1: "📍 [SQ] POSIZIONE GPS SQUADRA", 
+                lat: p.lat, lng: p.lng, 
+                dir: 'SA',
+                stato: 'ATTESA' 
+            });
+        }
+    });
+};
 
     let mediaRecorder; let audioChunks = [];
     document.getElementById('btn-audio').onclick = async () => {
