@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - App Operatore V4.6</title>
+    <title>PC THIENE - App Operatore V4.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -84,13 +84,6 @@
             </div>
         </div>
 
-        <div id="reply-box" class="mb-4 hidden">
-            <div class="bg-emerald-500/20 border-2 border-emerald-500/50 rounded-xl p-3">
-                <p class="text-[8px] font-black text-emerald-400 uppercase tracking-widest mb-1">Nota dalla Sala:</p>
-                <p id="reply-text" class="text-xs font-bold text-white uppercase italic leading-tight"></p>
-            </div>
-        </div>
-
         <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 shadow-xl">
             <textarea id="msg-text" class="w-full bg-slate-900 border-2 border-slate-700 rounded-xl p-3 font-bold text-white mb-2 h-20 outline-none uppercase" placeholder="Messaggio per la sala..."></textarea>
             <button onclick="window.askConfirmText()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase tracking-widest active:scale-95">Invia Messaggio</button>
@@ -142,41 +135,37 @@
             });
         }
 
-        // --- RICEZIONE TARGET E CONFERMA ---
+        // --- RICEZIONE MESSAGGI/TARGET DALLA SALA ---
         onValue(query(ref(db, 'brogliaccio'), limitToLast(20)), (snap) => {
             const data = snap.val();
             const targetArea = document.getElementById('target-area');
             if (data) {
                 const logs = Object.entries(data).reverse();
-                const lastTarget = logs.find(([k, l]) => l.squadra === sqId && l.dir === 'SA' && l.lat && (l.stato === 'ATTESA' || l.stato === 'RICEVUTO'));
+                // Filtra l'ultimo messaggio inviato dalla sala a questa squadra o a TUTTE
+                const lastMsg = logs.find(([k, l]) => (l.squadra === sqId || l.squadra === "COMUNICAZIONE GENERALE") && l.dir === 'SA');
                 
-                if (lastTarget) {
-                    const [key, log] = lastTarget;
+                if (lastMsg) {
+                    const [key, log] = lastMsg;
+                    // Se il messaggio è nuovo e in ATTESA, attiva vibrazione
                     if (log.stato === 'ATTESA' && !sessionStorage.getItem('alert_'+key)) {
                         if(navigator.vibrate) navigator.vibrate([300, 100, 300]);
                         sessionStorage.setItem('alert_'+key, 'true');
                     }
+
                     targetArea.innerHTML = `
                         <div class="p-5 rounded-3xl bg-slate-900 border-4 ${log.stato === 'ATTESA' ? 'pulse-warning border-red-600' : 'border-blue-600 shadow-lg'}">
-                            <p class="text-[9px] font-black uppercase text-blue-400 text-center tracking-widest mb-1">Target dalla Sala</p>
+                            <p class="text-[9px] font-black uppercase text-blue-400 text-center tracking-widest mb-1">Messaggio dalla Sala</p>
                             <h3 class="text-xl font-black text-center uppercase leading-tight text-white mb-4 italic">${log.m1}</h3>
                             ${log.stato === 'ATTESA' ? 
                                 `<button onclick="window.confermaRicezione('${key}')" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl uppercase shadow-lg active:scale-95">✅ Conferma Ricezione</button>` : 
                                 `<div class="flex flex-col gap-3">
-                                    <button onclick="window.openNavigator(${log.lat}, ${log.lng})" class="w-full bg-emerald-600 text-white font-black py-5 rounded-2xl uppercase flex items-center justify-center gap-2 active:scale-95">🗺️ Navigatore</button>
+                                    ${log.lat ? `<button onclick="window.openNavigator(${log.lat}, ${log.lng})" class="w-full bg-emerald-600 text-white font-black py-5 rounded-2xl uppercase flex items-center justify-center gap-2 active:scale-95">🗺️ Navigatore</button>` : ''}
                                     <button onclick="window.askConfirmArrivo('${key}')" class="w-full bg-red-600 text-white font-black py-4 rounded-2xl uppercase text-[10px] opacity-90 active:scale-95">🏁 Arrivo sul Posto</button>
                                 </div>`
                             }
                         </div>`;
                     targetArea.classList.remove('hidden');
                 } else { targetArea.classList.add('hidden'); }
-
-                // Note in M2
-                const lastReply = logs.find(l => l[1].squadra === sqId && l[1].dir === 'SQ' && l[1].m2);
-                if (lastReply) {
-                    document.getElementById('reply-box').classList.remove('hidden');
-                    document.getElementById('reply-text').innerText = lastReply[1].m2;
-                } else { document.getElementById('reply-box').classList.add('hidden'); }
             }
         });
 
@@ -186,7 +175,7 @@
                 stato: 'RICEVUTO',
                 m2: `CONFERMATO RICEZIONE ORE ${oraConferma}` 
             });
-            Swal.fire({ icon:'success', title:'CONFERMATO', toast:true, position:'top', timer:2000, showConfirmButton:false });
+            Swal.fire({ icon:'success', title:'RICEZIONE CONFERMATA', toast:true, position:'top', timer:2000, showConfirmButton:false });
         };
         
         window.openNavigator = (lat, lng) => {
@@ -195,17 +184,37 @@
         };
 
         window.askConfirmArrivo = (key) => {
-            Swal.fire({ title:'CONFERMI ARRIVO?', showCancelButton:true, background:'#0f172a', color:'#fff' }).then(async (r) => {
+            Swal.fire({ 
+                title: 'CONFERMI ARRIVO?', 
+                text: 'Il log verrà messo in ATTESA per la Sala Operativa',
+                showCancelButton: true, 
+                background: '#0f172a', 
+                color: '#fff' 
+            }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getGPS();
+                    const oraArrivo = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                    
+                    // Chiude il vecchio log
                     update(ref(db, `brogliaccio/${key}`), { stato: 'OK' });
+                    // Aggiorna anagrafica
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: p.lat, lng: p.lng });
-                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "🏁 ARRIVATI SUL POSTO", dir: 'SQ', stato: 'OK', lat: p.lat, lng: p.lng });
+                    // Invia NUOVO log in ATTESA per allertare la sala
+                    push(ref(db, 'brogliaccio'), { 
+                        ora: oraArrivo, 
+                        squadra: sqId, 
+                        m1: "🏁 ARRIVO SUL POSTO / TARGET RAGGIUNTO", 
+                        m2: `RICEVUTO DALLA SQUADRA ORE ${oraArrivo}`,
+                        dir: 'SQ', 
+                        stato: 'ATTESA', 
+                        lat: p.lat, 
+                        lng: p.lng 
+                    });
                 }
             });
         };
 
-        // --- INVIO STATI / MEDIA ---
+        // --- INVIO STATI / MESSAGGI ---
         window.askConfirmStatus = (v, label) => {
             Swal.fire({ title:'CAMBIA STATO?', text:label, showCancelButton:true, background:'#0f172a', color:'#fff' }).then(async (r) => {
                 if(r.isConfirmed) {
