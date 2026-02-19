@@ -148,38 +148,56 @@
         } else { targetArea.classList.add('hidden'); }
     });
 
-    // --- FUNZIONI DI RISPOSTA SU INDEX (FIX INVERSIONE) ---
-    window.rispondiRicevuto = (id, msgOrig) => {
-        const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
-        update(ref(db, `brogliaccio/${id}`), { 
+   window.rispondiRicevuto = (id, msgOrig) => {
+    const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
+    const dataOggi = new Date().toLocaleDateString('it-IT');
+
+    // Usiamo SET invece di UPDATE per sovrascrivere l'intera identità del record
+    // Questo "pulisce" il record da ogni traccia del mittente Sala
+    import("https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js").then((mod) => {
+        mod.set(mod.ref(db, `brogliaccio/${id}`), { 
+            ora: ora,
+            data: dataOggi,
+            squadra: sqId,        // Tuo ID (es. SQUADRA 1)
+            m1: msgOrig,          // Testo originale (es. VIA ROMA 10)
             m2: `RICEVUTO ORE ${ora}`,
             stato: 'RICEVUTO',
-            dir: 'SQ',
-            squadra: sqId,
-            m1: msgOrig // Riafferma il contenuto originale
+            dir: 'SQ'             // Forza GIALLO e polarità SQUADRA
         }).then(() => {
             Swal.fire({ icon:'success', title:'CONFERMATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
         });
-    };
+    });
+};
 
-    window.rispondiArrivo = (id) => {
-        Swal.fire({ title: 'CONFERMI ARRIVO?', showCancelButton: true, confirmButtonText: 'SÌ' }).then(async (r) => {
-            if(r.isConfirmed) {
-                const p = await getFinalPos();
-                const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
-                await update(ref(db, `brogliaccio/${id}`), { 
-                    m2: `ARRIVATI ORE ${ora}`,
-                    stato: 'OK',
-                    dir: 'SQ',
+window.rispondiArrivo = (id) => {
+    Swal.fire({ title: 'CONFERMI ARRIVO?', showCancelButton: true, confirmButtonText: 'SÌ' }).then(async (r) => {
+        if(r.isConfirmed) {
+            const p = await getFinalPos();
+            const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
+            const dataOggi = new Date().toLocaleDateString('it-IT');
+            
+            // Troviamo il messaggio originale per non perdere il testo m1
+            const testoOriginale = document.getElementById('text-msg-sala').innerText;
+
+            import("https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js").then((mod) => {
+                mod.set(mod.ref(db, `brogliaccio/${id}`), { 
+                    ora: ora,
+                    data: dataOggi,
                     squadra: sqId,
+                    m1: testoOriginale,
+                    m2: `ARRIVATI ORE ${ora}`,
+                    stato: 'OK',      
+                    dir: 'SQ',        
                     lat: p.lat, 
                     lng: p.lng
                 });
-                update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: p.lat, lng: p.lng });
-                Swal.fire({ icon:'success', title:'ARRIVO SEGNALATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
-            }
-        });
-    };
+            });
+
+            update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: p.lat, lng: p.lng });
+            Swal.fire({ icon:'success', title:'ARRIVO SEGNALATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
+        }
+    });
+};
 
     onValue(ref(db, `anagrafica_squadre/${sqId}`), (snap) => {
         const val = snap.val(); 
