@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - V9.7</title>
+    <title>PC THIENE - V9.8</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -15,23 +15,23 @@
         .swal2-popup { border-radius: 1.5rem !important; background: #1e293b !important; color: white !important; }
     </style>
 </head>
-<body class="p-3 flex flex-col h-full">
+<body class="p-3 flex flex-col h-full bg-slate-950">
 
     <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-950 flex items-center justify-center p-6 text-center">
         <div class="w-full max-w-xs glass p-6 rounded-[2.5rem] border border-slate-800 shadow-2xl">
-            <h2 class="text-2xl font-black italic text-blue-500 mb-6 uppercase leading-none">PC <span class="text-white">THIENE</span></h2>
+            <h2 class="text-2xl font-black italic text-blue-500 mb-6 uppercase">PC THIENE</h2>
             <input type="password" id="app-password" class="w-full bg-slate-950 border-2 border-slate-800 rounded-xl p-3 text-center text-3xl mb-6 text-white outline-none" placeholder="••••" inputmode="numeric">
-            <button onclick="window.checkAppPassword()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase shadow-lg active:scale-95">Entra</button>
+            <button onclick="window.checkAppPassword()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase shadow-lg">Entra</button>
         </div>
     </div>
 
     <div id="main-app-container" class="hidden flex flex-col h-full overflow-hidden">
         <header class="flex justify-between items-center mb-2 shrink-0">
             <div>
-                <h1 class="text-lg font-black italic text-white leading-none uppercase tracking-tighter tracking-tighter">PC <span class="text-blue-500 italic">THIENE</span></h1>
+                <h1 class="text-lg font-black italic text-white leading-none uppercase tracking-tighter">PC <span class="text-blue-500 italic">THIENE</span></h1>
                 <p id="sq-name" class="text-blue-400 font-black text-[9px] uppercase mt-0.5 tracking-widest leading-none">---</p>
             </div>
-            <span class="text-[8px] font-black text-slate-500 border border-white/10 px-2 py-0.5 rounded-full uppercase italic">V9.7 FINAL</span>
+            <span class="text-[8px] font-black text-slate-500 border border-white/10 px-2 py-0.5 rounded-full uppercase italic">V9.8 STABILE</span>
         </header>
 
         <div id="target-summary-badge" class="mb-2 hidden shrink-0">
@@ -57,22 +57,19 @@
 
         <div class="grid grid-cols-3 gap-2 mb-3 shrink-0">
             <button onclick="document.getElementById('input-foto').click()" class="bg-white text-black rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-90 shadow-lg">
-                <span class="text-xl">📷</span>
-                <span class="font-black text-[9px] uppercase tracking-tighter uppercase font-black tracking-tighter">Foto</span>
+                <span class="text-xl">📷</span><span class="font-black text-[9px] uppercase">Foto</span>
                 <input type="file" id="input-foto" accept="image/*" capture="camera" class="hidden" onchange="window.previewImage(this)">
             </button>
             <button id="btn-audio" class="bg-slate-800 text-white rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-90 shadow-lg border border-white/5">
-                <span id="audio-icon" class="text-xl">🎤</span>
-                <span id="audio-label" class="font-black text-[9px] uppercase tracking-tighter uppercase font-black tracking-tighter">Vocale</span>
+                <span id="audio-icon" class="text-xl">🎤</span><span id="audio-label" class="font-black text-[9px] uppercase">Vocale</span>
             </button>
-            <button onclick="window.askConfirmGPS()" class="bg-emerald-600 text-white rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-90 shadow-lg font-black uppercase">
-                <span class="text-xl">📍</span>
-                <span class="font-black text-[9px] tracking-tighter uppercase font-black tracking-tighter">Posizione</span>
+            <button onclick="window.askConfirmGPS()" class="bg-emerald-600 text-white rounded-2xl py-3 flex flex-col items-center gap-1 active:scale-90 shadow-lg">
+                <span class="text-xl">📍</span><span class="font-black text-[9px] uppercase">Posizione</span>
             </button>
         </div>
 
         <div class="glass rounded-3xl p-3 mt-auto shadow-2xl border border-white/5 shrink-0">
-            <textarea id="msg-input" class="w-full bg-slate-950/30 border border-slate-700 rounded-xl p-3 text-sm font-bold text-white mb-2 h-16 outline-none uppercase placeholder:text-slate-700" placeholder="MESSAGGIO ALLA SALA..."></textarea>
+            <textarea id="msg-input" class="w-full bg-slate-950/30 border border-slate-700 rounded-xl p-3 text-sm font-bold text-white mb-2 h-16 outline-none uppercase placeholder:text-slate-700" placeholder="SCRIVI ALLA SALA..."></textarea>
             <button onclick="window.askConfirmText()" class="w-full bg-blue-600 text-white font-black py-3.5 rounded-xl uppercase text-xs tracking-widest active:scale-95 shadow-lg">Invia Messaggio</button>
         </div>
     </div>
@@ -103,13 +100,15 @@
             });
         }
 
+        // --- MONITORAGGIO LOGICA BROGLIACCIO (STESSO LOG) ---
         onValue(query(ref(db, 'brogliaccio'), limitToLast(15)), (snap) => {
             const data = snap.val(); if (!data) return;
             const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).sort((a, b) => b.id.localeCompare(a.id));
             
             const lastTarget = logs.find(l => (l.squadra === sqId || l.squadra === 'TUTTE') && l.lat);
+            const summaryBadge = document.getElementById('target-summary-badge');
             if (lastTarget) {
-                document.getElementById('target-summary-badge').classList.remove('hidden');
+                summaryBadge.classList.remove('hidden');
                 document.getElementById('target-summary-text').innerText = lastTarget.m1;
             }
 
@@ -121,49 +120,55 @@
                     <div class="glass p-3 rounded-2xl border-l-4 shadow-xl ${activeAction.stato === 'ATTESA' ? 'pulse-recording border-red-600' : 'border-blue-600'}">
                         <div class="text-[11px] font-black text-white uppercase mb-2 italic leading-tight">${activeAction.m1}</div>
                         ${activeAction.stato === 'ATTESA' ? 
-                          `<button onclick="window.confermaRicezione('${activeAction.id}', '${activeAction.m1}')" class="w-full bg-blue-600 py-3 rounded-lg text-[10px] font-black uppercase">✅ Ricevuto</button>` :
+                          `<button onclick="window.chiudiNelLog('${activeAction.id}', 'RICEVUTO')" class="w-full bg-blue-600 py-3 rounded-lg text-[10px] font-black uppercase">✅ Ricevuto</button>` :
                           `<div class="grid grid-cols-2 gap-2">
-                             <button onclick="window.openNav(${activeAction.lat}, ${activeAction.lng})" class="bg-emerald-600 py-3 rounded-lg text-[10px] font-black uppercase">Mappa</button>
-                             <button onclick="window.askArrivo('${activeAction.id}', '${activeAction.m1}')" class="bg-red-600 py-3 rounded-lg text-[10px] font-black uppercase">Arrivati</button>
+                             <button onclick="window.openNav(${activeAction.lat}, ${activeAction.lng})" class="bg-emerald-600 py-3 rounded-lg text-[10px] font-black uppercase shadow">Mappa</button>
+                             <button onclick="window.chiudiArrivo('${activeAction.id}')" class="bg-red-600 py-3 rounded-lg text-[10px] font-black uppercase shadow">Arrivati</button>
                            </div>`}
                     </div>`;
             } else { nav.classList.add('hidden'); }
         });
 
-        // --- FIX DEFINITIVO: NUOVO LOG PER EVITARE INVERSIONE ---
-        window.confermaRicezione = (k, m1) => {
+        // --- FUNZIONI DI CHIUSURA NELLO STESSO RECORD ---
+        window.chiudiNelLog = (id, testo) => {
             const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
-            update(ref(db, `brogliaccio/${k}`), { stato: 'RICEVUTO' }); // Chiude quello sala
-            push(ref(db, 'brogliaccio'), { ora, squadra: sqId, m1: `✅ RICEVUTO: ${m1}`, dir: 'SQ' }); // Nuovo log Squadra
-            notifySala();
+            // AGGIORNAMENTO ATOMICO: Cambia direzione, chiude stato e SOVRASCRIVE nome squadra per evitare inversioni
+            update(ref(db, `brogliaccio/${id}`), { 
+                m2: `${testo} ORE ${ora}`,
+                stato: 'RICEVUTO',
+                dir: 'SQ',
+                squadra: sqId 
+            }).then(notifySala);
         };
 
-        window.askArrivo = (k, m1) => {
+        window.chiudiArrivo = (id) => {
             Swal.fire({ title: 'CONFERMI ARRIVO?', showCancelButton: true, confirmButtonText: 'SÌ' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getFinalPos();
                     const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
-                    update(ref(db, `brogliaccio/${k}`), { stato: 'OK' }); // Chiude quello sala
+                    // Chiude il log originale facendolo diventare GIALLO (SQ) e della squadra reale
+                    await update(ref(db, `brogliaccio/${id}`), { 
+                        m2: `ARRIVATI ORE ${ora}`,
+                        stato: 'OK',
+                        dir: 'SQ',
+                        squadra: sqId,
+                        lat: p.lat, lng: p.lng
+                    });
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: p.lat, lng: p.lng });
-                    push(ref(db, 'brogliaccio'), { ora, squadra: sqId, m1: `🏁 ARRIVATI SU: ${m1}`, dir: 'SQ', lat: p.lat, lng: p.lng }); // Nuovo log Squadra
                     notifySala();
                 }
             });
         };
 
-        // --- ANTEPRIME E CONFERME ---
+        // --- MEDIA E MESSAGGI (SEMPRE DIR: SQ) ---
         window.previewImage = (input) => {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    Swal.fire({
-                        title: 'Inviare Foto?',
-                        html: `<img src="${e.target.result}" style="width:100%; border-radius:1rem; margin-top:10px;">`,
-                        showCancelButton: true, confirmButtonText: 'INVIA'
-                    }).then(async (result) => {
-                        if (result.isConfirmed) {
+                    Swal.fire({ title: 'Inviare Foto?', html: `<img src="${e.target.result}" style="width:100%; border-radius:1rem;">`, showCancelButton: true }).then(async (res) => {
+                        if (res.isConfirmed) {
                             const p = await getFinalPos();
-                            push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: `📷 FOTO`, mediaUrl: e.target.result, mediaType: 'IMG', lat: p.lat, lng: p.lng, dir: 'SQ' });
+                            push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: `📷 FOTO`, mediaUrl: e.target.result, mediaType: 'IMG', lat: p.lat, lng: p.lng, dir: 'SQ' });
                             notifySala();
                         }
                         input.value = "";
@@ -184,16 +189,12 @@
                 mediaRecorder.onstop = () => {
                     btn.classList.remove('pulse-recording');
                     const b = new Blob(audioChunks, { type: 'audio/webm' });
-                    Swal.fire({
-                        title: 'Inviare Vocale?',
-                        html: `<audio controls src="${URL.createObjectURL(b)}" style="width:100%; margin-top:10px;"></audio>`,
-                        showCancelButton: true, confirmButtonText: 'INVIA'
-                    }).then(async (result) => {
-                        if (result.isConfirmed) {
-                            const reader = new FileReader(); reader.readAsDataURL(b);
-                            reader.onloadend = async () => {
+                    Swal.fire({ title: 'Inviare Vocale?', html: `<audio controls src="${URL.createObjectURL(b)}" style="width:100%"></audio>`, showCancelButton: true }).then(async (res) => {
+                        if (res.isConfirmed) {
+                            const r = new FileReader(); r.readAsDataURL(b);
+                            r.onloadend = async () => {
                                 const p = await getFinalPos();
-                                push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: `🎤 VOCALE`, mediaUrl: reader.result, mediaType: 'AUDIO', lat: p.lat, lng: p.lng, dir: 'SQ' });
+                                push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: `🎤 VOCALE`, mediaUrl: r.result, mediaType: 'AUDIO', lat: p.lat, lng: p.lng, dir: 'SQ' });
                                 notifySala();
                             };
                         }
@@ -207,7 +208,7 @@
                 if(r.isConfirmed) {
                     const p = await getFinalPos();
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: v, lat: p.lat, lng: p.lng });
-                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: `STATO: ${v.toUpperCase()}`, dir: 'SQ', lat: p.lat, lng: p.lng });
+                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: `STATO: ${v.toUpperCase()}`, dir: 'SQ', lat: p.lat, lng: p.lng });
                     notifySala();
                 }
             });
@@ -215,10 +216,10 @@
 
         window.askConfirmText = () => {
             const t = document.getElementById('msg-input').value.trim(); if(!t) return;
-            Swal.fire({ title: 'Inviare Messaggio?', text: t.toUpperCase(), showCancelButton: true }).then(async (r) => {
+            Swal.fire({ title: 'Inviare?', text: t.toUpperCase(), showCancelButton: true }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getFinalPos();
-                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: t.toUpperCase(), dir: 'SQ', lat: p.lat, lng: p.lng });
+                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: t.toUpperCase(), dir: 'SQ', lat: p.lat, lng: p.lng });
                     document.getElementById('msg-input').value = "";
                     notifySala();
                 }
@@ -229,16 +230,15 @@
             Swal.fire({ title: 'Inviare Posizione?', showCancelButton: true }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getFinalPos();
-                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: `📍 POSIZIONE`, lat: p.lat, lng: p.lng, dir: 'SQ' });
+                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: `📍 POSIZIONE`, lat: p.lat, lng: p.lng, dir: 'SQ' });
                     notifySala();
                 }
             });
         };
 
         window.openNav = (lat, lng) => window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank');
-        onValue(ref(db, `anagrafica_squadre/${sqId}`), (snapshot) => {
-            const data = snapshot.val();
-            document.getElementById('current-status').innerText = data?.stato?.toUpperCase() || "---";
+        onValue(ref(db, `anagrafica_squadre/${sqId}`), snapshot => {
+            const d = snapshot.val(); document.getElementById('current-status').innerText = d?.stato?.toUpperCase() || "---";
         });
     </script>
 </body>
