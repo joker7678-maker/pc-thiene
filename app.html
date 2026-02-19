@@ -182,7 +182,7 @@
 
     window.navig = (lat, lng) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank'); };
 
-    // --- FIX RICEZIONE ---
+// --- FIX RICEZIONE UNIVERSALE ---
     onValue(query(ref(db, 'brogliaccio'), limitToLast(12)), (snap) => {
         const data = snap.val(); if (!data) return;
         const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).sort((a, b) => b.id.localeCompare(a.id));
@@ -191,27 +191,38 @@
         const label = document.getElementById('label-msg');
         const testo = document.getElementById('testo-msg');
         const pulsanti = document.getElementById('area-pulsanti');
+
         if (sala) {
-            idSalaAttivo = sala.id; viaAttiva = sala.m1; testo.innerText = viaAttiva;
+            idSalaAttivo = sala.id; 
+            viaAttiva = sala.m1 || "DESTINAZIONE"; 
+            testo.innerText = viaAttiva;
             testo.classList.replace('text-slate-400', 'text-white');
-            // Controllo semplificato: se c'è una coordinata (maiuscola o minuscola) e non è OK
-            if ((sala.lat || sala.LAT) && sala.stato !== 'OK') {
+
+            // Prende Lat/Lng in qualsiasi formato (maiuscolo o minuscolo)
+            const tLat = sala.lat || sala.LAT;
+            const tLng = sala.lng || sala.LNG;
+
+            // Se esistono coordinate e l'ordine non è ancora 'OK' (chiuso)
+            if (tLat && tLng && sala.stato !== 'OK') {
                 wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-red-600 bg-red-900/10 shadow-2xl flex flex-col justify-center min-h-[110px]";
-                label.innerText = "🚨 ORDINE DI INTERVENTO:"; label.style.color = "#ef4444";
+                label.innerText = "🚨 ORDINE DI INTERVENTO:"; 
+                label.style.color = "#ef4444";
                 pulsanti.classList.remove('hidden');
+
                 if (sala.stato === 'ATTESA') {
                     pulsanti.innerHTML = `<button onclick="cRic()" class="w-full bg-blue-600 py-5 rounded-3xl font-bold uppercase text-lg shadow-lg">✅ RICEVI ORDINE</button>`;
                 } else {
-                    const lLat = sala.lat || sala.LAT; const lLng = sala.lng || sala.LNG;
                     pulsanti.innerHTML = `<div class="grid grid-cols-2 gap-3">
-                        <button onclick="navig(${lLat}, ${lLng})" class="bg-emerald-600 py-5 rounded-2xl font-bold uppercase text-xs shadow-lg">📍 NAVIGA</button>
+                        <button onclick="window.navig(${tLat}, ${tLng})" class="bg-emerald-600 py-5 rounded-2xl font-bold uppercase text-xs shadow-lg">📍 NAVIGA</button>
                         <button onclick="cArr()" class="bg-red-600 py-5 rounded-2xl font-bold uppercase text-xs shadow-lg">🏁 ARRIVATI</button>
                     </div>`;
                 }
             } else {
+                // Stato normale / comunicazione semplice
                 wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-blue-500 bg-blue-500/10 shadow-2xl flex flex-col justify-center min-h-[110px]";
                 label.innerText = (sala.stato === 'OK') ? "IN ATTESA DI ORDINI" : "✉️ COMUNICAZIONE DALLA SALA:";
-                label.style.color = "#3b82f6"; pulsanti.classList.add('hidden');
+                label.style.color = "#3b82f6"; 
+                pulsanti.classList.add('hidden');
             }
         }
     });
@@ -252,3 +263,4 @@
 </script>
 </body>
 </html>
+
