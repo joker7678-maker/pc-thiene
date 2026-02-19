@@ -150,51 +150,42 @@
 
 window.rispondiRicevuto = (idSala, msgOrig) => {
     const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
-    
-    // AGGIORNAMENTO CHIRURGICO PER DASHBOARD
     update(ref(db, `brogliaccio/${idSala}`), { 
-        dir: 'SA',             // Manteniamo SA così il testo della sala (m1) resta azzurro a sinistra
-        squadra: sqId,         // Riaffermiamo la squadra
+        dir: 'SA',             // Fondamentale: Resta SA così la Dashboard legge [SALA] a sinistra
+        squadra: sqId, 
         stato: 'RICEVUTO',
-        m2: `[CONFERMA SQ] RICEVUTO ORE ${ora}` // In m2 mettiamo la firma squadra
+        m2: `✅ RICEVUTO DALLA SQUADRA ORE ${ora}` // La squadra scrive nella riga sotto (m2)
     }).then(() => {
         Swal.fire({ icon:'success', title:'CONFERMATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
     });
 };
 
 window.rispondiArrivo = (idSala) => {
-    Swal.fire({ 
-        title: 'CONFERMI ARRIVO?', 
-        showCancelButton: true, 
-        confirmButtonText: 'SÌ',
-        background: '#1e293b',
-        color: '#fff' 
-    }).then(async (r) => {
+    Swal.fire({ title: 'CONFERMI ARRIVO?', showCancelButton: true, confirmButtonText: 'SÌ' }).then(async (r) => {
         if(r.isConfirmed) {
             const p = await getFinalPos();
             const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
-            const dataOggi = new Date().toLocaleDateString('it-IT');
-            
             const viaOriginale = document.getElementById('text-msg-sala').innerText;
 
-            // 1. CHIUDIAMO IL VECCHIO LOG DELLA SALA
+            // 1. Chiudiamo il vecchio log della sala
             await update(ref(db, `brogliaccio/${idSala}`), { stato: 'OK' });
 
-            // 2. CREIAMO IL NUOVO LOG SQUADRA IN "ATTESA"
-            // Così in Sala apparirà il tasto per confermare l'arrivo
+            // 2. Creiamo il NUOVO log di Arrivo
+            // NOTA: Usiamo dir: 'SQ' ma scriviamo il contenuto in m1 in modo esplicito
             await push(ref(db, 'brogliaccio'), {
                 ora: ora,
-                data: dataOggi,
+                data: new Date().toLocaleDateString('it-IT'),
                 squadra: sqId,
-                m1: `🏁 ARRIVATI SUL POSTO: ${viaOriginale}`,
+                m1: `🏁 ARRIVO SUL POSTO`, 
+                m2: `RIF: ${viaOriginale}`, // Mettiamo il riferimento sotto
                 dir: 'SQ', 
-                stato: 'ATTESA', // <--- Fondamentale per la risposta della Sala
+                stato: 'ATTESA', // Resta in attesa della tua conferma in Sala
                 lat: p.lat,
                 lng: p.lng
             });
 
             update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: p.lat, lng: p.lng });
-            Swal.fire({ icon:'success', title:'ARRIVO INVIATO IN ATTESA', toast:true, position:'top', timer:1500, showConfirmButton:false });
+            Swal.fire({ icon:'success', title:'ARRIVO INVIATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
         }
     });
 };
