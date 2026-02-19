@@ -144,31 +144,22 @@
         } else { targetArea.classList.add('hidden'); }
     });
 
-// --- RICEZIONE POSIZIONE (CONFERMA) ---
 window.rispondiRicevuto = (idSala, msgOrig) => {
     const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
     
     update(ref(db, `brogliaccio/${idSala}`), { 
-        m2: `📍 RICEVUTO ORE ${ora}`, 
-        stato: 'RICEVUTO',
-        dir: 'SQ',        // TORNA A SQ: Così il log diventa GIALLO e segna SQUADRA
-        squadra: sqId     // Firma la squadra
-    }).then(() => {
-        Swal.fire({ icon:'success', title:'CONFERMATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
-    });
-};
-
-// --- RICEZIONE POSIZIONE (CONFERMA SULLO STESSO LOG) ---
-window.rispondiRicevuto = (idSala, msgOrig) => {
-    const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
-    
-    update(ref(db, `brogliaccio/${idSala}`), { 
-        // MANTENIAMO DIR: 'SA' per evitare l'inversione nomi in Dashboard
-        dir: 'SA', 
+        // 1. Cambiamo la direzione in SQ per avere il colore GIALLO e il prefisso [SQ]
+        dir: 'SQ', 
+        
+        // 2. SCAMBIAMO I CAMPI: Questo è il trucco per ingannare la Dashboard 
+        // e farle scrivere i nomi nel posto giusto nonostante il cambio direzione
         squadra: sqId, 
-        stato: 'RICEVUTO',
-        // Usiamo m2 per mostrare la conferma della squadra
-        m2: `✅ RICEVUTO ORE ${ora}` 
+        
+        // 3. Manteniamo il testo originale e aggiungiamo la conferma
+        m1: msgOrig,
+        m2: `✅ RICEVUTO ORE ${ora}`,
+        
+        stato: 'RICEVUTO'
     }).then(() => {
         Swal.fire({ icon:'success', title:'CONFERMATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
     });
