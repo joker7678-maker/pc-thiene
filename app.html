@@ -139,32 +139,44 @@
             }
         });
 
-        onValue(query(ref(db, 'brogliaccio'), limitToLast(50)), (snap) => {
-            const data = snap.val(); if (!data) return;
-            const logs = Object.entries(data).sort((a,b) => b[0].localeCompare(a[0]));
+// --- LOGICA SINCRONIZZAZIONE V7.8 (RICERCA DIRETTA ULTIMO MSG) ---
+onValue(query(ref(db, 'brogliaccio'), limitToLast(100)), (snap) => {
+    const data = snap.val(); if (!data) return;
+    const logs = Object.entries(data).sort((a,b) => b[0].localeCompare(a[0]));
 
-            const activeTarget = logs.find(([k, l]) => l.squadra === sqId && l.dir === 'SA' && l.lat && l.stato !== 'OK');
-            const navChannel = document.getElementById('nav-channel');
-            if (activeTarget) {
-                const [key, log] = activeTarget;
-                navChannel.classList.remove('hidden');
-                document.getElementById('nav-text').innerText = log.m1;
-                document.getElementById('nav-card').className = `glass p-3 rounded-2xl border-l-8 shadow-xl ${log.stato === 'ATTESA' ? 'pulse-red border-red-600' : 'border-blue-600'}`;
-                document.getElementById('nav-btns').innerHTML = log.stato === 'ATTESA' ? 
-                    `<button onclick="window.confermaRicezione('${key}')" class="w-full bg-blue-600 py-4 rounded-xl text-xs font-black uppercase mt-1">✅ OK RICEVUTO SQUADRA</button>` :
-                    `<div class="grid grid-cols-2 gap-2 mt-1"><button onclick="window.openNav(${log.lat}, ${log.lng})" class="bg-emerald-600 py-3 rounded-xl text-[10px] font-black uppercase">NAVIGA</button><button onclick="window.askArrivo('${key}')" class="bg-red-600 py-3 rounded-xl text-[10px] font-black uppercase">ARRIVATI</button></div>`;
-            } else { navChannel.classList.add('hidden'); }
+    // 1. GESTIONE TARGET/NAVIGAZIONE (Invariata)
+    const activeTarget = logs.find(([k, l]) => l.squadra === sqId && l.dir === 'SA' && l.lat && l.stato !== 'OK');
+    const navChannel = document.getElementById('nav-channel');
+    if (activeTarget) {
+        const [key, log] = activeTarget;
+        navChannel.classList.remove('hidden');
+        document.getElementById('nav-text').innerText = log.m1;
+        document.getElementById('nav-card').className = `glass p-3 rounded-2xl border-l-8 shadow-xl ${log.stato === 'ATTESA' ? 'pulse-red border-red-600' : 'border-blue-600'}`;
+        document.getElementById('nav-btns').innerHTML = log.stato === 'ATTESA' ? 
+            `<button onclick="window.confermaRicezione('${key}')" class="w-full bg-blue-600 py-4 rounded-xl text-xs font-black uppercase mt-1">✅ OK RICEVUTO SQUADRA</button>` :
+            `<div class="grid grid-cols-2 gap-2 mt-1"><button onclick="window.openNav(${log.lat}, ${log.lng})" class="bg-emerald-600 py-3 rounded-xl text-[10px] font-black uppercase">NAVIGA</button><button onclick="window.askArrivo('${key}')" class="bg-red-600 py-3 rounded-xl text-[10px] font-black uppercase">ARRIVATI</button></div>`;
+    } else { navChannel.classList.add('hidden'); }
 
-            const lastLogSala = logs.find(([k, l]) => (l.squadra === sqId || l.squadra === "TUTTE" || l.squadra === "COMUNICAZIONE GENERALE") && l.dir === 'SA' && (!l.m2 || !l.m2.toUpperCase().includes("CONFERMA")));
-            
-            const msgChannel = document.getElementById('msg-channel');
-            if (lastLogSala) {
-                msgChannel.classList.remove('hidden');
-                const log = lastLogSala[1];
-                document.getElementById('msg-text-sala').innerText = (log.m2 && log.m2 !== '---') ? log.m2 : log.m1;
-            } else { msgChannel.classList.add('hidden'); }
-        });
-
+    // 2. CANALE MESSAGGI: PRENDE L'ULTIMO MSG REALE DELLA SALA PER QUESTA SQUADRA
+    const lastLogSala = logs.find(([k, l]) => {
+        const destinatoAMe = (l.squadra === sqId || l.squadra === "TUTTE" || l.squadra === "COMUNICAZIONE GENERALE");
+        const provieneDaSala = (l.dir === 'SA');
+        // Filtriamo solo i messaggi di sistema che non devono apparire nel box arancione
+        const msgPulito = l.m1 && !l.m1.includes("STATO:") && !l.m1.includes("POSIZIONE");
+        
+        return destinatoAMe && provieneDaSala && msgPulito;
+    });
+    
+    const msgChannel = document.getElementById('msg-channel');
+    if (lastLogSala) {
+        msgChannel.classList.remove('hidden');
+        const log = lastLogSala[1];
+        // Mostra M1 (il messaggio della sala). Se la sala ha scritto qualcosa in M2, mostra quello.
+        document.getElementById('msg-text-sala').innerText = (log.m2 && log.m2 !== '---' && !log.m2.includes("CONFERMA")) ? log.m2 : log.m1;
+    } else { 
+        msgChannel.classList.add('hidden'); 
+    }
+});
         window.confermaRicezione = (k) => {
             update(ref(db, `brogliaccio/${k}`), { stato: 'RICEVUTO', m2: `CONFERMA RICEVUTO ORE ${new Date().toLocaleTimeString().slice(0,5)}` });
             notifySala();
@@ -244,3 +256,4 @@
     </script>
 </body>
 </html>
+
