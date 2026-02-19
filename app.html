@@ -125,8 +125,11 @@ onValue(query(ref(db, 'brogliaccio'), limitToLast(20)), (snap) => {
 
     // 2. Box Navigazione Interattivo
     // Cerchiamo il target che non sia ancora chiuso (OK)
-    const targetAttivo = logs.find(l => l.lat && l.lat !== "" && (l.squadra === sqId || l.squadra === "TUTTE") && l.stato !== 'OK' && l.dir === 'SA');
-    
+const targetAttivo = logs.find(l => 
+    l.lat && l.lat !== "" && 
+    (l.squadra === sqId || l.squadra === "TUTTE") && 
+    l.stato !== 'OK'
+);    
     if (targetAttivo) {
         targetArea.classList.remove('hidden');
         const isAttesa = (targetAttivo.stato === 'ATTESA');
@@ -149,43 +152,29 @@ onValue(query(ref(db, 'brogliaccio'), limitToLast(20)), (snap) => {
 
 window.rispondiRicevuto = (idSala, msgOrig) => {
     const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
-    // Aggiorna il log originale: forziamo squadra e direzione per evitare inversioni
+    // Sovrascriviamo l'ID del messaggio esistente
     update(ref(db, `brogliaccio/${idSala}`), { 
-        stato: 'RICEVUTO',
         m2: `RICEVUTO ORE ${ora}`,
-        dir: 'SQ',
-        squadra: sqId 
-    }).then(() => {
-        Swal.fire({ icon:'success', title:'RICEVUTO INVIATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
+        stato: 'RICEVUTO',
+        dir: 'SQ',        // Forza il colore Giallo
+        squadra: sqId     // Firma come squadra: BLOCCA L'INVERSIONE
     });
 };
 
 window.rispondiArrivo = (idSala, msgOrig) => {
-    Swal.fire({ title: 'CONFERMI ARRIVO?', showCancelButton: true, confirmButtonText: 'SÌ', background: '#1e293b', color: '#fff' }).then(async (r) => {
+    Swal.fire({ title: 'CONFERMI ARRIVO?', showCancelButton: true, confirmButtonText: 'SÌ' }).then(async (r) => {
         if(r.isConfirmed) {
-            const p = await getFinalPos();
+            const p = await getGPS();
             const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
-            
-            // 1. Chiude il log della sala (così sparisce il box blu)
-            update(ref(db, `brogliaccio/${idSala}`), { stato: 'OK' });
-
-            // 2. Crea un NUOVO log Squadra (Giallo) specifico per l'arrivo
-            // Questo garantisce che la dashboard veda "SQUADRA" come mittente
-            push(ref(db, 'brogliaccio'), {
-                ora: ora,
-                data: new Date().toLocaleDateString('it-IT'),
-                squadra: sqId,
-                m1: `🏁 ARRIVATI SU: ${msgOrig}`,
+            // Chiudiamo lo stesso ID messaggio
+            await update(ref(db, `brogliaccio/${idSala}`), { 
+                m2: `ARRIVATI ORE ${ora}`,
+                stato: 'OK',      // Fa sparire il box blu
                 dir: 'SQ',
-                stato: 'OK',
-                lat: p.lat,
-                lng: p.lng
+                squadra: sqId,
+                lat: p.lat, lng: p.lng
             });
-
-            // 3. Aggiorna anagrafica per la mappa
             update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: p.lat, lng: p.lng });
-            
-            Swal.fire({ icon:'success', title:'ARRIVO INVIATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
         }
     });
 };
