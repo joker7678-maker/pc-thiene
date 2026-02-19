@@ -213,6 +213,67 @@ window.rispondiArrivo = (idSala) => {
         }
     });
 };
+// --- FUNZIONE GESTIONE E ANTEPRIMA FOTO ---
+window.handleImagePreview = (file) => {
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const base64Data = e.target.result;
+
+        // Mostra l'anteprima prima di inviare
+        Swal.fire({
+            title: 'INVIARE QUESTA FOTO?',
+            html: `
+                <div class="mt-2">
+                    <img src="${base64Data}" style="width:100%; border-radius:1rem; border:2px solid #3b82f6 shadow-lg">
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'SÌ, INVIA',
+            cancelButtonText: 'ANNULLA',
+            background: '#1e293b',
+            color: '#fff',
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#ef4444'
+        }).then(async (res) => {
+            if (res.isConfirmed) {
+                // Notifica di caricamento
+                Swal.fire({ 
+                    title: 'Caricamento...', 
+                    allowOutsideClick: false, 
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                try {
+                    const p = await getFinalPos();
+                    const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
+
+                    await push(ref(db, 'brogliaccio'), {
+                        ora: ora,
+                        data: new Date().toLocaleDateString('it-IT'),
+                        squadra: sqId,
+                        m1: "📷 FOTO ALLEGATA",
+                        mediaUrl: base64Data,
+                        mediaType: 'IMG',
+                        dir: 'SQ', 
+                        lat: p.lat,
+                        lng: p.lng,
+                        stato: 'ATTESA' // Appare in Dashboard con il tasto RISPONDI
+                    });
+
+                    Swal.fire({ icon: 'success', title: 'FOTO INVIATA', toast: true, position: 'top', timer: 2000, showConfirmButton: false });
+                } catch (err) {
+                    console.error("Errore invio foto:", err);
+                    Swal.fire("Errore", "Riprova, caricamento fallito.", "error");
+                }
+            }
+            // Svuota l'input per permettere nuovi scatti
+            document.getElementById('input-foto').value = "";
+        });
+    };
+    reader.readAsDataURL(file);
+};
 
 // --- CAMBIO STATO (LOG NUOVO) ---
 window.askConfirmStatus = (v, label) => {
