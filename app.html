@@ -154,18 +154,30 @@
 
     setInterval(() => { document.getElementById('ora').innerText = new Date().toLocaleTimeString('it-IT'); }, 1000);
 
-    async function inviaNuovo(testo, stato = 'OK', extra = {}) {
-        const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
-        let pos = { lat: '', lng: '' };
-        if (navigator.geolocation && document.getElementById('gps-toggle').checked) {
-            try {
-                const p = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3000 }));
-                pos = { lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) };
-                update(ref(db, `anagrafica_squadre/${sqId}`), { ...pos, ultimo_contatto: ora });
-            } catch (e) {}
-        }
-        return push(ref(db, 'brogliaccio'), { ora, squadra: sqId, m1: testo.toUpperCase(), dir: 'SQ', stato, ...pos, ...extra });
+async function inviaNuovo(testo, stato = 'OK', extra = {}) {
+    const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
+    let pos = { lat: '', lng: '' };
+    
+    // Recupero posizione se GPS attivo
+    if (navigator.geolocation && document.getElementById('gps-toggle').checked) {
+        try {
+            const p = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3000 }));
+            pos = { lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) };
+            update(ref(db, `anagrafica_squadre/${sqId}`), { ...pos, ultimo_contatto: ora });
+        } catch (e) { console.log("Errore GPS"); }
     }
+    
+    // INVIO AL DATABASE
+    return push(ref(db, 'brogliaccio'), { 
+        ora, 
+        squadra: sqId, 
+        m1: testo.toUpperCase(), 
+        dir: 'SQ', 
+        stato: stato, // Qui riceve 'ATTESA' dalla funzione cArr
+        ...pos, 
+        ...extra 
+    });
+}
 
 window.askStatus = (s, icon) => {
     Swal.fire({ 
@@ -210,21 +222,26 @@ window.cArr = () => {
     if (!idSalaAttivo) return;
     Swal.fire({ 
         title: 'ARRIVATI SUL POSTO?', 
+        text: 'Verrà inviato il log di arrivo alla Sala Operativa',
         icon: 'warning', 
         showCancelButton: true,
-        confirmButtonText: 'CONFERMA ARRIVO'
+        confirmButtonText: 'CONFERMA'
     }).then(async (r) => {
         if(r.isConfirmed) {
-            // 1. Chiude il comando rosso della sala (lo mette in grigio)
+            // 1. Chiude il comando precedente della sala
             update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'OK' });
             
-            // 2. INVIA IL LOG DI ARRIVO IN STATO "ATTESA" (Diventa rosso/giallo in Dash)
+            // 2. APRE UN NUOVO LOG DI ARRIVO E LO METTE IN 'ATTESA'
+            // Questo forzerà la riga a diventare rossa/gialla in Dashboard
             await inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, 'ATTESA');
             
-            // 3. Cambia lo stato anagrafico della squadra
+            // 3. Aggiorna lo stato della squadra nell'anagrafica
             update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
             
-            idSalaAttivo = null; // Libera la variabile per il prossimo ordine
+            // 4. Resetta la variabile e sblocca l'app
+            idSalaAttivo = null;
+            
+            Swal.fire({ icon: 'success', title: 'LOG INVIATO', timer: 1000, showConfirmButton: false });
         }
     });
 };
