@@ -156,6 +156,63 @@ window.rispondiRicevuto = (idSala, msgOrig) => {
         Swal.fire({ icon:'success', title:'CONFERMATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
     });
 };
+// --- FUNZIONE ARRIVO SUL POSTO (Da reinserire in app.html) ---
+window.rispondiArrivo = (idSala) => {
+    Swal.fire({ 
+        title: 'CONFERMI ARRIVO?', 
+        showCancelButton: true, 
+        confirmButtonText: 'SÌ',
+        background: '#1e293b',
+        color: '#fff' 
+    }).then(async (r) => {
+        if(r.isConfirmed) {
+            try {
+                const p = await getFinalPos();
+                const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
+                
+                // Recuperiamo la via dal box azzurro/blu
+                let viaElement = document.getElementById('text-msg-sala');
+                let via = viaElement ? viaElement.innerText : "";
+                
+                // Pulizia: togliamo le scritte fisse per il log finale
+                via = via.replace(/DESTINAZIONE/gi, '')
+                         .replace(/📍/g, '')
+                         .replace(/:/g, '')
+                         .trim();
+
+                if(via === "") via = "SUL POSTO";
+
+                // 1. Chiudiamo il log della sala (Azzurro) per far sparire il box dall'app
+                await update(ref(db, `brogliaccio/${idSala}`), { stato: 'OK' });
+
+                // 2. Creiamo il NUOVO log Squadra (Giallo)
+                // Ora usiamo dir: 'SQ' perché abbiamo corretto la Dashboard Master!
+                await push(ref(db, 'brogliaccio'), {
+                    ora: ora,
+                    data: new Date().toLocaleDateString('it-IT'),
+                    squadra: sqId,
+                    m1: `🏁 Arrivati a ${via}`, 
+                    dir: 'SQ', 
+                    stato: 'ATTESA', 
+                    lat: p.lat,
+                    lng: p.lng
+                });
+
+                // 3. Cambiamo lo stato della squadra in "Intervento"
+                update(ref(db, `anagrafica_squadre/${sqId}`), { 
+                    stato: 'Intervento', 
+                    lat: p.lat, 
+                    lng: p.lng 
+                });
+                
+                Swal.fire({ icon:'success', title:'ARRIVO INVIATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
+            } catch (error) {
+                console.error("Errore:", error);
+                Swal.fire("Errore", "Impossibile completare l'invio.", "error");
+            }
+        }
+    });
+};
 
 // --- CAMBIO STATO (LOG NUOVO) ---
 window.askConfirmStatus = (v, label) => {
