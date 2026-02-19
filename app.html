@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - V9.0</title>
+    <title>PC THIENE - V9.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -31,7 +31,7 @@
                 <h1 class="text-lg font-black italic text-white leading-none uppercase tracking-tighter">PC <span class="text-blue-500">THIENE</span></h1>
                 <p id="sq-name" class="text-blue-400 font-black text-[9px] uppercase mt-0.5 tracking-widest leading-none italic">---</p>
             </div>
-            <span class="text-[8px] font-black text-slate-500 border border-white/10 px-2 py-0.5 rounded-full uppercase">V9.0</span>
+            <span class="text-[8px] font-black text-slate-500 border border-white/10 px-2 py-0.5 rounded-full uppercase italic">V9.1 FIX-DIR</span>
         </header>
 
         <div id="target-summary-badge" class="mb-3 hidden shrink-0">
@@ -106,12 +106,10 @@
             document.getElementById('current-status').innerText = data?.stato?.toUpperCase() || "---";
         });
 
-        // --- MONITORAGGIO LOGICA BROGLIACCIO V9.0 ---
         onValue(query(ref(db, 'brogliaccio'), limitToLast(15)), (snap) => {
             const data = snap.val(); if (!data) return;
             const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).sort((a, b) => b.id.localeCompare(a.id));
             
-            // Trova l'indirizzo dell'ultimo target (anche se concluso)
             const lastTarget = logs.find(l => l.squadra === sqId && l.lat);
             const summaryBadge = document.getElementById('target-summary-badge');
             if (lastTarget) {
@@ -119,7 +117,6 @@
                 document.getElementById('target-summary-text').innerText = lastTarget.m1;
             }
 
-            // Azione attiva
             const activeAction = logs.find(l => l.squadra === sqId && l.dir === 'SA' && l.lat && l.stato !== 'OK');
             const nav = document.getElementById('nav-channel');
             if (activeAction) {
@@ -137,14 +134,16 @@
             } else { nav.classList.add('hidden'); }
         });
 
-        // --- FUNZIONI DI RISPOSTA (AGGIORNAMENTO MIRATO) ---
+        // --- FIX DEFINITIVO INVERSIONE: SOVRASCRIVI SQUADRA CON SQID ---
         window.rispondiNelLog = (id, testo) => {
             const ora = new Date().toLocaleTimeString().slice(0,5);
-            // Aggiorniamo SOLO i campi necessari, mantenendo il campo 'squadra' intatto
+            // Quando la direzione diventa SQ, forziamo il campo squadra ad essere il tuo ID
+            // In questo modo la Dashboard vede: Squadra: [TUO_ID] | Dir: SQ (Giallo)
             update(ref(db, `brogliaccio/${id}`), { 
                 m2: `${testo} ORE ${ora}`,
                 stato: 'RICEVUTO',
-                dir: 'SQ' // Passa a Squadra (Giallo)
+                dir: 'SQ',
+                squadra: sqId 
             }).then(notifySala);
         };
 
@@ -156,7 +155,8 @@
                     await update(ref(db, `brogliaccio/${id}`), { 
                         m2: `ARRIVATI ORE ${ora}`,
                         stato: 'OK',
-                        dir: 'SQ', // Passa a Squadra (Giallo)
+                        dir: 'SQ',
+                        squadra: sqId,
                         lat: p.lat, lng: p.lng
                     });
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: p.lat, lng: p.lng });
@@ -213,7 +213,6 @@
             notifySala();
         };
 
-        // GESTIONE VOCALE CON ANTEPRIMA (Stessa logica DIR: SQ)
         let mediaRecorder; let audioChunks = []; let startTime; let timerInterval;
         document.getElementById('btn-audio').onclick = async () => {
             const btn = document.getElementById('btn-audio'); const timerLabel = document.getElementById('audio-timer');
