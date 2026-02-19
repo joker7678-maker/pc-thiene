@@ -158,7 +158,23 @@ window.rispondiRicevuto = (idSala, msgOrig) => {
     });
 };
 
-// --- ARRIVO SUL POSTO (NUOVO LOG) ---
+// --- RICEZIONE POSIZIONE (CONFERMA SULLO STESSO LOG) ---
+window.rispondiRicevuto = (idSala, msgOrig) => {
+    const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
+    
+    update(ref(db, `brogliaccio/${idSala}`), { 
+        // MANTENIAMO DIR: 'SA' per evitare l'inversione nomi in Dashboard
+        dir: 'SA', 
+        squadra: sqId, 
+        stato: 'RICEVUTO',
+        // Usiamo m2 per mostrare la conferma della squadra
+        m2: `✅ RICEVUTO ORE ${ora}` 
+    }).then(() => {
+        Swal.fire({ icon:'success', title:'CONFERMATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
+    });
+};
+
+// --- ARRIVO SUL POSTO (NUOVO LOG INDIPENDENTE) ---
 window.rispondiArrivo = (idSala) => {
     Swal.fire({ 
         title: 'CONFERMI ARRIVO?', 
@@ -171,14 +187,15 @@ window.rispondiArrivo = (idSala) => {
             const p = await getFinalPos();
             const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
             
-            // Prendiamo la via dal box info
+            // Recuperiamo la via dal box info
             let via = document.getElementById('text-msg-sala').innerText;
             via = via.replace(/DESTINAZIONE/gi, '').replace(/📍/g, '').replace(/:/g, '').trim();
 
-            // 1. Chiudiamo il log della sala
+            // 1. Chiudiamo il log della sala (Azzurro)
             await update(ref(db, `brogliaccio/${idSala}`), { stato: 'OK' });
 
-            // 2. Nuovo log Squadra
+            // 2. Creiamo un NUOVO log Squadra (Giallo)
+            // Questo non si inverte perché nasce già come SQ
             await push(ref(db, 'brogliaccio'), {
                 ora: ora,
                 data: new Date().toLocaleDateString('it-IT'),
