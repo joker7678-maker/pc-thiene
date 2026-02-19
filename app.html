@@ -110,59 +110,49 @@
             });
         }
 
-// --- MONITORAGGIO UNIFICATO BROGLIACCIO CORRETTO ---
+// --- MONITORAGGIO UNIFICATO V9.13 ---
 onValue(query(ref(db, 'brogliaccio'), limitToLast(20)), (snap) => {
     const data = snap.val(); if (!data) return;
     const targetArea = document.getElementById('target-area');
     const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).sort((a, b) => b.id.localeCompare(a.id));
     
-    // 1. Box Messaggio Superiore (Info Sala)
-    const lastLogSala = logs.find(l => l.dir === 'SA' && (l.squadra === sqId || l.squadra === "TUTTE" || l.squadra === "COMUNICAZIONE GENERALE"));
+    // 1. Ultimo messaggio Sala (Box superiore)
+    const lastLogSala = logs.find(l => l.dir === 'SA' && (l.squadra === sqId || l.squadra === "TUTTE"));
     if (lastLogSala) {
         document.getElementById('last-msg-sala').classList.remove('hidden');
         document.getElementById('text-msg-sala').innerText = lastLogSala.m1 || '---';
     }
 
-    // 2. LOGICA BOX INTERATTIVO (Posizione da Raggiungere)
-    // FIX: Rimosso l.dir === 'SA' per permettere al box di restare attivo anche dopo il cambio in 'SQ'
-    const targetAttivo = logs.find(l => 
-        l.lat && l.lat !== "" && 
-        (l.squadra === sqId || l.squadra === "TUTTE") && 
-        l.stato !== 'OK'
-    );
+    // 2. Box Navigazione Interattivo
+    // Cerchiamo il target che non sia ancora chiuso (OK)
+    const targetAttivo = logs.find(l => l.lat && l.lat !== "" && (l.squadra === sqId || l.squadra === "TUTTE") && l.stato !== 'OK' && l.dir === 'SA');
     
     if (targetAttivo) {
         targetArea.classList.remove('hidden');
         const isAttesa = (targetAttivo.stato === 'ATTESA');
         targetArea.innerHTML = `
             <div class="glass p-4 rounded-[1.5rem] border-2 shadow-2xl ${isAttesa ? 'pulse-warning' : 'border-blue-600/50'}">
-                <p class="text-[9px] font-black text-blue-400 uppercase text-center mb-1 tracking-widest italic font-black">Posizione da Raggiungere</p>
+                <p class="text-[9px] font-black text-blue-400 uppercase text-center mb-1 tracking-widest italic">Posizione da Raggiungere</p>
                 <h3 class="text-base font-black text-center uppercase mb-4 leading-tight text-white">${targetAttivo.m1}</h3>
                 ${isAttesa ? 
-                    `<button onclick="window.chiudiNelLog('${targetAttivo.id}', 'RICEVUTO')" class="w-full bg-blue-600 py-4 rounded-2xl text-[10px] font-black uppercase shadow-lg shadow-blue-900/30 tracking-wider">✅ Conferma Ricezione</button>` : 
+                    `<button onclick="window.rispondiRicevuto('${targetAttivo.id}', '${targetAttivo.m1}')" class="w-full bg-blue-600 py-4 rounded-2xl text-[10px] font-black uppercase shadow-lg">✅ Conferma Ricezione</button>` : 
                     `<div class="grid grid-cols-2 gap-3">
                         <button onclick="window.openNavigator(${targetAttivo.lat}, ${targetAttivo.lng})" class="bg-emerald-600 py-4 rounded-2xl text-[10px] font-black uppercase shadow-lg">Mappa</button>
-                        <button onclick="window.chiudiArrivo('${targetAttivo.id}')" class="bg-red-600 py-4 rounded-2xl text-[10px] font-black uppercase shadow-lg">Arrivati</button>
+                        <button onclick="window.rispondiArrivo('${targetAttivo.id}', '${targetAttivo.m1}')" class="bg-red-600 py-4 rounded-2xl text-[10px] font-black uppercase shadow-lg">Arrivati</button>
                     </div>`
                 }
             </div>`;
-    } else { 
-        targetArea.classList.add('hidden'); 
-    }
+    } else { targetArea.classList.add('hidden'); }
 });
 
-// --- FUNZIONE STATO UNITÀ ---
-onValue(ref(db, `anagrafica_squadre/${sqId}`), (snap) => {
-    const val = snap.val(); 
-    if (val) document.getElementById('current-status').innerText = val.stato ? val.stato.toUpperCase() : "---";
-});
+// --- FUNZIONI DI RISPOSTA UNIFICATE (FIX SALA/SQUADRA) ---
 
-// --- FIX DEFINITIVO INVERSIONE E RISPOSTA ---
-window.chiudiNelLog = (id, testo) => {
+window.rispondiRicevuto = (idSala, msgOrig) => {
     const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
-    update(ref(db, `brogliaccio/${id}`), { 
-        m2: `${testo} ORE ${ora}`,
+    // Aggiorna il log originale: forziamo squadra e direzione per evitare inversioni
+    update(ref(db, `brogliaccio/${idSala}`), { 
         stato: 'RICEVUTO',
+        m2: `RICEVUTO ORE ${ora}`,
         dir: 'SQ',
         squadra: sqId 
     }).then(() => {
@@ -170,45 +160,41 @@ window.chiudiNelLog = (id, testo) => {
     });
 };
 
-// --- FUNZIONE STATO UNITÀ ---
-onValue(ref(db, `anagrafica_squadre/${sqId}`), (snap) => {
-    const val = snap.val(); 
-    if (val) document.getElementById('current-status').innerText = val.stato ? val.stato.toUpperCase() : "---";
-});
-
-// --- FIX DEFINITIVO INVERSIONE E RISPOSTA ---
-window.chiudiNelLog = (id, testo) => {
-    const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
-    update(ref(db, `brogliaccio/${id}`), { 
-        m2: `${testo} ORE ${ora}`,
-        stato: 'RICEVUTO',
-        dir: 'SQ',
-        squadra: sqId 
-    }).then(() => {
-        Swal.fire({ icon:'success', title:'RICEVUTO INVIATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
-    });
-};
-
-window.chiudiArrivo = (id) => {
+window.rispondiArrivo = (idSala, msgOrig) => {
     Swal.fire({ title: 'CONFERMI ARRIVO?', showCancelButton: true, confirmButtonText: 'SÌ', background: '#1e293b', color: '#fff' }).then(async (r) => {
         if(r.isConfirmed) {
             const p = await getFinalPos();
             const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
-            // AGGIORNAMENTO ATOMICO: Forziamo la squadra a sqId e stato a OK
-            await update(ref(db, `brogliaccio/${id}`), { 
-                m2: `ARRIVATI ORE ${ora}`,
+            
+            // 1. Chiude il log della sala (così sparisce il box blu)
+            update(ref(db, `brogliaccio/${idSala}`), { stato: 'OK' });
+
+            // 2. Crea un NUOVO log Squadra (Giallo) specifico per l'arrivo
+            // Questo garantisce che la dashboard veda "SQUADRA" come mittente
+            push(ref(db, 'brogliaccio'), {
+                ora: ora,
+                data: new Date().toLocaleDateString('it-IT'),
+                squadra: sqId,
+                m1: `🏁 ARRIVATI SU: ${msgOrig}`,
+                dir: 'SQ',
                 stato: 'OK',
-                dir: 'SQ',        // Diventa giallo
-                squadra: sqId,    // <--- QUESTO IMPEDISCE L'INVERSIONE
-                lat: p.lat, 
+                lat: p.lat,
                 lng: p.lng
             });
-            // Aggiorna anche l'anagrafica per la mappa
+
+            // 3. Aggiorna anagrafica per la mappa
             update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: p.lat, lng: p.lng });
+            
             Swal.fire({ icon:'success', title:'ARRIVO INVIATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
         }
     });
 };
+
+// --- STATO UNITÀ ---
+onValue(ref(db, `anagrafica_squadre/${sqId}`), (snap) => {
+    const val = snap.val(); 
+    if (val) document.getElementById('current-status').innerText = val.stato ? val.stato.toUpperCase() : "---";
+});
 
         window.openNavigator = (lat, lng) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank'); };
 
