@@ -11,11 +11,17 @@
         body { font-family: 'Inter', sans-serif; background: #020617; color: white; height: 100dvh; overflow: hidden; margin: 0; display: flex; flex-direction: column; }
         .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
         
+        /* TITOLO ALLINEATO E OTTIMIZZATO */
         .monitor-title-pro { 
-            font-weight: 900 !important; font-size: 1.1rem !important; text-transform: uppercase; 
+            font-weight: 900 !important; 
+            font-size: 1.05rem !important; 
+            text-transform: uppercase; 
             background: linear-gradient(to bottom, #ffffff 40%, #94a3b8 100%); 
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
-            filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.3)); white-space: nowrap;
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.3)); 
+            white-space: nowrap;
+            letter-spacing: -0.02em;
         }
 
         #wrapper-msg { min-height: 110px; font-weight: 400; transition: all 0.3s ease; }
@@ -34,7 +40,7 @@
 
     <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-950 flex items-center justify-center p-6 text-center">
         <div class="w-full max-w-sm glass p-8 rounded-[2.5rem] border border-blue-500/30">
-            <h1 class="monitor-title-pro mb-8">PC THIENE</h1>
+            <h1 class="monitor-title-pro mb-8 text-center w-full">PC THIENE</h1>
             <input type="password" id="app-password" class="w-full bg-slate-900 border-2 border-slate-700 rounded-2xl p-4 text-center text-4xl mb-6 text-white outline-none" placeholder="••••" inputmode="numeric">
             <button onclick="checkPass()" class="w-full bg-blue-600 text-white font-bold py-5 rounded-2xl uppercase tracking-widest active:bg-blue-700 shadow-lg">Accedi</button>
         </div>
@@ -151,10 +157,23 @@
         });
     };
 
-    window.askGPS = () => {
-        Swal.fire({ title: 'GPS', text: 'Inviare posizione attuale?', icon: 'location', showCancelButton: true }).then((r) => {
-            if(r.isConfirmed) inviaNuovo("📍 AGGIORNAMENTO GPS AUTOMATICO", 'ATTESA');
-        });
+    // --- GPS MANUALE CON VIA ---
+    window.askGPS = async () => {
+        const gpsOn = document.getElementById('gps-toggle').checked;
+        if (!gpsOn) {
+            const { value: via } = await Swal.fire({
+                title: 'GPS DISATTIVATO',
+                text: 'Inserisci via manualmente:',
+                input: 'text',
+                inputPlaceholder: 'Es: Via Roma 10...',
+                showCancelButton: true
+            });
+            if (via) inviaNuovo(`📍 POSIZIONE MANUALE: ${via}`, 'ATTESA');
+        } else {
+            Swal.fire({ title: 'GPS', text: 'Inviare posizione attuale?', icon: 'location', showCancelButton: true }).then((r) => {
+                if(r.isConfirmed) inviaNuovo("📍 AGGIORNAMENTO GPS AUTOMATICO", 'ATTESA');
+            });
+        }
     };
 
     window.askFreeMsg = () => {
@@ -163,7 +182,6 @@
         inviaNuovo(t, 'ATTESA').then(() => { document.getElementById('msg-input').value = ""; });
     };
 
-    // --- 1. RICEZIONE: AGGIORNA STESSO LOG ---
     window.cRic = () => { 
         if (idSalaAttivo) {
             update(ref(db, `brogliaccio/${idSalaAttivo}`), { 
@@ -174,16 +192,12 @@
         }
     };
 
-    // --- 2. ARRIVATI: GENERA NUOVO LOG IN ATTESA ---
     window.cArr = () => {
         if (!idSalaAttivo) return;
         Swal.fire({ title: 'ARRIVATI SUL POSTO?', icon: 'warning', showCancelButton: true }).then(async (r) => {
             if(r.isConfirmed) {
-                // Chiude log della sala
                 await update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'OK' });
-                // CREA NUOVO LOG DA CONFERMARE (ROSSO IN DASH)
                 await inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, 'ATTESA');
-                // Aggiorna anagrafica
                 update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
                 idSalaAttivo = null;
             }
