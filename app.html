@@ -170,6 +170,25 @@ window.chiudiNelLog = (id, testo) => {
     });
 };
 
+// --- FUNZIONE STATO UNITÀ ---
+onValue(ref(db, `anagrafica_squadre/${sqId}`), (snap) => {
+    const val = snap.val(); 
+    if (val) document.getElementById('current-status').innerText = val.stato ? val.stato.toUpperCase() : "---";
+});
+
+// --- FIX DEFINITIVO INVERSIONE E RISPOSTA ---
+window.chiudiNelLog = (id, testo) => {
+    const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
+    update(ref(db, `brogliaccio/${id}`), { 
+        m2: `${testo} ORE ${ora}`,
+        stato: 'RICEVUTO',
+        dir: 'SQ',
+        squadra: sqId 
+    }).then(() => {
+        Swal.fire({ icon:'success', title:'RICEVUTO INVIATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
+    });
+};
+
 window.chiudiArrivo = (id) => {
     Swal.fire({ title: 'CONFERMI ARRIVO?', showCancelButton: true, confirmButtonText: 'SÌ', background: '#1e293b', color: '#fff' }).then(async (r) => {
         if(r.isConfirmed) {
