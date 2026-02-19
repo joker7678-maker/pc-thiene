@@ -294,59 +294,62 @@ window.askConfirmStatus = (v, label) => {
     });
 };
 
-// --- 1. INVIO MESSAGGIO TESTO ---
+// --- 1. INVIO MESSAGGIO TESTO (In attesa di risposta) ---
 window.askConfirmText = () => {
     const t = document.getElementById('msg-text').value.trim(); 
     if(!t) return;
-    Swal.fire({ title: 'INVIARE?', text: t.toUpperCase(), showCancelButton: true }).then(async (r) => {
+    Swal.fire({ title: 'INVIARE?', text: t.toUpperCase(), showCancelButton: true, background: '#1e293b', color: '#fff' }).then(async (r) => {
         if(r.isConfirmed) {
             const p = await getFinalPos();
             push(ref(db, 'brogliaccio'), { 
                 ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
                 squadra: sqId, 
                 m1: t.toUpperCase(), 
-                dir: 'SQ', // <--- CAMBIATO IN SQ
+                dir: 'SQ',        // Giallo e nomi corretti
+                stato: 'ATTESA',  // <--- BLOCCA IN SALA PER RISPOSTA
                 lat: p.lat, 
-                lng: p.lng, 
-                stato: 'ATTESA' 
+                lng: p.lng
             });
             document.getElementById('msg-text').value = "";
         }
     });
 };
 
-// --- 2. INVIO POSIZIONE GPS ---
+// --- 2. INVIO POSIZIONE GPS (In attesa di risposta) ---
 window.askConfirmGPS = () => {
-    Swal.fire({ title: 'INVIARE GPS?', showCancelButton: true }).then(async (r) => {
+    Swal.fire({ title: 'INVIARE GPS?', showCancelButton: true, background: '#1e293b', color: '#fff' }).then(async (r) => {
         if(r.isConfirmed) {
             const p = await getFinalPos();
             push(ref(db, 'brogliaccio'), { 
                 ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
                 squadra: sqId, 
                 m1: "📍 POSIZIONE GPS SQUADRA", 
+                dir: 'SQ',        // Giallo e nomi corretti
+                stato: 'ATTESA',  // <--- BLOCCA IN SALA PER RISPOSTA
                 lat: p.lat, 
-                lng: p.lng, 
-                dir: 'SQ', // <--- CAMBIATO IN SQ
-                stato: 'ATTESA' 
+                lng: p.lng
             });
         }
     });
 };
 
-// --- 3. CAMBIO STATO (Sede, Arrivo, ecc.) ---
+// --- 3. CAMBIO STATO (In attesa di risposta) ---
 window.askConfirmStatus = (v, label) => {
-    Swal.fire({ title: 'CAMBIARE STATO?', text: label, showCancelButton:true }).then(async (r) => {
+    Swal.fire({ title: 'CAMBIARE STATO?', text: label, showCancelButton:true, background: '#1e293b', color: '#fff' }).then(async (r) => {
         if(r.isConfirmed) {
             const p = await getFinalPos();
+            // Aggiorna subito l'anagrafica per la mappa
             update(ref(db, `anagrafica_squadre/${sqId}`), { stato: v, lat: p.lat, lng: p.lng });
+            
+            // Invia il log che richiede conferma dalla sala
             push(ref(db, 'brogliaccio'), { 
                 ora: new Date().toLocaleTimeString('it-IT').slice(0,5), 
                 squadra: sqId, 
                 m1: `STATO: ${v.toUpperCase()}`, 
-                dir: 'SQ', // <--- CAMBIATO IN SQ
+                dir: 'SQ',        // Giallo e nomi corretti
+                stato: 'ATTESA',  // <--- BLOCCA IN SALA PER RISPOSTA
                 lat: p.lat, 
-                lng: p.lng, 
-                stato: 'OK' 
+                lng: p.lng
             });
         }
     });
