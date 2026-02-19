@@ -214,17 +214,42 @@
 
     // --- FUNZIONI OPERATIVE ---
 
+ // 1. Quando la squadra preme "RICEVUTO"
     window.cRic = (id) => {
         Swal.fire({
             title: 'CONFERMI RICEZIONE?',
-            text: "La Sala saprà che sei partito",
+            text: "Il log verrà aggiornato con la presa in carico",
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: 'SÌ, RICEVUTO'
         }).then((res) => {
             if (res.isConfirmed) {
-                update(ref(db, `brogliaccio/${id}`), { stato: 'RICEVUTO' });
-                invia("✅ MESSAGGIO RICEVUTO - IN MOVIMENTO");
+                // AGGIORNA LO STESSO LOG: cambia lo stato e aggiunge la nota al messaggio
+                update(ref(db, `brogliaccio/${id}`), { 
+                    stato: 'RICEVUTO',
+                    m1: document.getElementById('testo-ultimo-messaggio').innerText + " - ✅ PRESO IN CARICO"
+                });
+            }
+        });
+    };
+
+    // 2. Quando la squadra preme "ARRIVATI"
+    window.cArr = (id, via) => {
+        Swal.fire({
+            title: 'ARRIVATI SUL POSTO?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'SÌ, ARRIVATI'
+        }).then((res) => {
+            if (res.isConfirmed) {
+                // AGGIORNA LO STESSO LOG: imposta lo stato su ATTESA per far diventare la riga ROSSA in Dash
+                update(ref(db, `brogliaccio/${id}`), { 
+                    stato: 'ATTESA', 
+                    m1: via + " - 🏁 ARRIVATI SUL POSTO"
+                });
+                
+                // Aggiorna lo stato della squadra nel pannello anagrafica
+                update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
             }
         });
     };
