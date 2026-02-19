@@ -161,30 +161,44 @@ window.rispondiRicevuto = (idSala, msgOrig) => {
 };
 
 window.rispondiArrivo = (idSala) => {
-    Swal.fire({ title: 'CONFERMI ARRIVO?', showCancelButton: true, confirmButtonText: 'SÌ' }).then(async (r) => {
+    Swal.fire({ 
+        title: 'CONFERMI ARRIVO?', 
+        showCancelButton: true, 
+        confirmButtonText: 'SÌ',
+        background: '#1e293b',
+        color: '#fff' 
+    }).then(async (r) => {
         if(r.isConfirmed) {
             const p = await getFinalPos();
             const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
+            const dataOggi = new Date().toLocaleDateString('it-IT');
+            
+            // Prendiamo solo la via dal box dell'app
             const viaOriginale = document.getElementById('text-msg-sala').innerText;
 
-            // 1. Chiudiamo il vecchio log della sala
+            // 1. CHIUDIAMO IL VECCHIO LOG DELLA SALA
             await update(ref(db, `brogliaccio/${idSala}`), { stato: 'OK' });
 
-            // 2. Creiamo il NUOVO log di Arrivo
-            // NOTA: Usiamo dir: 'SQ' ma scriviamo il contenuto in m1 in modo esplicito
+            // 2. NUOVO LOG SQUADRA (GIALLO)
+            // Pulito: solo icona e via
             await push(ref(db, 'brogliaccio'), {
                 ora: ora,
-                data: new Date().toLocaleDateString('it-IT'),
+                data: dataOggi,
                 squadra: sqId,
-                m1: `🏁 ARRIVO SUL POSTO`, 
-                m2: `RIF: ${viaOriginale}`, // Mettiamo il riferimento sotto
+                m1: `🏁 ${viaOriginale}`, // Lascia solo icona e via
                 dir: 'SQ', 
-                stato: 'ATTESA', // Resta in attesa della tua conferma in Sala
+                stato: 'ATTESA', // Resta in attesa per la conferma della sala
                 lat: p.lat,
                 lng: p.lng
             });
 
-            update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: p.lat, lng: p.lng });
+            // 3. AGGIORNA STATO ANAGRAFICA PER LA MAPPA
+            update(ref(db, `anagrafica_squadre/${sqId}`), { 
+                stato: 'Intervento', 
+                lat: p.lat, 
+                lng: p.lng 
+            });
+            
             Swal.fire({ icon:'success', title:'ARRIVO INVIATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
         }
     });
