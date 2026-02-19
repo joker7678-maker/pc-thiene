@@ -217,7 +217,7 @@ window.askStatus = (s, icon) => {
     };
 
     window.cRic = () => { if (idSalaAttivo) update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'RICEVUTO', m2: "✅ RICEVUTO" }); };
-
+// --- SOSTITUISCI LA TUA FUNZIONE cArr CON QUESTA ---
 window.cArr = () => {
     if (!idSalaAttivo) return;
     Swal.fire({ 
@@ -227,70 +227,83 @@ window.cArr = () => {
         confirmButtonText: 'CONFERMA'
     }).then(async (r) => {
         if(r.isConfirmed) {
-            // 1. Chiude il comando rosso della sala (lo mette in grigio)
+            // 1. Chiude il comando della sala
             update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'OK' });
             
-            // 2. APRE UN NUOVO LOG DI ARRIVO IN STATO 'ATTESA'
-            // Questo farà apparire una NUOVA riga in Dashboard da confermare
+            // 2. APRE NUOVO LOG IN ATTESA PER LA DASHBOARD
             await inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, 'ATTESA');
             
-            // 3. Aggiorna l'anagrafica
+            // 3. Aggiorna anagrafica
             update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
             
-            idSalaAttivo = null; // Resetta per il prossimo ordine
+            idSalaAttivo = null;
+            Swal.fire({ icon: 'success', title: 'ARRIVO COMUNICATO', timer: 1000, showConfirmButton: false });
         }
     });
 };
     window.navig = (lat, lng) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank'); };
 
-// --- FIX RICEZIONE DEFINITIVO ---
-    onValue(query(ref(db, 'brogliaccio'), limitToLast(12)), (snap) => {
-        const data = snap.val(); if (!data) return;
-        const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).sort((a, b) => b.id.localeCompare(a.id));
-        
-        // Trova l'ultimo messaggio della sala per questa squadra
-        const sala = logs.find(l => l.dir === 'SA' && (l.squadra === sqId || l.squadra === "TUTTE"));
-        
-        const wrapper = document.getElementById('wrapper-msg');
-        const label = document.getElementById('label-msg');
-        const testo = document.getElementById('testo-msg');
-        const pulsanti = document.getElementById('area-pulsanti');
-        
-        if (sala) {
-            idSalaAttivo = sala.id;
-            viaAttiva = sala.m1 || "DESTINAZIONE"; 
-            testo.innerText = viaAttiva;
-            testo.classList.replace('text-slate-400', 'text-white');
+// --- SOSTITUISCI LA TUA FUNZIONE onValue CON QUESTA ---
+onValue(query(ref(db, 'brogliaccio'), limitToLast(12)), (snap) => {
+    const data = snap.val(); if (!data) return;
+    const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).sort((a, b) => b.id.localeCompare(a.id));
+    
+    const sala = logs.find(l => l.dir === 'SA' && (l.squadra === sqId || l.squadra === "TUTTE"));
+    
+    const wrapper = document.getElementById('wrapper-msg');
+    const label = document.getElementById('label-msg');
+    const testo = document.getElementById('testo-msg');
+    const pulsanti = document.getElementById('area-pulsanti');
+    
+    // Riferimenti per il blocco interfaccia
+    const lockScreen = document.getElementById('lock-screen');
+    const controlsArea = document.getElementById('controls-area');
 
-            // Cerca lat/lng sia minuscolo che maiuscolo
-            const tLat = sala.lat || sala.LAT;
-            const tLng = sala.lng || sala.LNG;
+    if (sala) {
+        idSalaAttivo = sala.id;
+        viaAttiva = sala.m1 || "DESTINAZIONE"; 
+        testo.innerText = viaAttiva;
+        testo.classList.replace('text-slate-400', 'text-white');
 
-            // Se esistono coordinate e l'ordine non è chiuso (OK)
-            if (tLat && tLng && sala.stato !== 'OK') {
-                // BOX ROSSO OPERATIVO
-                wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-red-600 bg-red-900/10 shadow-2xl flex flex-col justify-center min-h-[110px]";
-                label.innerText = "🚨 ORDINE DI INTERVENTO:";
-                label.style.color = "#ef4444";
-                pulsanti.classList.remove('hidden');
-                
-                if (sala.stato === 'ATTESA') {
-                    pulsanti.innerHTML = `<button onclick="cRic()" class="w-full bg-blue-600 py-5 rounded-3xl font-bold uppercase text-lg shadow-lg">✅ RICEVI ORDINE</button>`;
-                } else {
-                    pulsanti.innerHTML = `<div class="grid grid-cols-2 gap-3">
-                        <button onclick="window.navig(${tLat}, ${tLng})" class="bg-emerald-600 py-5 rounded-2xl font-bold uppercase text-xs shadow-lg">📍 NAVIGA</button>
-                        <button onclick="cArr()" class="bg-red-600 py-5 rounded-2xl font-bold uppercase text-xs shadow-lg">🏁 ARRIVATI</button>
-                    </div>`;
-                }
-            } else {
-                // BOX BLU ATTESA
-                wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-blue-500 bg-blue-500/10 shadow-2xl flex flex-col justify-center min-h-[110px]";
-                label.innerText = (sala.stato === 'OK') ? "IN ATTESA DI ORDINI" : "✉️ COMUNICAZIONE DALLA SALA:";
-                label.style.color = "#3b82f6";
-                pulsanti.classList.add('hidden');
+        const tLat = sala.lat || sala.LAT;
+        const tLng = sala.lng || sala.LNG;
+
+        if (tLat && tLng && sala.stato !== 'OK') {
+            // --- ATTIVA BLOCCO E BOX ROSSO ---
+            if(lockScreen) lockScreen.classList.remove('hidden');
+            if(controlsArea) {
+                controlsArea.style.opacity = "0.2";
+                controlsArea.style.pointerEvents = "none";
             }
+
+            wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-red-600 bg-red-900/10 shadow-2xl flex flex-col justify-center min-h-[110px] z-[50]";
+            label.innerText = "🚨 ORDINE DI INTERVENTO:";
+            label.style.color = "#ef4444";
+            pulsanti.classList.remove('hidden');
+            
+            if (sala.stato === 'ATTESA') {
+                pulsanti.innerHTML = `<button onclick="cRic()" class="w-full bg-blue-600 py-5 rounded-3xl font-bold uppercase text-lg shadow-lg">✅ RICEVI ORDINE</button>`;
+            } else {
+                pulsanti.innerHTML = `<div class="grid grid-cols-2 gap-3">
+                    <button onclick="window.navig(${tLat}, ${tLng})" class="bg-emerald-600 py-5 rounded-2xl font-bold uppercase text-xs shadow-lg">📍 NAVIGA</button>
+                    <button onclick="cArr()" class="bg-red-600 py-5 rounded-2xl font-bold uppercase text-xs shadow-lg">🏁 ARRIVATI</button>
+                </div>`;
+            }
+        } else {
+            // --- DISATTIVA BLOCCO E BOX BLU ---
+            if(lockScreen) lockScreen.classList.add('hidden');
+            if(controlsArea) {
+                controlsArea.style.opacity = "1";
+                controlsArea.style.pointerEvents = "auto";
+            }
+
+            wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-blue-500 bg-blue-500/10 shadow-2xl flex flex-col justify-center min-h-[110px]";
+            label.innerText = (sala.stato === 'OK') ? "IN ATTESA DI ORDINI" : "✉️ COMUNICAZIONE DALLA SALA:";
+            label.style.color = "#3b82f6";
+            pulsanti.classList.add('hidden');
         }
-    });
+    }
+});
 // CONTROLLO ATTIVAZIONE REMOTA DA DASHBOARD
 onValue(ref(db, `anagrafica_squadre/${sqId}`), (s) => {
     const d = s.val();
