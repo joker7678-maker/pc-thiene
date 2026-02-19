@@ -144,39 +144,57 @@
         } else { targetArea.classList.add('hidden'); }
     });
 
-    // --- FUNZIONI DI RISPOSTA ---
-    window.rispondiRicevuto = (idSala, msgOrig) => {
-        const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
-        update(ref(db, `brogliaccio/${idSala}`), { 
-            dir: 'SA', 
-            squadra: sqId, 
-            stato: 'RICEVUTO',
-            m2: `✅ RICEVUTO ORE ${ora}` 
-        }).then(() => {
-            Swal.fire({ icon:'success', title:'CONFERMATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
-        });
-    };
+// --- RICEZIONE POSIZIONE (CONFERMA) ---
+window.rispondiRicevuto = (idSala, msgOrig) => {
+    const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
+    
+    update(ref(db, `brogliaccio/${idSala}`), { 
+        m2: `📍 RICEVUTO ORE ${ora}`, 
+        stato: 'RICEVUTO',
+        dir: 'SQ',        // TORNA A SQ: Così il log diventa GIALLO e segna SQUADRA
+        squadra: sqId     // Firma la squadra
+    }).then(() => {
+        Swal.fire({ icon:'success', title:'CONFERMATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
+    });
+};
 
-    window.rispondiArrivo = (idSala) => {
-        Swal.fire({ title: 'CONFERMI ARRIVO?', showCancelButton: true, confirmButtonText: 'SÌ' }).then(async (r) => {
-            if(r.isConfirmed) {
-                const p = await getFinalPos();
-                const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
-                let via = document.getElementById('text-msg-sala').innerText;
-                via = via.replace(/DESTINAZIONE/gi, '').replace(/📍/g, '').replace(/:/g, '').trim();
+// --- ARRIVO SUL POSTO (NUOVO LOG) ---
+window.rispondiArrivo = (idSala) => {
+    Swal.fire({ 
+        title: 'CONFERMI ARRIVO?', 
+        showCancelButton: true, 
+        confirmButtonText: 'SÌ',
+        background: '#1e293b',
+        color: '#fff' 
+    }).then(async (r) => {
+        if(r.isConfirmed) {
+            const p = await getFinalPos();
+            const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
+            
+            // Prendiamo la via dal box info
+            let via = document.getElementById('text-msg-sala').innerText;
+            via = via.replace(/DESTINAZIONE/gi, '').replace(/📍/g, '').replace(/:/g, '').trim();
 
-                await update(ref(db, `brogliaccio/${idSala}`), { stato: 'OK' });
-                await push(ref(db, 'brogliaccio'), {
-                    ora: ora, data: new Date().toLocaleDateString('it-IT'),
-                    squadra: sqId, m1: `🏁 Arrivati a ${via}`,
-                    dir: 'SQ', stato: 'ATTESA', lat: p.lat, lng: p.lng
-                });
+            // 1. Chiudiamo il log della sala
+            await update(ref(db, `brogliaccio/${idSala}`), { stato: 'OK' });
 
-                update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: p.lat, lng: p.lng });
-                Swal.fire({ icon:'success', title:'ARRIVO INVIATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
-            }
-        });
-    };
+            // 2. Nuovo log Squadra
+            await push(ref(db, 'brogliaccio'), {
+                ora: ora,
+                data: new Date().toLocaleDateString('it-IT'),
+                squadra: sqId,
+                m1: `🏁 Arrivati a ${via}`, 
+                dir: 'SQ',       // GIALLO
+                stato: 'ATTESA', // Aspetta conferma dalla sala
+                lat: p.lat,
+                lng: p.lng
+            });
+
+            update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: p.lat, lng: p.lng });
+            Swal.fire({ icon:'success', title:'ARRIVO INVIATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
+        }
+    });
+};
 
     onValue(ref(db, `anagrafica_squadre/${sqId}`), (snap) => {
         const val = snap.val(); 
