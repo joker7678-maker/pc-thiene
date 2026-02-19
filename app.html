@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - APP SQUADRA V9.5</title>
+    <title>PC THIENE - APP SQUADRA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -12,14 +12,10 @@
         body { font-family: 'Inter', sans-serif; background: #020617; color: white; touch-action: manipulation; overflow: hidden; height: 100vh; font-weight: 400; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
         
-        /* TITOLO IDENTICO A INDEX.HTML */
         .monitor-title-pro { 
-            font-weight: 700; 
-            letter-spacing: -0.04em; 
-            text-transform: uppercase; 
+            font-weight: 700; letter-spacing: -0.04em; text-transform: uppercase; 
             background: linear-gradient(to bottom, #ffffff 40%, #94a3b8 100%); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
             filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.4));
         }
 
@@ -122,23 +118,31 @@
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('main-app-container').classList.remove('hidden');
         } else {
-            Swal.fire({ icon: 'error', title: 'ERRORE', text: 'Password errata', timer: 1000, showConfirmButton: false });
+            Swal.fire({ icon: 'error', title: 'ERRORE', text: 'Password errata', timer: 1200, showConfirmButton: false });
         }
     };
 
+    // FUNZIONE CORE INVIO CON GESTIONE GPS OFF
     function invia(testo, extra = {}) {
         const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
         let log = { ora, squadra: sqId, m1: testo.toUpperCase(), dir: 'SQ', stato: 'OK', lat: '', lng: '', ...extra };
-        if (navigator.geolocation && document.getElementById('gps-toggle').checked) {
+        const gpsOn = document.getElementById('gps-toggle').checked;
+
+        if (navigator.geolocation && gpsOn) {
             navigator.geolocation.getCurrentPosition((p) => {
                 log.lat = p.coords.latitude.toFixed(6); log.lng = p.coords.longitude.toFixed(6);
                 update(ref(db, `anagrafica_squadre/${sqId}`), { lat: log.lat, lng: log.lng, ultimo_contatto: ora });
                 push(ref(db, 'brogliaccio'), log);
-            }, () => { push(ref(db, 'brogliaccio'), log); }, { timeout: 4000 });
-        } else { push(ref(db, 'brogliaccio'), log); }
+            }, () => { 
+                log.m1 += " (GPS ERROR)"; push(ref(db, 'brogliaccio'), log); 
+            }, { timeout: 4000 });
+        } else { 
+            if(!gpsOn) log.m1 += " (GPS OFF)";
+            push(ref(db, 'brogliaccio'), log); 
+        }
     }
 
-    // RISPOSTE CON NUOVO LOG PER ARRIVO
+    // GESTIONE RICEZIONE E ARRIVO (CORRETTA)
     window.cRic = (id) => {
         Swal.fire({ title: 'RICEVUTO?', icon: 'question', showCancelButton: true }).then((res) => {
             if (res.isConfirmed) update(ref(db, `brogliaccio/${id}`), { stato: 'RICEVUTO', m2: "✅ PRESO IN CARICO" });
@@ -148,11 +152,11 @@
     window.cArr = (id, via) => {
         Swal.fire({ title: 'ARRIVATI SUL POSTO?', icon: 'warning', showCancelButton: true }).then((res) => {
             if (res.isConfirmed) {
-                // Chiude il log della sala
-                update(ref(db, `brogliaccio/${id}`), { stato: 'OK', m2: "🏁 ARRIVATI" });
-                // Invia NUOVO LOG in attesa (RIGA ROSSA)
+                // 1. Chiude log sala
+                update(ref(db, `brogliaccio/${id}`), { stato: 'OK', m2: "🏁 SQUADRA ARRIVATA" });
+                // 2. Crea NUOVO log per l'attesa (RIGA ROSSA)
                 invia(`🏁 ARRIVATI A: ${via}`, { stato: 'ATTESA' });
-                // Aggiorna stato unità
+                // 3. Aggiorna anagrafica
                 update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
             }
         });
