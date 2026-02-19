@@ -63,7 +63,7 @@
         <section class="flex-1 flex flex-col justify-end space-y-3 pb-2 relative">
             <div id="lock-screen" class="absolute inset-0 z-40 bg-slate-950/80 backdrop-blur-sm rounded-[2rem] flex flex-col items-center justify-center hidden">
                 <div class="text-red-500 text-5xl mb-3 animate-pulse">🚨</div>
-                <div class="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Intervento in corso...</div>
+                <div class="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">SPOSTAMENTO IN CORSO...</div>
             </div>
 
             <div id="controls-area" class="space-y-3">
@@ -163,33 +163,35 @@
         inviaNuovo(t, 'ATTESA').then(() => { document.getElementById('msg-input').value = ""; });
     };
 
-    // --- RICEZIONE ORDINE CON LOG AUTOMATICO ---
+    // --- AGGIORNAMENTO STESSO LOG (RICEVUTO) ---
     window.cRic = () => { 
         if (idSalaAttivo) {
-            // 1. Aggiorna lo stato nel messaggio della sala
-            update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'RICEVUTO' }); 
-            // 2. INVIA LOG AUTOMATICO DI RISPOSTA IN ATTESA
-            inviaNuovo("✅ ORDINE RICEVUTO: IN MOVIMENTO", 'ATTESA');
+            // Aggiorna la riga esistente della sala aggiungendo la risposta
+            update(ref(db, `brogliaccio/${idSalaAttivo}`), { 
+                stato: 'RICEVUTO', 
+                m2: "✅ POSIZIONE RICEVUTA: IN MOVIMENTO" 
+            }); 
             Swal.fire({ icon: 'success', title: 'RICEVUTO', timer: 800, showConfirmButton: false });
         }
     };
 
-    // --- ARRIVATI SUL POSTO CON LOG AUTOMATICO ---
+    // --- AGGIORNAMENTO STESSO LOG (ARRIVATI) ---
     window.cArr = () => {
         if (!idSalaAttivo) return;
         Swal.fire({ title: 'ARRIVATI SUL POSTO?', icon: 'warning', showCancelButton: true }).then(async (r) => {
             if(r.isConfirmed) {
-                // Chiude comando sala
-                await update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'OK' });
-                // Invia log di arrivo in attesa
-                await inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, 'ATTESA');
+                // Aggiorna la riga esistente indicando l'arrivo
+                await update(ref(db, `brogliaccio/${idSalaAttivo}`), { 
+                    stato: 'OK', 
+                    m2: "🏁 ARRIVATI SUL POSTO" 
+                });
                 update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
                 idSalaAttivo = null;
             }
         });
     };
 
-    window.navig = (lat, lng) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank'); };
+    window.navig = (lat, lng) => { window.open(`http://googleusercontent.com/maps.google.com/maps?daddr=${lat},${lng}&travelmode=driving`, '_blank'); };
 
     onValue(query(ref(db, 'brogliaccio'), limitToLast(12)), (snap) => {
         const data = snap.val(); if (!data) return;
@@ -211,11 +213,11 @@
                 if(lock) lock.classList.remove('hidden');
                 if(controls) { controls.style.opacity = "0.2"; controls.style.pointerEvents = "none"; }
                 wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-red-600 bg-red-900/10 shadow-2xl flex flex-col justify-center min-h-[110px] relative z-[50]";
-                label.innerText = "🚨 ORDINE DI INTERVENTO:"; label.style.color = "#ef4444";
+                label.innerText = "🚨 POSIZIONE RICEVUTA:"; label.style.color = "#ef4444";
                 pulsanti.classList.remove('hidden');
                 
                 if (sala.stato === 'ATTESA') {
-                    pulsanti.innerHTML = `<button onclick="cRic()" class="w-full bg-blue-600 py-5 rounded-3xl font-bold uppercase text-lg shadow-lg">✅ RICEVI ORDINE</button>`;
+                    pulsanti.innerHTML = `<button onclick="cRic()" class="w-full bg-blue-600 py-5 rounded-3xl font-bold uppercase text-lg shadow-lg">✅ RICEVI POSIZIONE</button>`;
                 } else {
                     pulsanti.innerHTML = `<div class="grid grid-cols-2 gap-3">
                         <button onclick="window.navig(${tLat}, ${sala.lng || sala.LNG})" class="bg-emerald-600 py-5 rounded-2xl font-bold uppercase text-xs">📍 NAVIGA</button>
