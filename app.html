@@ -3,20 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - App Operatore V5.5</title>
+    <title>PC THIENE - App Operatore V5.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; touch-action: manipulation; overflow-x: hidden; }
         
-        /* Grafica Slider GPS */
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 20px; }
         .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #10b981; }
         input:checked + .slider:before { transform: translateX(20px); }
         
-        /* Animazioni e Stati */
         @keyframes pulse-red {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); transform: scale(1); }
             70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
@@ -39,7 +37,7 @@
 
     <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-900 flex flex-col items-center justify-center p-6">
         <div class="w-full max-w-xs text-center">
-            <h2 class="text-4xl font-black italic text-blue-500 mb-6 uppercase tracking-tighter">PC THIENE</h2>
+            <h2 class="text-4xl font-black italic text-blue-500 mb-6 uppercase tracking-tighter text-center">PC THIENE</h2>
             <div class="bg-slate-800 p-8 rounded-[2.5rem] border border-slate-700 shadow-2xl">
                 <p class="text-slate-400 text-[10px] font-bold uppercase mb-4 tracking-widest">Inserire Codice Sblocco</p>
                 <input type="password" id="app-password" class="w-full bg-slate-950 border-2 border-slate-700 rounded-2xl p-4 text-center text-4xl mb-6 text-white outline-none focus:border-blue-500 transition-all" placeholder="••••" inputmode="numeric">
@@ -55,7 +53,7 @@
                 <p id="sq-name" class="text-blue-400 font-black text-xs uppercase mt-1 tracking-widest">---</p>
             </div>
             <div class="flex flex-col items-end gap-1">
-                <span class="text-[9px] font-black text-slate-500 uppercase">GPS Activo</span>
+                <span class="text-[9px] font-black text-slate-500 uppercase">GPS Attivo</span>
                 <label class="relative inline-block w-10 h-5">
                     <input type="checkbox" id="gps-toggle" checked class="opacity-0 w-0 h-0"><span class="slider"></span>
                 </label>
@@ -64,7 +62,7 @@
 
         <div id="last-msg-sala" class="mb-6 hidden">
             <div class="glass p-4 rounded-3xl shadow-2xl relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                <div class="absolute top-0 left-0 w-1.5 h-full bg-blue-500"></div>
                 <p class="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                     <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span> Ultima Comunicazione
                 </p>
@@ -125,7 +123,6 @@
         const sqId = (urlParams.get('id') || "SQUADRA_TEST").toUpperCase();
         document.getElementById('sq-name').innerText = "UNITÀ: " + sqId;
 
-        // --- AUTH & STATUS ---
         onValue(ref(db, `anagrafica_squadre/${sqId}`), (snapshot) => {
             const data = snapshot.val();
             if (!data || data.attiva === false) {
@@ -146,7 +143,7 @@
                 sessionStorage.setItem('pc_auth_v3', 'true');
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('main-app-container').style.display = 'block';
-            } else { Swal.fire({ icon:'error', title:'Codice Errato', background:'#1e293b', color:'#fff', confirmButtonColor: '#2563eb' }); }
+            } else { Swal.fire({ icon:'error', title:'Codice Errato', background:'#1e293b', color:'#fff' }); }
         };
 
         async function getGPS() {
@@ -159,32 +156,27 @@
             });
         }
 
-        // --- RICEZIONE E STORICO ---
         onValue(query(ref(db, 'brogliaccio'), limitToLast(20)), (snap) => {
             const data = snap.val();
             if (!data) return;
             const targetArea = document.getElementById('target-area');
             const badgeReached = document.getElementById('reached-location-badge');
-            const boxMsgSala = document.getElementById('last-msg-sala');
             const textMsgSala = document.getElementById('text-msg-sala');
             
-            // Refresh forzato
             textMsgSala.innerHTML = "";
             const logs = Object.entries(data).sort((a,b) => b[0].localeCompare(a[0]));
             
-            // 1. Box "Ultima Interazione" (Sala + Squadra)
             const lastLog = logs.find(([k, l]) => (l.squadra === sqId || l.squadra === "COMUNICAZIONE GENERALE" || l.squadra === "TUTTE") && l.dir === 'SA');
             if (lastLog) {
+                document.getElementById('last-msg-sala').classList.remove('hidden');
                 const [id, log] = lastLog;
-                boxMsgSala.classList.remove('hidden');
-                let html = `<div class="uppercase"><span class="text-blue-400 font-black text-[10px] block mb-1">Sala Operativa:</span><span class="text-white font-bold text-sm tracking-tight">${log.m1 || '---'}</span></div>`;
+                let html = `<div class="uppercase"><span class="text-blue-400 font-black text-[10px] block mb-1">Sala Operativa:</span><span class="text-white font-bold text-sm leading-tight">${log.m1 || '---'}</span></div>`;
                 if (log.m2 && log.m2 !== '---' && log.m2 !== "") {
                     html += `<div class="mt-3 pt-3 border-t border-white/10 uppercase"><span class="text-amber-500 font-black text-[10px] block mb-1">Tua Risposta:</span><span class="text-amber-200/90 italic font-semibold text-[13px] leading-tight">${log.m2}</span></div>`;
                 }
                 textMsgSala.innerHTML = html;
             }
 
-            // 2. Navigazione Target
             const lastTarget = logs.find(([k, l]) => l.squadra === sqId && l.dir === 'SA' && l.lat);
             if (lastTarget) {
                 const [key, log] = lastTarget;
@@ -201,10 +193,10 @@
                     }
                     targetArea.innerHTML = `
                         <div class="glass p-6 rounded-[2.5rem] border-4 ${log.stato === 'ATTESA' ? 'pulse-warning border-red-600' : 'border-blue-600'}">
-                            <p class="text-[10px] font-black uppercase text-blue-400 text-center mb-2 tracking-[0.2em]">Nuovo Target</p>
-                            <h3 class="text-2xl font-black text-center uppercase text-white mb-6 italic leading-none tracking-tighter">${log.m1}</h3>
+                            <p class="text-[10px] font-black uppercase text-blue-400 text-center mb-2 tracking-widest">Target dalla Sala</p>
+                            <h3 class="text-2xl font-black text-center uppercase text-white mb-6 italic leading-none">${log.m1}</h3>
                             ${log.stato === 'ATTESA' ? 
-                                `<button onclick="window.confermaRicezione('${key}')" class="w-full bg-blue-600 text-white font-black py-6 rounded-3xl uppercase shadow-2xl active:scale-95 text-lg">Conferma Ricezione</button>` : 
+                                `<button onclick="window.confermaRicezione('${key}')" class="w-full bg-blue-600 text-white font-black py-6 rounded-3xl uppercase shadow-2xl active:scale-95 text-lg">✅ OK RICEVUTO</button>` : 
                                 `<div class="flex flex-col gap-3">
                                     <button onclick="window.openNavigator(${log.lat}, ${log.lng})" class="w-full bg-emerald-600 text-white font-black py-5 rounded-3xl uppercase flex items-center justify-center gap-3 active:scale-95 shadow-xl">🗺️ Avvia Navigatore</button>
                                     <button onclick="window.askConfirmArrivo('${key}')" class="w-full bg-red-600 text-white font-black py-4 rounded-3xl uppercase text-xs opacity-80 active:scale-95">🏁 Arrivo sul Posto</button>
@@ -215,9 +207,14 @@
             }
         });
 
+        // --- CORREZIONE LOGICA MESSAGGI ---
         window.confermaRicezione = async (k) => {
             const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-            await update(ref(db, `brogliaccio/${k}`), { stato: 'RICEVUTO', m2: `CONFERMA RICEZIONE SQUADRA ORE ${ora}` });
+            await update(ref(db, `brogliaccio/${k}`), { 
+                stato: 'RICEVUTO', 
+                m2: `OK RICEVUTO ORE ${ora}` // <--- MODIFICATO COME RICHIESTO
+            });
+            Swal.fire({ icon:'success', title:'CONFERMATO', toast:true, position:'top', timer:1500, showConfirmButton:false });
         };
 
         window.openNavigator = (lat, lng) => {
@@ -225,38 +222,50 @@
         };
 
         window.askConfirmArrivo = (key) => {
-            Swal.fire({ title: 'CONFERMI ARRIVO?', icon: 'question', showCancelButton: true, confirmButtonText: 'SÌ, ARRIVATI', background: '#1e293b', color: '#fff', confirmButtonColor: '#ef4444' }).then(async (r) => {
+            Swal.fire({ title: 'CONFERMI ARRIVO?', showCancelButton: true, confirmButtonText: 'SÌ, ARRIVATI', background: '#1e293b', color: '#fff' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getGPS();
                     const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-                    update(ref(db, `brogliaccio/${key}`), { stato: 'OK', m2: `SQUADRA ARRIVATA SUL POSTO ORE ${ora}` });
+                    // Chiude il target della sala
+                    update(ref(db, `brogliaccio/${key}`), { stato: 'OK', m2: `ARRIVATI SUL POSTO ORE ${ora}` });
+                    // Aggiorna anagrafica
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: p.lat, lng: p.lng });
-                    push(ref(db, 'brogliaccio'), { ora: ora, data: new Date().toLocaleDateString('it-IT'), squadra: sqId, m1: "🏁 ARRIVO SUL POSTO / TARGET RAGGIUNTO", m2: "", dir: 'SQ', stato: 'ATTESA', lat: p.lat, lng: p.lng });
+                    // Invia NUOVO log squadra in ATTESA
+                    push(ref(db, 'brogliaccio'), { 
+                        ora: ora, 
+                        data: new Date().toLocaleDateString('it-IT'),
+                        squadra: sqId, 
+                        m1: "🏁 ARRIVO SUL POSTO / OPERATIVI", 
+                        m2: "", 
+                        dir: 'SQ', 
+                        stato: 'ATTESA', 
+                        lat: p.lat, 
+                        lng: p.lng 
+                    });
                 }
             });
         };
 
+        // --- INVIO ALTRE FUNZIONI ---
         window.askConfirmStatus = (v, label) => {
-            Swal.fire({ title:'CAMBIA STATO?', text:label, showCancelButton:true, background:'#1e293b', color:'#fff', confirmButtonColor: '#2563eb' }).then(async (r) => {
+            Swal.fire({ title:'CAMBIA STATO?', text:label, showCancelButton:true, background:'#1e293b', color:'#fff' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getGPS();
-                    const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: v, lat: p.lat, lng: p.lng });
-                    push(ref(db, 'brogliaccio'), { ora: ora, squadra: sqId, m1: `STATO: ${v.toUpperCase()}`, m2: "", lat: p.lat, lng: p.lng, dir: 'SQ', stato: 'ATTESA' });
+                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: `STATO: ${v.toUpperCase()}`, m2: "", lat: p.lat, lng: p.lng, dir: 'SQ', stato: 'ATTESA' });
                 }
             });
         };
 
         window.askConfirmText = () => {
             const t = document.getElementById('msg-text').value.trim(); if(!t) return;
-            const p = getGPS(); // Pre-fetch GPS
             push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: t.toUpperCase(), m2: "", lat: "", lng: "", dir: 'SQ', stato: 'ATTESA' });
             document.getElementById('msg-text').value = "";
-            Swal.fire({ icon:'success', title:'Inviato', toast:true, position:'top', timer:1500, showConfirmButton:false });
+            Swal.fire({ icon:'success', title:'Inviato', toast:true, position:'top', timer:1000, showConfirmButton:false });
         };
 
         window.askConfirmGPS = () => {
-            Swal.fire({ title:'INVIA GPS?', showCancelButton:true, background:'#1e293b', color:'#fff', confirmButtonColor: '#059669' }).then(async (r) => {
+            Swal.fire({ title:'INVIA GPS?', showCancelButton:true, background:'#1e293b', color:'#fff' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getGPS();
                     push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString('it-IT').slice(0,5), squadra: sqId, m1: "📍 POSIZIONE GPS ATTUALE", m2: "", lat: p.lat, lng: p.lng, dir: 'SQ', stato: 'ATTESA' });
