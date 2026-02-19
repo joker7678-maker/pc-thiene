@@ -72,8 +72,8 @@
                     <div class="grid grid-cols-4 gap-2">
                         <button onclick="askStatus('Sede', '🏠')" class="bg-slate-800 py-4 rounded-xl text-[9px] uppercase">Sede</button>
                         <button onclick="askStatus('Uscita', '🚚')" class="bg-amber-500 text-black py-4 rounded-xl text-[9px] uppercase">Uscita</button>
-                        <button onclick="askStatus('Intervento', '🚨')" class="bg-red-600 py-4 rounded-xl text-[9px] uppercase">Posto</button>
-                        <button onclick="askStatus('Rientro', '🔙')" class="bg-blue-600 py-4 rounded-xl text-[9px] uppercase">Rientro</button>
+                        <button onclick="askStatus('Intervento', '🚨')" class="bg-red-600 text-white py-4 rounded-xl text-[9px] uppercase">Posto</button>
+                        <button onclick="askStatus('Rientro', '🔙')" class="bg-blue-600 text-white py-4 rounded-xl text-[9px] uppercase">Rientro</button>
                     </div>
                 </div>
 
@@ -142,15 +142,20 @@
         return push(ref(db, 'brogliaccio'), { ora, squadra: sqId, m1: testo.toUpperCase(), dir: 'SQ', stato, ...pos, ...extra });
     }
 
+    // --- DOPPIA CONFERMA STATI ---
     window.askStatus = (s, icon) => {
         Swal.fire({ title: 'CAMBIA STATO?', text: `Unità in: ${s}`, icon: 'question', showCancelButton: true }).then((r) => {
-            if(r.isConfirmed) { update(ref(db, `anagrafica_squadre/${sqId}`), { stato: s }); inviaNuovo(`STATO: ${icon} ${s}`, 'ATTESA'); }
+            if(r.isConfirmed) { 
+                update(ref(db, `anagrafica_squadre/${sqId}`), { stato: s }); 
+                inviaNuovo(`STATO: ${icon} ${s}`, 'ATTESA'); 
+            }
         });
     };
 
-    window.askGPS = async () => {
-        const { value: v } = await Swal.fire({ title: 'GPS', text: 'Inviare posizione?', showCancelButton: true });
-        if(v) inviaNuovo("📍 AGGIORNAMENTO GPS AUTOMATICO", 'OK');
+    window.askGPS = () => {
+        Swal.fire({ title: 'GPS', text: 'Inviare posizione attuale?', icon: 'location', showCancelButton: true }).then((r) => {
+            if(r.isConfirmed) inviaNuovo("📍 AGGIORNAMENTO GPS AUTOMATICO", 'ATTESA');
+        });
     };
 
     window.askFreeMsg = () => {
@@ -159,11 +164,19 @@
         inviaNuovo(t, 'ATTESA').then(() => { document.getElementById('msg-input').value = ""; });
     };
 
-    window.cRic = () => { if (idSalaAttivo) update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'RICEVUTO' }); };
+    // --- LOG RICEVUTO (DOPPIA CONFERMA) ---
+    window.cRic = () => { 
+        if (idSalaAttivo) {
+            update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'RICEVUTO' }); 
+            inviaNuovo("✅ ORDINE RICEVUTO: IN MOVIMENTO", 'ATTESA');
+            Swal.fire({ icon: 'success', title: 'RICEVUTO', timer: 800, showConfirmButton: false });
+        }
+    };
 
+    // --- LOG ARRIVATI (DOPPIA CONFERMA) ---
     window.cArr = () => {
         if (!idSalaAttivo) return;
-        Swal.fire({ title: 'ARRIVATI?', icon: 'warning', showCancelButton: true }).then(async (r) => {
+        Swal.fire({ title: 'ARRIVATI SUL POSTO?', icon: 'warning', showCancelButton: true }).then(async (r) => {
             if(r.isConfirmed) {
                 await update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'OK' });
                 await inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, 'ATTESA');
@@ -173,8 +186,9 @@
         });
     };
 
-    window.navig = (lat, lng) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank'); };
+    window.navig = (lat, lng) => { window.open(`http://maps.google.com/maps?q=${lat},${lng}&travelmode=driving`, '_blank'); };
 
+    // --- RICEZIONE E BLOCCO ---
     onValue(query(ref(db, 'brogliaccio'), limitToLast(12)), (snap) => {
         const data = snap.val(); if (!data) return;
         const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).sort((a, b) => b.id.localeCompare(a.id));
@@ -192,7 +206,7 @@
 
             if (tLat && sala.stato !== 'OK') {
                 if(lock) lock.classList.remove('hidden');
-                if(controls) controls.style.opacity = "0.2";
+                if(controls) { controls.style.opacity = "0.2"; controls.style.pointerEvents = "none"; }
                 wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-red-600 bg-red-900/10 shadow-2xl flex flex-col justify-center min-h-[110px] relative z-[50]";
                 label.innerText = "🚨 ORDINE DI INTERVENTO:"; label.style.color = "#ef4444";
                 pulsanti.classList.remove('hidden');
@@ -206,7 +220,7 @@
                 }
             } else {
                 if(lock) lock.classList.add('hidden');
-                if(controls) controls.style.opacity = "1";
+                if(controls) { controls.style.opacity = "1"; controls.style.pointerEvents = "auto"; }
                 wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-blue-500 bg-blue-500/10 shadow-2xl flex flex-col justify-center min-h-[110px]";
                 label.innerText = (sala.stato === 'OK') ? "IN ATTESA DI ORDINI" : "✉️ COMUNICAZIONE DALLA SALA:";
                 label.style.color = "#3b82f6"; pulsanti.classList.add('hidden');
@@ -214,6 +228,7 @@
         }
     });
 
+    // --- DISATTIVAZIONE REMOTA ---
     onValue(ref(db, `anagrafica_squadre/${sqId}`), (s) => {
         const d = s.val(); if(!d) return;
         document.getElementById('current-status').innerText = (d.stato || "---").toUpperCase();
@@ -221,12 +236,38 @@
         else document.getElementById('off-screen').classList.add('hidden');
     });
 
+    // --- INVIO FOTO/VOCALI CON DOPPIA CONFERMA ---
     window.upFoto = (f) => {
+        if (!f) return;
         const reader = new FileReader();
-        reader.onload = (e) => { inviaNuovo("📷 FOTO ALLEGATA", 'OK', { mediaUrl: e.target.result, mediaType: 'IMG' }); };
-        reader.readAsDataURL(f);
+        reader.onload = (e) => {
+            Swal.fire({ title: 'INVIARE FOTO?', html: `<img src="${e.target.result}" class="w-full rounded-2xl">`, showCancelButton: true }).then((r) => {
+                if(r.isConfirmed) inviaNuovo("📷 FOTO ALLEGATA", 'ATTESA', { mediaUrl: e.target.result, mediaType: 'IMG' });
+            });
+        }; reader.readAsDataURL(f);
     };
 
+    let mediaRecorder; let audioChunks = [];
+    document.getElementById('btn-voc').onclick = async () => {
+        const btn = document.getElementById('btn-voc');
+        if (!mediaRecorder || mediaRecorder.state === "inactive") {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream); audioChunks = [];
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const r = new FileReader();
+                r.onload = (e) => {
+                    Swal.fire({ title: 'INVIARE VOCALE?', html: `<audio controls class="w-full"><source src="${e.target.result}"></audio>`, showCancelButton: true }).then((res) => {
+                        if(res.isConfirmed) inviaNuovo("🎤 VOCALE ALLEGATO", 'ATTESA', { mediaUrl: e.target.result, mediaType: 'AUDIO' });
+                    });
+                }; r.readAsDataURL(audioBlob);
+            };
+            mediaRecorder.start(); btn.classList.add('bg-recording'); document.getElementById('voc-txt').innerText = "REC...";
+        } else {
+            mediaRecorder.stop(); btn.classList.remove('bg-recording'); document.getElementById('voc-txt').innerText = "VOCALE";
+        }
+    };
 </script>
 </body>
 </html>
