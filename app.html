@@ -170,16 +170,15 @@
 window.askStatus = (s, icon) => {
     Swal.fire({ 
         title: 'CAMBIA STATO?', 
-        text: `Unità in: ${s}`, 
+        text: `Imposto unità in: ${s}`, 
         icon: 'question', 
-        showCancelButton: true,
-        confirmButtonText: 'INVIA'
+        showCancelButton: true 
     }).then((r) => {
         if(r.isConfirmed) { 
-            // Aggiorna l'anagrafica subito per la mappa
+            // Aggiorna l'anagrafica per la mappa
             update(ref(db, `anagrafica_squadre/${sqId}`), { stato: s }); 
             
-            // INVIA COME LOG "ATTESA": apparirà in Dashboard e richiederà conferma
+            // INVIA LOG IN "ATTESA": la Dash dovrà cliccare "Ricevuto"
             inviaNuovo(`STATO: ${icon} ${s}`, 'ATTESA'); 
         }
     });
@@ -209,15 +208,23 @@ window.askStatus = (s, icon) => {
 
 window.cArr = () => {
     if (!idSalaAttivo) return;
-    Swal.fire({ title: 'ARRIVATI SUL POSTO?', icon: 'warning', showCancelButton: true }).then(async (r) => {
+    Swal.fire({ 
+        title: 'ARRIVATI SUL POSTO?', 
+        icon: 'warning', 
+        showCancelButton: true,
+        confirmButtonText: 'CONFERMA ARRIVO'
+    }).then(async (r) => {
         if(r.isConfirmed) {
-            // Chiude il comando della sala
+            // 1. Chiude il comando rosso della sala (lo mette in grigio)
             update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'OK' });
-            // INVIA IL LOG DI ARRIVO (Stato ATTESA per vederlo in Dash)
+            
+            // 2. INVIA IL LOG DI ARRIVO IN STATO "ATTESA" (Diventa rosso/giallo in Dash)
             await inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, 'ATTESA');
-            // Aggiorna lo stato squadra
+            
+            // 3. Cambia lo stato anagrafico della squadra
             update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
-            idSalaAttivo = null;
+            
+            idSalaAttivo = null; // Libera la variabile per il prossimo ordine
         }
     });
 };
