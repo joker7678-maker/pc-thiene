@@ -40,7 +40,7 @@
 
         <main class="flex-1 overflow-y-auto mb-4 px-1">
             <div id="wrapper-msg" class="glass p-6 rounded-[2.5rem] border-l-4 border-slate-700 min-h-[140px] flex flex-col justify-center shadow-2xl transition-colors duration-500">
-                <p id="label-msg" class="text-[9px] font-bold text-slate-500 uppercase mb-2 tracking-widest">In attesa...</p>
+                <p id="label-msg" class="text-[9px] font-bold text-slate-500 uppercase mb-2 tracking-widest tracking-widest">In attesa...</p>
                 <p id="testo-msg" class="text-sm font-normal text-slate-400 uppercase italic leading-tight">Nessuna comunicazione attiva</p>
                 <div id="area-pulsanti" class="hidden mt-6 pt-4 border-t border-white/10"></div>
             </div>
@@ -51,9 +51,9 @@
                 <div id="current-status" class="text-2xl font-black text-blue-500 italic mb-3 uppercase text-center leading-none tracking-tighter">---</div>
                 <div class="grid grid-cols-4 gap-2">
                     <button onclick="setStatus('Sede', '🏠')" class="bg-slate-800/80 py-4 rounded-xl text-[9px] font-bold uppercase active:bg-blue-600">Sede</button>
-                    <button onclick="setStatus('Uscita', '🚚')" class="bg-amber-500 text-black py-4 rounded-xl text-[9px] font-bold uppercase active:opacity-70">Uscita</button>
-                    <button onclick="setStatus('Intervento', '🚨')" class="bg-red-600 text-white py-4 rounded-xl text-[9px] font-bold uppercase active:opacity-70">Posto</button>
-                    <button onclick="setStatus('Rientro', '🔙')" class="bg-blue-600 text-white py-4 rounded-xl text-[9px] font-bold uppercase active:opacity-70">Rientro</button>
+                    <button onclick="setStatus('Uscita', '🚚')" class="bg-amber-500 text-black py-4 rounded-xl text-[9px] font-bold uppercase">Uscita</button>
+                    <button onclick="setStatus('Intervento', '🚨')" class="bg-red-600 text-white py-4 rounded-xl text-[9px] font-bold uppercase">Posto</button>
+                    <button onclick="setStatus('Rientro', '🔙')" class="bg-blue-600 text-white py-4 rounded-xl text-[9px] font-bold uppercase">Rientro</button>
                 </div>
             </div>
 
@@ -106,7 +106,6 @@
 
     setInterval(() => { document.getElementById('ora').innerText = new Date().toLocaleTimeString('it-IT'); }, 1000);
 
-    // FUNZIONI INVIO DIRETTE
     async function invia(testo, stato = 'OK', extra = {}) {
         const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
         let pos = { lat: '', lng: '' };
@@ -131,17 +130,27 @@
         if(t) { invia(t, 'ATTESA'); document.getElementById('msg-input').value = ""; }
     };
 
-    // LOGICA MESSAGGI SALA (UNICA E FISSA)
-    window.cRic = (id) => update(ref(db, `brogliaccio/${id}`), { stato: 'RICEVUTO' });
+    // --- AZIONI SU MESSAGGIO SALA (CON SCRITTURA SU m2) ---
+    window.cRic = (id) => {
+        update(ref(db, `brogliaccio/${id}`), { 
+            stato: 'RICEVUTO',
+            m2: "✅ MESSAGGIO RICEVUTO" 
+        });
+    };
+
     window.cArr = (idSala, via) => {
-        update(ref(db, `brogliaccio/${idSala}`), { stato: 'OK' }); // Chiude quello sala
-        invia(`🏁 ARRIVATI A: ${via}`, 'ATTESA'); // Apre nuovo della squadra
+        // Aggiorna m2 nel log della sala per chiudere il "dialogo"
+        update(ref(db, `brogliaccio/${idSala}`), { 
+            stato: 'OK',
+            m2: "🏁 ARRIVATI SUL POSTO" 
+        });
+        // Invia nuovo log squadra per attivare l'attesa in Dash (riga rossa)
+        invia(`🏁 ARRIVATI A: ${via}`, 'ATTESA');
         update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
     };
 
     window.navig = (lat, lng) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank'); };
 
-    // ASCOLTO REALTIME
     onValue(query(ref(db, 'brogliaccio'), limitToLast(10)), (snap) => {
         const data = snap.val(); if (!data) return;
         const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).sort((a, b) => b.id.localeCompare(a.id));
