@@ -68,6 +68,11 @@
         <h1 class="monitor-title-pro">PC THIENE</h1>
         <span id="sq-name" class="block text-[8px] font-medium text-blue-400 uppercase tracking-widest opacity-70">---</span>
     </div>
+    <div id="off-screen" class="fixed inset-0 z-[10000] bg-slate-950 flex flex-col items-center justify-center p-6 text-center hidden">
+    <div class="text-slate-500 text-6xl mb-4">🌑</div>
+    <h1 class="monitor-title-pro text-2xl mb-2">APP DISATTIVATA</h1>
+    <p class="text-slate-400 text-xs uppercase tracking-widest">Contattare la Sala Operativa per l'attivazione</p>
+</div>
     </header>
 
         <main class="shrink-0 mb-4 px-1">
@@ -202,17 +207,20 @@ window.askStatus = (s, icon) => {
 
     window.cRic = () => { if (idSalaAttivo) update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'RICEVUTO', m2: "✅ RICEVUTO" }); };
 
-    window.cArr = () => {
-        if (!idSalaAttivo) return;
-        Swal.fire({ title: 'ARRIVATI?', icon: 'warning', showCancelButton: true }).then(async (r) => {
-            if(r.isConfirmed) {
-                update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'OK' });
-                await inviaNuovo(`🏁 ARRIVATI A: ${viaAttiva}`, 'ATTESA');
-                update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
-                idSalaAttivo = null;
-            }
-        });
-    };
+window.cArr = () => {
+    if (!idSalaAttivo) return;
+    Swal.fire({ title: 'ARRIVATI SUL POSTO?', icon: 'warning', showCancelButton: true }).then(async (r) => {
+        if(r.isConfirmed) {
+            // Chiude il comando della sala
+            update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'OK' });
+            // INVIA IL LOG DI ARRIVO (Stato ATTESA per vederlo in Dash)
+            await inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, 'ATTESA');
+            // Aggiorna lo stato squadra
+            update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
+            idSalaAttivo = null;
+        }
+    });
+};
 
     window.navig = (lat, lng) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank'); };
 
@@ -264,17 +272,18 @@ window.askStatus = (s, icon) => {
             }
         }
     });
-    onValue(ref(db, `anagrafica_squadre/${sqId}`), (s) => { if(s.val()) document.getElementById('current-status').innerText = (s.val().stato || "---").toUpperCase(); });
-
-    window.upFoto = (f) => {
-        if (!f) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            Swal.fire({ title: 'INVIARE FOTO?', html: `<img src="${e.target.result}" class="w-full rounded-2xl">`, showCancelButton: true }).then((r) => {
-                if(r.isConfirmed) inviaNuovo("📷 FOTO ALLEGATA", 'OK', { mediaUrl: e.target.result, mediaType: 'IMG' });
-            });
-        }; reader.readAsDataURL(f);
-    };
+  onValue(ref(db, `anagrafica_squadre/${sqId}`), (s) => {
+    const d = s.val();
+    if(!d) return;
+    document.getElementById('current-status').innerText = (d.stato || "---").toUpperCase();
+    
+    // Se lo stato nell'anagrafica è "DISATTIVATA" (o simile), blocca tutto
+    if(d.attiva === false || d.stato === 'DISATTIVATA') {
+        document.getElementById('off-screen').classList.remove('hidden');
+    } else {
+        document.getElementById('off-screen').classList.add('hidden');
+    }
+});
 
     let mediaRecorder; let audioChunks = [];
     document.getElementById('btn-voc').onclick = async () => {
