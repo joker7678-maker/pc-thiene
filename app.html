@@ -14,15 +14,14 @@
         .slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: #10b981; }
         input:checked + .slider:before { transform: translateX(16px); }
-        /* Forza il box messaggi a non superare una certa altezza per non nascondere il resto */
-        #wrapper-msg { min-height: 160px; max-height: 200px; }
+        #wrapper-msg { min-height: 160px; max-height: 220px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
     </style>
 </head>
 <body class="p-3">
 
     <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-950 flex items-center justify-center p-6 text-center">
         <div class="w-full max-w-sm glass p-8 rounded-[2.5rem]">
-            <h1 class="monitor-title text-2xl mb-8">SISTEMA PC THIENE</h1>
+            <h1 class="monitor-title text-2xl mb-8 uppercase font-black">PC THIENE</h1>
             <input type="password" id="app-password" class="w-full bg-slate-900 border-2 border-slate-700 rounded-2xl p-4 text-center text-4xl mb-6 text-white outline-none" placeholder="••••" inputmode="numeric">
             <button onclick="checkPass()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl uppercase tracking-widest active:bg-blue-700">Accedi</button>
         </div>
@@ -31,28 +30,28 @@
     <div id="main-app" class="flex-1 flex flex-col hidden h-full overflow-hidden">
         <header class="flex justify-between items-center mb-4 shrink-0 px-1">
             <div class="border-l-4 border-blue-600 pl-4">
-                <span class="monitor-title text-lg leading-none text-white uppercase font-black">PROTEZIONE CIVILE THIENE</span>
+                <span class="monitor-title text-lg leading-none text-white uppercase font-black">PC THIENE</span>
                 <span id="sq-name" class="block text-[8px] font-bold text-blue-400 uppercase mt-1 italic tracking-widest">---</span>
             </div>
             <div class="bg-slate-900/50 p-2 rounded-2xl border border-white/5 flex items-center gap-2">
-                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">GPS</span>
+                <span class="text-[9px] font-bold text-slate-400 uppercase">GPS</span>
                 <label class="relative inline-block w-8 h-5"><input type="checkbox" id="gps-toggle" checked class="opacity-0 w-0 h-0"><span class="slider"></span></label>
             </div>
         </header>
 
         <main class="shrink-0 mb-4 px-1">
-            <div id="wrapper-msg" class="glass p-5 rounded-[2.5rem] border-l-4 border-slate-700 flex flex-col justify-center shadow-2xl transition-all duration-300 overflow-hidden">
-                <p id="label-msg" class="text-[9px] font-bold text-slate-500 uppercase mb-2 tracking-widest">In attesa...</p>
-                <p id="testo-msg" class="text-sm font-normal text-slate-400 uppercase italic leading-tight">Nessuna comunicazione attiva</p>
+            <div id="wrapper-msg" class="glass p-5 rounded-[2.5rem] border-l-4 border-slate-700 shadow-2xl transition-all duration-300">
+                <p id="label-msg" class="text-[9px] font-bold text-slate-500 uppercase mb-2 tracking-widest">SISTEMA IN ASCOLTO...</p>
+                <p id="testo-msg" class="text-sm font-normal text-slate-400 uppercase italic leading-tight">In attesa di comunicazioni</p>
                 <div id="area-pulsanti" class="hidden mt-4 pt-3 border-t border-white/10"></div>
             </div>
         </main>
 
-        <section class="flex-1 flex flex-col justify-end space-y-3 pb-2 overflow-y-auto">
+        <section class="flex-1 flex flex-col justify-end space-y-3 pb-2">
             <div class="glass rounded-[2rem] p-3 shadow-2xl border border-white/5">
                 <div id="current-status" class="text-2xl font-black text-blue-500 italic mb-3 uppercase text-center leading-none tracking-tighter">---</div>
                 <div class="grid grid-cols-4 gap-2">
-                    <button onclick="setStatus('Sede', '🏠')" class="bg-slate-800/80 py-4 rounded-xl text-[9px] font-bold uppercase active:bg-blue-600">Sede</button>
+                    <button onclick="setStatus('Sede', '🏠')" class="bg-slate-800 py-4 rounded-xl text-[9px] font-bold uppercase active:bg-blue-600">Sede</button>
                     <button onclick="setStatus('Uscita', '🚚')" class="bg-amber-500 text-black py-4 rounded-xl text-[9px] font-bold uppercase">Uscita</button>
                     <button onclick="setStatus('Intervento', '🚨')" class="bg-red-600 text-white py-4 rounded-xl text-[9px] font-bold uppercase">Posto</button>
                     <button onclick="setStatus('Rientro', '🔙')" class="bg-blue-600 text-white py-4 rounded-xl text-[9px] font-bold uppercase">Rientro</button>
@@ -61,14 +60,14 @@
 
             <div class="grid grid-cols-3 gap-3">
                 <button onclick="document.getElementById('in-foto').click()" class="bg-white text-black rounded-2xl py-5 flex flex-col items-center">
-                    <span class="text-2xl">📷</span><span class="text-[9px] font-black uppercase italic">Foto</span>
+                    <span class="text-2xl">📷</span><span class="text-[9px] font-black uppercase italic leading-none mt-1">Foto</span>
                     <input type="file" id="in-foto" accept="image/*" capture="camera" class="hidden" onchange="upFoto(this.files[0])">
                 </button>
                 <button id="btn-voc" class="bg-slate-800 rounded-2xl py-5 flex flex-col items-center border border-white/5">
-                    <span class="text-2xl">🎤</span><span id="voc-txt" class="text-[9px] font-black uppercase italic">Vocale</span>
+                    <span class="text-2xl">🎤</span><span id="voc-txt" class="text-[9px] font-black uppercase italic leading-none mt-1">Vocale</span>
                 </button>
                 <button onclick="sendGPS()" class="bg-emerald-600 rounded-2xl py-5 flex flex-col items-center shadow-xl">
-                    <span class="text-2xl">📍</span><span class="text-[9px] font-black uppercase italic">GPS</span>
+                    <span class="text-2xl">📍</span><span class="text-[9px] font-black uppercase italic leading-none mt-1">GPS</span>
                 </button>
             </div>
 
@@ -81,7 +80,7 @@
         <footer class="shrink-0 py-2 border-t border-slate-800 flex justify-between items-center px-4 bg-slate-950">
             <div id="ora" class="text-yellow-400 font-mono font-bold text-xs tracking-widest">00:00:00</div>
             <div class="flex items-center gap-1">
-                <span class="text-[10px] font-black italic"><span class="text-white">JoK</span><span class="text-red-600">ART</span></span>
+                <span class="text-[10px] font-black italic"><span class="text-white text-xs">JoK</span><span class="text-red-600 text-xs">ART</span></span>
                 <div class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
             </div>
         </footer>
@@ -97,7 +96,8 @@
     const sqId = (urlParams.get('id') || "TEST").toUpperCase();
     document.getElementById('sq-name').innerText = "UNITÀ: " + sqId;
 
-    let idMessaggioSalaAttivo = null;
+    let idSalaAttivo = null;
+    let viaAttiva = ""; // SALVA LA VIA PER L'INVIO SUCCESSIVO
 
     window.checkPass = () => {
         if (document.getElementById('app-password').value === "2026") {
@@ -134,35 +134,66 @@
         if(t) { inviaNuovo(t, 'ATTESA'); document.getElementById('msg-input').value = ""; }
     };
 
-    // --- LOGICA MESSAGGI SALA CORRETTA ---
+    // --- AZIONI SALA OPERATIVE ---
     window.cRic = () => {
-        if (!idMessaggioSalaAttivo) return;
-        // Aggiorna m2 del log sala solo con la conferma di ricezione
-        update(ref(db, `brogliaccio/${idMessaggioSalaAttivo}`), { 
+        if (!idSalaAttivo) return;
+        update(ref(db, `brogliaccio/${idSalaAttivo}`), { 
             stato: 'RICEVUTO',
             m2: "✅ RICEVUTO"
         });
     };
 
-    window.cArr = (via) => {
-        if (!idMessaggioSalaAttivo) return;
-        
-        // 1. Chiudiamo il log della sala in modo NEUTRO
-        update(ref(db, `brogliaccio/${idMessaggioSalaAttivo}`), { 
+    window.cArr = () => {
+        if (!idSalaAttivo) return;
+        // 1. Chiude log sala
+        update(ref(db, `brogliaccio/${idSalaAttivo}`), { 
             stato: 'OK',
-            m2: "🏁 MISSIONE CONCLUSA (ARRIVATI)"
+            m2: "🏁 ARRIVATI"
         });
-
-        // 2. Creiamo il NUOVO log della squadra che chiede ordini
-        // Questo log NON tocca quello della sala, è un record a parte
-        inviaNuovo(`🏁 ARRIVATI SUL POSTO A: ${via}`, 'ATTESA');
-        
-        // 3. Aggiorniamo lo stato dell'unità nell'anagrafica
+        // 2. Invia NUOVO log squadra con la via salvata prima
+        inviaNuovo(`🏁 ARRIVATI A: ${viaAttiva}`, 'ATTESA');
         update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
-        
-        // Reset ID attivo per evitare doppie modifiche sullo stesso messaggio
-        idMessaggioSalaAttivo = null; 
+        idSalaAttivo = null; // Reset per non modificare log vecchi
     };
+
+    window.navig = (lat, lng) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank'); };
+
+    onValue(query(ref(db, 'brogliaccio'), limitToLast(12)), (snap) => {
+        const data = snap.val(); if (!data) return;
+        const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).sort((a, b) => b.id.localeCompare(a.id));
+        const sala = logs.find(l => l.dir === 'SA' && (l.squadra === sqId || l.squadra === "TUTTE"));
+        
+        const wrapper = document.getElementById('wrapper-msg');
+        const label = document.getElementById('label-msg');
+        const testo = document.getElementById('testo-msg');
+        const pulsanti = document.getElementById('area-pulsanti');
+        
+        if (sala) {
+            idSalaAttivo = sala.id;
+            viaAttiva = sala.m1; // SALVO IL TESTO DEL MESSAGGIO (LA VIA)
+            testo.innerText = sala.m1;
+            testo.classList.replace('text-slate-400', 'text-white');
+
+            if (sala.lat && sala.stato !== 'OK') {
+                wrapper.className = "glass p-5 rounded-[2.5rem] border-l-4 border-red-600 bg-red-900/10 shadow-2xl";
+                label.innerText = "🚨 ORDINE DI INTERVENTO:"; label.classList.replace('text-slate-500', 'text-red-500');
+                pulsanti.classList.remove('hidden');
+                
+                if (sala.stato === 'ATTESA') {
+                    pulsanti.innerHTML = `<button onclick="cRic()" class="w-full bg-blue-600 py-6 rounded-3xl font-black uppercase text-lg">✅ RICEVI ORDINE</button>`;
+                } else {
+                    pulsanti.innerHTML = `<div class="grid grid-cols-2 gap-3">
+                        <button onclick="navig(${sala.lat}, ${sala.lng})" class="bg-emerald-600 py-6 rounded-2xl font-black uppercase text-xs">📍 NAVIGA</button>
+                        <button onclick="cArr()" class="bg-red-600 py-6 rounded-2xl font-black uppercase text-xs">🏁 ARRIVATI</button>
+                    </div>`;
+                }
+            } else {
+                wrapper.className = "glass p-5 rounded-[2.5rem] border-l-4 border-blue-500 bg-blue-500/10 shadow-2xl";
+                label.innerText = "✉️ COMUNICAZIONE DALLA SALA:"; label.classList.replace('text-slate-500', 'text-blue-500');
+                pulsanti.classList.add('hidden');
+            }
+        }
+    });
 
     onValue(ref(db, `anagrafica_squadre/${sqId}`), (s) => { 
         if(s.val()) document.getElementById('current-status').innerText = (s.val().stato || "---").toUpperCase(); 
