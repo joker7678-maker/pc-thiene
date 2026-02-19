@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - V7.1</title>
+    <title>PC THIENE - V7.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -21,9 +21,9 @@
 <body class="p-3 flex flex-col h-full">
 
     <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-950 flex items-center justify-center p-6 text-center">
-        <div class="w-full max-w-sm bg-slate-900 p-8 rounded-[3rem] border border-slate-800 shadow-2xl">
+        <div class="w-full max-w-sm bg-slate-900 p-8 rounded-[3rem] border border-slate-800 shadow-2xl text-center">
             <h2 class="text-3xl font-black italic text-blue-500 mb-6 uppercase">PC THIENE</h2>
-            <input type="password" id="app-password" class="w-full bg-slate-950 border-2 border-slate-800 rounded-2xl p-4 text-center text-4xl mb-6 text-white outline-none" placeholder="••••" inputmode="numeric">
+            <input type="password" id="app-password" class="w-full bg-slate-950 border-2 border-slate-800 rounded-xl p-4 text-center text-4xl mb-6 text-white outline-none" placeholder="••••" inputmode="numeric">
             <button onclick="window.checkAppPassword()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl uppercase text-lg shadow-lg">Sblocca</button>
         </div>
     </div>
@@ -42,7 +42,7 @@
 
         <div id="nav-channel" class="mb-2 hidden">
             <div id="nav-card" class="glass p-3 rounded-2xl border-l-8 shadow-xl">
-                <p class="text-[9px] font-black text-blue-400 uppercase mb-1">Destinazione da Raggiungere</p>
+                <p class="text-[9px] font-black text-blue-400 uppercase mb-1">Target Navigazione</p>
                 <div id="nav-text" class="text-base font-black text-white uppercase leading-tight mb-2"></div>
                 <div id="nav-btns"></div>
             </div>
@@ -50,7 +50,7 @@
 
         <div id="msg-channel" class="mb-2 hidden">
             <div class="glass p-3 rounded-2xl border-l-8 border-amber-500 shadow-lg">
-                <p class="text-[9px] font-black text-amber-500 uppercase mb-1 tracking-widest">Ultima Risposta Sala</p>
+                <p class="text-[9px] font-black text-amber-500 uppercase mb-1 tracking-widest">Comunicazione dalla Sala</p>
                 <div id="msg-text-sala" class="text-sm font-bold text-white uppercase leading-tight"></div>
             </div>
         </div>
@@ -72,7 +72,7 @@
         </div>
 
         <div class="glass rounded-2xl p-3 mt-auto shadow-2xl">
-            <div id="manual-gps-area" class="hidden"><input type="text" id="manual-via" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white uppercase mb-2" placeholder="VIA / LOCALITÀ (MANUALE)"></div>
+            <div id="manual-gps-area" class="hidden"><input type="text" id="manual-via" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white uppercase mb-2 font-bold" placeholder="VIA / LOCALITÀ (MANUALE)"></div>
             <textarea id="msg-input" class="w-full bg-slate-950/50 border border-slate-700 rounded-xl p-2 text-sm font-bold text-white mb-2 h-14 outline-none uppercase" placeholder="SCRIVI MESSAGGIO..."></textarea>
             <button onclick="window.askConfirmText()" class="w-full bg-blue-600 text-white font-black py-3.5 rounded-xl uppercase text-xs shadow-lg">Invia Messaggio</button>
         </div>
@@ -88,6 +88,10 @@
         const urlParams = new URLSearchParams(window.location.search);
         const sqId = (urlParams.get('id') || "SQUADRA_TEST").toUpperCase();
         document.getElementById('sq-name').innerText = "UNITÀ: " + sqId;
+
+        const notifySala = () => {
+            Swal.fire({ icon:'success', title:'INVIATO A SALA', toast:true, position:'top', timer:2000, showConfirmButton:false, background:'#1e293b', color:'#fff' });
+        };
 
         window.checkAppPassword = () => {
             if (document.getElementById('app-password').value === "2026") {
@@ -114,12 +118,12 @@
             } else return { lat: '', lng: '', note };
         }
 
-        // --- LOGICA SINCRONIZZAZIONE (CORRETTA) ---
+        // --- FILTRO SOLO SALA ---
         onValue(query(ref(db, 'brogliaccio'), limitToLast(20)), (snap) => {
             const data = snap.val(); if (!data) return;
             const logs = Object.entries(data).sort((a,b) => b[0].localeCompare(a[0]));
 
-            // 1. CANALE NAVIGAZIONE (Solo Target NON OK)
+            // NAVIGAZIONE: Ultimo SA con lat e stato non OK
             const activeTarget = logs.find(([k, l]) => l.squadra === sqId && l.dir === 'SA' && l.lat && l.stato !== 'OK');
             const navChannel = document.getElementById('nav-channel');
             if (activeTarget) {
@@ -132,33 +136,33 @@
                     `<div class="grid grid-cols-2 gap-2 mt-1"><button onclick="window.openNav(${log.lat}, ${log.lng})" class="bg-emerald-600 py-3 rounded-xl text-[10px] font-black uppercase">NAVIGA</button><button onclick="window.askArrivo('${key}')" class="bg-red-600 py-3 rounded-xl text-[10px] font-black uppercase">ARRIVATI</button></div>`;
             } else { navChannel.classList.add('hidden'); }
 
-            // 2. CANALE MESSAGGI (L'ultima risposta della sala su M2 o l'ultimo messaggio M1)
-            // Cerchiamo l'ultimo log della sala, indipendentemente dalla presenza di coordinate
+            // MESSAGGI: Ultimo log in assoluto dove la DIREZIONE è SA (SALA)
             const lastLogSala = logs.find(([k, l]) => (l.squadra === sqId || l.squadra === "TUTTE" || l.squadra === "COMUNICAZIONE GENERALE") && l.dir === 'SA');
             const msgChannel = document.getElementById('msg-channel');
             if (lastLogSala) {
                 const [key, log] = lastLogSala;
                 msgChannel.classList.remove('hidden');
-                // Se c'è una risposta (m2), diamo priorità a quella, altrimenti mostriamo m1
+                // Mostra m2 se presente (risposta specifica), altrimenti m1 (messaggio originale)
                 document.getElementById('msg-text-sala').innerText = (log.m2 && log.m2 !== '---') ? log.m2 : log.m1;
             } else { msgChannel.classList.add('hidden'); }
         });
 
-        // --- AZIONI ---
         window.confermaRicezione = (k) => {
             update(ref(db, `brogliaccio/${k}`), { stato: 'RICEVUTO', m2: `[CONFERMA-SQ] RICEVUTO ORE ${new Date().toLocaleTimeString().slice(0,5)}` });
+            notifySala();
         };
 
         window.openNav = (lat, lng) => window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank');
 
         window.askArrivo = (key) => {
-            Swal.fire({ title: 'ARRIVATI?', showCancelButton: true, background: '#1e293b', color: '#fff' }).then(async (r) => {
+            Swal.fire({ title:'ARRIVATI?', showCancelButton:true, background:'#1e293b', color:'#fff' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getFinalPos();
                     const ora = new Date().toLocaleTimeString().slice(0,5);
-                    await update(ref(db, `brogliaccio/${key}`), { stato: 'OK', m2: `[CONFERMA-SQ] ARRIVATI ORE ${ora}` });
-                    await update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: p.lat, lng: p.lng });
-                    push(ref(db, 'brogliaccio'), { ora, data: new Date().toLocaleDateString(), squadra: sqId, m1: `🏁 ARRIVO SUL POSTO [SQUADRA] ${p.note}`, m2: "", dir: 'SQ', stato: 'ATTESA', lat: p.lat, lng: p.lng });
+                    await update(ref(db, `brogliaccio/${key}`), { stato:'OK', m2: `[CONFERMA-SQ] ARRIVATI ORE ${ora}` });
+                    await update(ref(db, `anagrafica_squadre/${sqId}`), { stato:'Intervento', lat:p.lat, lng:p.lng });
+                    await push(ref(db, 'brogliaccio'), { ora, data: new Date().toLocaleDateString(), squadra: sqId, m1: `🏁 ARRIVO SUL POSTO [SQUADRA] ${p.note}`, m2: "", dir: 'SQ', stato: 'ATTESA', lat: p.lat, lng: p.lng });
+                    notifySala();
                 }
             });
         };
@@ -169,20 +173,27 @@
                     const p = await getFinalPos();
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: v, lat: p.lat, lng: p.lng });
                     push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: `STATO: ${v.toUpperCase()} [SQUADRA] ${p.note}`, m2: "", lat: p.lat, lng: p.lng, dir: 'SQ', stato: 'ATTESA' });
+                    notifySala();
                 }
             });
         };
 
-        window.askConfirmText = async () => {
+        window.askConfirmText = () => {
             const t = document.getElementById('msg-input').value.trim(); if(!t) return;
-            const p = await getFinalPos();
-            push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: `${t.toUpperCase()} [SQUADRA] ${p.note}`, m2: "", dir: 'SQ', stato: 'ATTESA', lat: p.lat, lng: p.lng });
-            document.getElementById('msg-input').value = "";
+            Swal.fire({ title:'INVIARE MESSAGGIO?', text: t.toUpperCase(), showCancelButton:true, background:'#1e293b', color:'#fff' }).then(async (r) => {
+                if(r.isConfirmed) {
+                    const p = await getFinalPos();
+                    push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: `${t.toUpperCase()} [SQUADRA] ${p.note}`, m2: "", dir: 'SQ', stato: 'ATTESA', lat: p.lat, lng: p.lng });
+                    document.getElementById('msg-input').value = "";
+                    notifySala();
+                }
+            });
         };
 
         window.askConfirmGPS = async () => {
             const p = await getFinalPos();
             push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: `📍 POSIZIONE [SQUADRA] ${p.note}`, m2: "", lat: p.lat, lng: p.lng, dir: 'SQ', stato: 'ATTESA' });
+            notifySala();
         };
 
         window.handleImage = (f) => {
@@ -190,6 +201,7 @@
             reader.onload = async (e) => {
                 const p = await getFinalPos();
                 push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: `📷 FOTO [SQUADRA] ${p.note}`, mediaUrl:e.target.result, mediaType:'IMG', m2: "", lat:p.lat, lng:p.lng, dir:'SQ', stato:'ATTESA' });
+                notifySala();
             };
         };
 
@@ -205,6 +217,7 @@
                     r.onloadend = async () => {
                         const p = await getFinalPos();
                         push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: `🎤 VOCALE [SQUADRA] ${p.note}`, mediaUrl:r.result, mediaType:'AUDIO', lat:p.lat, lng:p.lng, dir:'SQ', stato:'ATTESA' });
+                        notifySala();
                     };
                 };
                 mediaRecorder.start(); document.getElementById('btn-audio').classList.add('pulse-red');
