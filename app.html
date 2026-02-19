@@ -38,6 +38,19 @@
         .bg-recording { background-color: #ef4444 !important; animation: pulse-red 1.5s infinite; }
         @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
         .swal2-popup { border-radius: 2rem !important; background: #1e293b !important; color: white !important; }
+        /* Overlay per bloccare i comandi durante l'intervento */
+.locked-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 2rem;
+    pointer-events: all;
+}
     </style>
 </head>
 <body class="p-3">
@@ -70,35 +83,43 @@
             </div>
         </main>
 
-        <section class="flex-1 flex flex-col justify-end space-y-3 pb-2">
-            <div class="glass rounded-[2rem] p-3 shadow-2xl border border-white/5 text-center">
-                <div id="current-status" class="text-2xl font-black text-blue-500 italic mb-3 uppercase leading-none tracking-tighter">---</div>
-                <div class="grid grid-cols-4 gap-2">
-                    <button onclick="askStatus('Sede', '🏠')" class="bg-slate-800/80 py-4 rounded-xl text-[9px] font-medium uppercase">Sede</button>
-                    <button onclick="askStatus('Uscita', '🚚')" class="bg-amber-500 text-black py-4 rounded-xl text-[9px] font-medium uppercase shadow-lg">Uscita</button>
-                    <button onclick="askStatus('Intervento', '🚨')" class="bg-red-600 text-white py-4 rounded-xl text-[9px] font-medium uppercase shadow-lg">Posto</button>
-                    <button onclick="askStatus('Rientro', '🔙')" class="bg-blue-600 text-white py-4 rounded-xl text-[9px] font-medium uppercase shadow-lg">Rientro</button>
-                </div>
-            </div>
+<section class="flex-1 flex flex-col justify-end space-y-3 pb-2 relative">
+    
+    <div id="lock-screen" class="absolute inset-0 z-40 bg-slate-950/80 backdrop-blur-sm rounded-[2rem] flex flex-col items-center justify-center hidden transition-all duration-500">
+        <div class="text-red-500 text-5xl mb-3 animate-pulse">🚨</div>
+        <div class="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Intervento in corso...</div>
+    </div>
 
-            <div class="grid grid-cols-3 gap-3">
-                <button onclick="document.getElementById('in-foto').click()" class="bg-white text-black rounded-2xl py-5 flex flex-col items-center shadow-xl active:scale-95">
-                    <span class="text-2xl">📷</span><span class="text-[9px] font-bold uppercase italic mt-1">Foto</span>
-                    <input type="file" id="in-foto" accept="image/*" capture="camera" class="hidden" onchange="upFoto(this.files[0])">
-                </button>
-                <button id="btn-voc" class="bg-slate-800 rounded-2xl py-5 flex flex-col items-center border border-white/5 active:scale-95 transition-colors">
-                    <span class="text-2xl">🎤</span><span id="voc-txt" class="text-[9px] font-bold uppercase italic mt-1">Vocale</span>
-                </button>
-                <button onclick="askGPS()" class="bg-emerald-600 rounded-2xl py-5 flex flex-col items-center shadow-xl active:scale-95">
-                    <span class="text-2xl">📍</span><span class="text-[9px] font-bold uppercase italic mt-1">GPS</span>
-                </button>
+    <div id="controls-area" class="space-y-3 transition-opacity duration-500">
+        <div class="glass rounded-[2rem] p-3 shadow-2xl border border-white/5 text-center">
+            <div id="current-status" class="text-2xl font-black text-blue-500 italic mb-3 uppercase leading-none tracking-tighter">---</div>
+            <div class="grid grid-cols-4 gap-2">
+                <button onclick="askStatus('Sede', '🏠')" class="bg-slate-800/80 py-4 rounded-xl text-[9px] font-medium uppercase">Sede</button>
+                <button onclick="askStatus('Uscita', '🚚')" class="bg-amber-500 text-black py-4 rounded-xl text-[9px] font-medium uppercase shadow-lg">Uscita</button>
+                <button onclick="askStatus('Intervento', '🚨')" class="bg-red-600 text-white py-4 rounded-xl text-[9px] font-medium uppercase shadow-lg">Posto</button>
+                <button onclick="askStatus('Rientro', '🔙')" class="bg-blue-600 text-white py-4 rounded-xl text-[9px] font-medium uppercase shadow-lg">Rientro</button>
             </div>
+        </div>
 
-            <div class="glass rounded-[2rem] p-3 border border-white/5 flex gap-2">
-                <textarea id="msg-input" class="flex-1 bg-slate-900/50 rounded-xl p-3 text-xs text-white h-12 outline-none uppercase resize-none placeholder:text-slate-600 font-normal" placeholder="MESSAGGIO..."></textarea>
-                <button onclick="askFreeMsg()" class="bg-blue-600 px-4 rounded-xl font-bold uppercase text-[10px] shadow-lg active:scale-90">INVIA</button>
-            </div>
-        </section>
+        <div class="grid grid-cols-3 gap-3">
+            <button onclick="document.getElementById('in-foto').click()" class="bg-white text-black rounded-2xl py-5 flex flex-col items-center shadow-xl active:scale-95">
+                <span class="text-2xl">📷</span><span class="text-[9px] font-bold uppercase italic mt-1">Foto</span>
+                <input type="file" id="in-foto" accept="image/*" capture="camera" class="hidden" onchange="upFoto(this.files[0])">
+            </button>
+            <button id="btn-voc" class="bg-slate-800 rounded-2xl py-5 flex flex-col items-center border border-white/5 active:scale-95">
+                <span class="text-2xl">🎤</span><span id="voc-txt" class="text-[9px] font-bold uppercase italic mt-1">Vocale</span>
+            </button>
+            <button onclick="askGPS()" class="bg-emerald-600 rounded-2xl py-5 flex flex-col items-center shadow-xl active:scale-95">
+                <span class="text-2xl">📍</span><span class="text-[9px] font-bold uppercase italic mt-1">GPS</span>
+            </button>
+        </div>
+
+        <div class="glass rounded-[2rem] p-3 border border-white/5 flex gap-2">
+            <textarea id="msg-input" class="flex-1 bg-slate-900/50 rounded-xl p-3 text-xs text-white h-12 outline-none uppercase resize-none placeholder:text-slate-600" placeholder="MESSAGGIO..."></textarea>
+            <button onclick="askFreeMsg()" class="bg-blue-600 px-4 rounded-xl font-bold uppercase text-[10px] shadow-lg active:scale-90">INVIA</button>
+        </div>
+    </div>
+</section>
 
         <footer class="shrink-0 py-2 border-t border-slate-800 flex justify-between items-center px-4 bg-slate-950">
             <div id="ora" class="text-yellow-400 font-mono font-bold text-xs tracking-widest">00:00:00</div>
