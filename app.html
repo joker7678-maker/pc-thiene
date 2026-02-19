@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PC THIENE - V7.7</title>
+    <title>PC THIENE - App Operatore V8.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -21,9 +21,9 @@
 <body class="p-3 flex flex-col h-full">
 
     <div id="inhibition-overlay" class="fixed inset-0 z-[10000] bg-slate-950 flex flex-col items-center justify-center p-6 text-center" style="display:none;">
-        <div class="text-6xl mb-4">🚫</div>
-        <h2 class="text-2xl font-black text-white uppercase italic">Accesso Disattivato</h2>
-        <p class="text-slate-400 mt-2 uppercase text-xs">Contattare la Sala Operativa</p>
+        <div class="text-7xl mb-6">🚫</div>
+        <h2 class="text-2xl font-black text-white uppercase italic tracking-tighter">Accesso Disattivato</h2>
+        <p class="text-slate-400 mt-2 uppercase text-[10px] tracking-[0.2em]">Contattare la Sala Operativa per lo sblocco</p>
     </div>
 
     <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-950 flex items-center justify-center p-6 text-center">
@@ -38,7 +38,7 @@
         <header class="flex justify-between items-center mb-2">
             <div>
                 <h1 class="text-xl font-black italic text-white leading-none tracking-tighter">PC <span class="text-blue-500">THIENE</span></h1>
-                <p id="sq-name" class="text-blue-400 font-black text-[10px] uppercase mt-1 tracking-widest">---</p>
+                <p id="sq-name" class="text-blue-400 font-black text-[10px] uppercase mt-1 tracking-widest leading-none">---</p>
             </div>
             <div class="flex items-center gap-2">
                 <span class="text-[8px] font-black text-slate-500 uppercase">GPS</span>
@@ -48,7 +48,7 @@
 
         <div id="nav-channel" class="mb-2 hidden">
             <div id="nav-card" class="glass p-3 rounded-2xl border-l-8 shadow-xl">
-                <p class="text-[9px] font-black text-blue-400 uppercase mb-1 italic">Target In Corso</p>
+                <p class="text-[9px] font-black text-blue-400 uppercase mb-1 italic">Destinazione Inviata</p>
                 <div id="nav-text" class="text-base font-black text-white uppercase leading-tight mb-2"></div>
                 <div id="nav-btns"></div>
             </div>
@@ -57,30 +57,30 @@
         <div id="msg-channel" class="mb-2 hidden">
             <div class="glass p-3 rounded-2xl border-l-8 border-amber-500 shadow-lg">
                 <p class="text-[9px] font-black text-amber-500 uppercase mb-1 tracking-widest italic">Dalla Sala Operativa</p>
-                <div id="msg-text-sala" class="text-sm font-bold text-white uppercase leading-tight"></div>
+                <div id="msg-text-sala" class="text-sm font-bold text-white uppercase leading-tight">...</div>
             </div>
         </div>
 
-        <div class="glass rounded-2xl p-3 mb-2 text-center border border-white/5">
-            <div id="current-status" class="text-xl font-black text-blue-500 italic mb-3 uppercase leading-none">---</div>
+        <div class="glass rounded-2xl p-3 mb-2 text-center border border-white/5 shadow-inner">
+            <div id="current-status" class="text-2xl font-black text-blue-500 italic mb-3 uppercase leading-none tracking-tighter">---</div>
             <div class="grid grid-cols-4 gap-1.5">
-                <button onclick="window.askConfirmStatus('Sede', '🏠 SEDE')" class="bg-slate-700 py-3 rounded-xl text-[9px] font-black uppercase">SEDE</button>
-                <button onclick="window.askConfirmStatus('Uscita', '🚚 USCITA')" class="bg-amber-500 text-black py-3 rounded-xl text-[9px] font-black uppercase">USCITA</button>
-                <button onclick="window.askConfirmStatus('Intervento', '🚨 POSTO')" class="bg-red-600 py-3 rounded-xl text-[9px] font-black uppercase">POSTO</button>
-                <button onclick="window.askConfirmStatus('Rientro', '🔙 RIENTRO')" class="bg-blue-600 py-3 rounded-xl text-[9px] font-black uppercase">RIENTRO</button>
+                <button onclick="window.askConfirmStatus('Sede', '🏠 SEDE')" class="bg-slate-700 py-4 rounded-xl text-[9px] font-black uppercase shadow">SEDE</button>
+                <button onclick="window.askConfirmStatus('Uscita', '🚚 USCITA')" class="bg-amber-500 text-black py-4 rounded-xl text-[9px] font-black uppercase shadow">USCITA</button>
+                <button onclick="window.askConfirmStatus('Intervento', '🚨 POSTO')" class="bg-red-600 py-4 rounded-xl text-[9px] font-black uppercase shadow">POSTO</button>
+                <button onclick="window.askConfirmStatus('Rientro', '🔙 RIENTRO')" class="bg-blue-600 py-4 rounded-xl text-[9px] font-black uppercase shadow">RIENTRO</button>
             </div>
         </div>
 
         <div class="grid grid-cols-3 gap-2 mb-2">
-            <button onclick="document.getElementById('input-foto').click()" class="bg-white text-black rounded-xl py-3 flex flex-col items-center gap-1 active:scale-90 shadow-lg"><span class="text-2xl">📷</span><span class="font-black text-[9px]">FOTO</span><input type="file" id="input-foto" accept="image/*" capture="camera" class="hidden" onchange="window.handleImage(this.files[0])"></button>
-            <button id="btn-audio" class="bg-red-600 text-white rounded-xl py-3 flex flex-col items-center gap-1 active:scale-90 shadow-lg"><span id="audio-icon" class="text-2xl">🎤</span><span id="audio-label" class="font-black text-[9px]">VOCALE</span></button>
-            <button onclick="window.askConfirmGPS()" class="bg-emerald-600 text-white rounded-xl py-3 flex flex-col items-center gap-1 active:scale-90 shadow-lg"><span class="text-2xl">📍</span><span class="font-black text-[9px]">GPS</span></button>
+            <button onclick="document.getElementById('input-foto').click()" class="bg-white text-black rounded-2xl py-4 flex flex-col items-center gap-1 active:scale-90 shadow-lg"><span class="text-2xl">📷</span><span class="font-black text-[9px]">FOTO</span><input type="file" id="input-foto" accept="image/*" capture="camera" class="hidden" onchange="window.handleImage(this.files[0])"></button>
+            <button id="btn-audio" class="bg-red-600 text-white rounded-2xl py-4 flex flex-col items-center gap-1 active:scale-90 shadow-lg"><span id="audio-icon" class="text-2xl">🎤</span><span id="audio-label" class="font-black text-[9px]">VOCALE</span></button>
+            <button onclick="window.askConfirmGPS()" class="bg-emerald-600 text-white rounded-2xl py-4 flex flex-col items-center gap-1 active:scale-90 shadow-lg"><span class="text-2xl">📍</span><span class="font-black text-[9px]">GPS</span></button>
         </div>
 
         <div class="glass rounded-2xl p-3 mt-auto shadow-2xl">
             <div id="manual-gps-area" class="hidden"><input type="text" id="manual-via" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white uppercase mb-2 font-bold" placeholder="VIA / LOCALITÀ (MANUALE)"></div>
             <textarea id="msg-input" class="w-full bg-slate-950/50 border border-slate-700 rounded-xl p-2 text-sm font-bold text-white mb-2 h-14 outline-none uppercase" placeholder="SCRIVI MESSAGGIO..."></textarea>
-            <button onclick="window.askConfirmText()" class="w-full bg-blue-600 text-white font-black py-3.5 rounded-xl uppercase text-xs shadow-lg active:scale-95">Invia Messaggio</button>
+            <button onclick="window.askConfirmText()" class="w-full bg-blue-600 text-white font-black py-4 rounded-xl uppercase text-xs shadow-lg active:scale-95">Invia Messaggio</button>
         </div>
     </div>
 
@@ -124,6 +124,7 @@
             } else return { lat: '', lng: '', note };
         }
 
+        // --- MONITORAGGIO ACCESSO (INIBIZIONE REMOTA) ---
         onValue(ref(db, `anagrafica_squadre/${sqId}`), (snapshot) => {
             const data = snapshot.val();
             const overlay = document.getElementById('inhibition-overlay');
@@ -135,48 +136,48 @@
                 if (sessionStorage.getItem('pc_auth_v3') === 'true') {
                     document.getElementById('main-app-container').style.display = 'flex';
                 }
-                document.getElementById('current-status').innerText = data.stato ? data.stato.toUpperCase() : "---";
+                document.getElementById('current-status').innerText = data && data.stato ? data.stato.toUpperCase() : "---";
             }
         });
 
-// --- LOGICA SINCRONIZZAZIONE V7.8 (RICERCA DIRETTA ULTIMO MSG) ---
-onValue(query(ref(db, 'brogliaccio'), limitToLast(100)), (snap) => {
-    const data = snap.val(); if (!data) return;
-    const logs = Object.entries(data).sort((a,b) => b[0].localeCompare(a[0]));
+        // --- LOGICA SINCRONIZZAZIONE MESSAGGI SALA (V8.0) ---
+        onValue(query(ref(db, 'brogliaccio'), limitToLast(50)), (snap) => {
+            const data = snap.val(); if (!data) return;
+            const logs = Object.entries(data)
+                        .map(([id, val]) => ({ id, ...val }))
+                        .sort((a, b) => b.id.localeCompare(a.id));
 
-    // 1. GESTIONE TARGET/NAVIGAZIONE (Invariata)
-    const activeTarget = logs.find(([k, l]) => l.squadra === sqId && l.dir === 'SA' && l.lat && l.stato !== 'OK');
-    const navChannel = document.getElementById('nav-channel');
-    if (activeTarget) {
-        const [key, log] = activeTarget;
-        navChannel.classList.remove('hidden');
-        document.getElementById('nav-text').innerText = log.m1;
-        document.getElementById('nav-card').className = `glass p-3 rounded-2xl border-l-8 shadow-xl ${log.stato === 'ATTESA' ? 'pulse-red border-red-600' : 'border-blue-600'}`;
-        document.getElementById('nav-btns').innerHTML = log.stato === 'ATTESA' ? 
-            `<button onclick="window.confermaRicezione('${key}')" class="w-full bg-blue-600 py-4 rounded-xl text-xs font-black uppercase mt-1">✅ OK RICEVUTO SQUADRA</button>` :
-            `<div class="grid grid-cols-2 gap-2 mt-1"><button onclick="window.openNav(${log.lat}, ${log.lng})" class="bg-emerald-600 py-3 rounded-xl text-[10px] font-black uppercase">NAVIGA</button><button onclick="window.askArrivo('${key}')" class="bg-red-600 py-3 rounded-xl text-[10px] font-black uppercase">ARRIVATI</button></div>`;
-    } else { navChannel.classList.add('hidden'); }
+            // 1. CANALE NAVIGAZIONE
+            const activeTarget = logs.find(l => l.squadra === sqId && l.dir === 'SA' && l.lat && l.stato !== 'OK');
+            const navChannel = document.getElementById('nav-channel');
+            if (activeTarget) {
+                navChannel.classList.remove('hidden');
+                document.getElementById('nav-text').innerText = activeTarget.m1;
+                document.getElementById('nav-card').className = `glass p-3 rounded-2xl border-l-8 shadow-xl ${activeTarget.stato === 'ATTESA' ? 'pulse-red border-red-600' : 'border-blue-600'}`;
+                document.getElementById('nav-btns').innerHTML = activeTarget.stato === 'ATTESA' ? 
+                    `<button onclick="window.confermaRicezione('${activeTarget.id}')" class="w-full bg-blue-600 py-4 rounded-xl text-xs font-black uppercase mt-1">✅ OK RICEVUTO SQUADRA</button>` :
+                    `<div class="grid grid-cols-2 gap-2 mt-1"><button onclick="window.openNav(${activeTarget.lat}, ${activeTarget.lng})" class="bg-emerald-600 py-3 rounded-xl text-[10px] font-black uppercase">MAPPA</button><button onclick="window.askArrivo('${activeTarget.id}')" class="bg-red-600 py-3 rounded-xl text-[10px] font-black uppercase">ARRIVATI</button></div>`;
+            } else { navChannel.classList.add('hidden'); }
 
-    // 2. CANALE MESSAGGI: PRENDE L'ULTIMO MSG REALE DELLA SALA PER QUESTA SQUADRA
-    const lastLogSala = logs.find(([k, l]) => {
-        const destinatoAMe = (l.squadra === sqId || l.squadra === "TUTTE" || l.squadra === "COMUNICAZIONE GENERALE");
-        const provieneDaSala = (l.dir === 'SA');
-        // Filtriamo solo i messaggi di sistema che non devono apparire nel box arancione
-        const msgPulito = l.m1 && !l.m1.includes("STATO:") && !l.m1.includes("POSIZIONE");
-        
-        return destinatoAMe && provieneDaSala && msgPulito;
-    });
-    
-    const msgChannel = document.getElementById('msg-channel');
-    if (lastLogSala) {
-        msgChannel.classList.remove('hidden');
-        const log = lastLogSala[1];
-        // Mostra M1 (il messaggio della sala). Se la sala ha scritto qualcosa in M2, mostra quello.
-        document.getElementById('msg-text-sala').innerText = (log.m2 && log.m2 !== '---' && !log.m2.includes("CONFERMA")) ? log.m2 : log.m1;
-    } else { 
-        msgChannel.classList.add('hidden'); 
-    }
-});
+            // 2. CANALE MESSAGGI (FILTRO ANTI-BLOCCO SALA)
+            const messaggiSala = logs.filter(l => 
+                (l.squadra === sqId || l.squadra === "TUTTE" || l.squadra === "COMUNICAZIONE GENERALE") && 
+                l.dir === 'SA' &&
+                l.m1 && !l.m1.includes("STATO:") && !l.m1.includes("POSIZIONE")
+            );
+
+            const msgChannel = document.getElementById('msg-channel');
+            if (messaggiSala.length > 0) {
+                const ultimo = messaggiSala[0];
+                msgChannel.classList.remove('hidden');
+                // Se m2 non contiene conferme automatiche, mostralo, altrimenti m1
+                const m2Val = ultimo.m2 ? ultimo.m2.toUpperCase() : "";
+                const isConferma = m2Val.includes("RICEVUTO") || m2Val.includes("ARRIVATI") || m2Val.includes("CONFERMA");
+                document.getElementById('msg-text-sala').innerText = (ultimo.m2 && !isConferma) ? ultimo.m2 : ultimo.m1;
+            } else { msgChannel.classList.add('hidden'); }
+        });
+
+        // --- AZIONI ---
         window.confermaRicezione = (k) => {
             update(ref(db, `brogliaccio/${k}`), { stato: 'RICEVUTO', m2: `CONFERMA RICEVUTO ORE ${new Date().toLocaleTimeString().slice(0,5)}` });
             notifySala();
@@ -185,7 +186,7 @@ onValue(query(ref(db, 'brogliaccio'), limitToLast(100)), (snap) => {
         window.openNav = (lat, lng) => window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank');
 
         window.askArrivo = (key) => {
-            Swal.fire({ title: 'ARRIVATI SUL POSTO?', showCancelButton: true, background: '#1e293b', color: '#fff', confirmButtonText: 'SÌ, ARRIVATI' }).then(async (r) => {
+            Swal.fire({ title: 'ARRIVATI?', showCancelButton: true, background: '#1e293b', color: '#fff', confirmButtonText: 'SÌ' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getFinalPos();
                     const ora = new Date().toLocaleTimeString().slice(0,5);
@@ -210,7 +211,7 @@ onValue(query(ref(db, 'brogliaccio'), limitToLast(100)), (snap) => {
 
         window.askConfirmText = () => {
             const t = document.getElementById('msg-input').value.trim(); if(!t) return;
-            Swal.fire({ title: 'INVIARE MESSAGGIO?', text: t.toUpperCase(), showCancelButton: true, background: '#1e293b', color: '#fff', confirmButtonText: 'SÌ, INVIA' }).then(async (r) => {
+            Swal.fire({ title: 'INVIARE MESSAGGIO?', text: t.toUpperCase(), showCancelButton: true, background: '#1e293b', color: '#fff', confirmButtonText: 'INVIA' }).then(async (r) => {
                 if(r.isConfirmed) {
                     const p = await getFinalPos();
                     push(ref(db, 'brogliaccio'), { ora: new Date().toLocaleTimeString().slice(0,5), squadra: sqId, m1: `${t.toUpperCase()} [SQUADRA] ${p.note}`, m2: "", dir: 'SQ', stato: 'ATTESA', lat: p.lat, lng: p.lng });
@@ -256,4 +257,3 @@ onValue(query(ref(db, 'brogliaccio'), limitToLast(100)), (snap) => {
     </script>
 </body>
 </html>
-
