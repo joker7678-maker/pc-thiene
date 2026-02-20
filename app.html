@@ -11,24 +11,18 @@
         body { font-family: 'Inter', sans-serif; background: #020617; color: white; height: 100dvh; overflow: hidden; margin: 0; display: flex; flex-direction: column; }
         .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
         
-        /* TITOLO PC THIENE GRANDE */
         .title-pc { 
-            font-weight: 900; 
-            font-size: 1.4rem; 
-            text-transform: uppercase; 
+            font-weight: 900; font-size: 1.5rem; text-transform: uppercase; 
             background: linear-gradient(to bottom, #ffffff 40%, #94a3b8 100%); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
             filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.3)); 
-            white-space: nowrap;
-            letter-spacing: -0.02em;
-            line-height: 1;
+            letter-spacing: -0.02em; line-height: 1.1;
         }
 
-        /* NOMINATIVO SQUADRA INGRANDITO */
-        #sq-name { font-size: 14px; font-weight: 900; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.1em; }
+        #sq-name { font-size: 18px; font-weight: 900; color: #3b82f6; text-transform: uppercase; line-height: 1; }
+        #sq-members { font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: 500; }
 
-        /* TOGGLE GPS BELLO */
+        /* TOGGLE GPS */
         .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 34px; }
@@ -36,7 +30,7 @@
         input:checked + .slider { background-color: #10b981; }
         input:checked + .slider:before { transform: translateX(22px); }
 
-        #wrapper-msg { min-height: 110px; font-weight: 400; transition: all 0.3s ease; }
+        #wrapper-msg { min-height: 110px; transition: all 0.3s ease; }
         .bg-recording { background-color: #ef4444 !important; animation: pulse-red 1.5s infinite; }
         @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
         .swal2-popup { border-radius: 2rem !important; background: #1e293b !important; color: white !important; }
@@ -59,16 +53,14 @@
     </div>
 
     <div id="main-app" class="flex-1 flex flex-col hidden h-full overflow-hidden">
-        <header class="flex justify-between items-start mb-4 shrink-0 px-1">
-            <div class="border-l-4 border-blue-600 pl-3">
-                <h1 class="title-pc">PROTEZIONE CIVILE THIENE</h1>
-                <div class="flex flex-col mt-1">
-                    <span id="sq-name">---</span>
-                    <span id="sq-members" class="text-[8px] text-slate-400 uppercase font-medium max-w-[200px] truncate">Caricamento operatori...</span>
-                </div>
+        <header class="flex justify-between items-start mb-6 shrink-0 px-1">
+            <div class="flex flex-col gap-1 border-l-4 border-blue-600 pl-3">
+                <h1 class="title-pc mb-1">PROTEZIONE CIVILE<br>THIENE</h1>
+                <span id="sq-name">---</span>
+                <span id="sq-members">CARICAMENTO...</span>
             </div>
-            <div class="bg-slate-900/80 p-2 rounded-2xl border border-white/10 flex flex-col items-center gap-1 min-w-[60px]">
-                <span class="text-[8px] font-black text-slate-500 uppercase tracking-tighter">GPS ATTIVO</span>
+            <div class="flex flex-col items-end gap-1">
+                <span class="text-[8px] font-black text-slate-500 uppercase">GPS</span>
                 <label class="switch">
                     <input type="checkbox" id="gps-toggle" checked>
                     <span class="slider"></span>
@@ -77,54 +69,55 @@
         </header>
 
         <main class="shrink-0 mb-4 px-1">
-            <div id="wrapper-msg" class="glass p-4 rounded-[2.5rem] border-l-4 border-blue-500 shadow-2xl flex flex-col justify-center">
-                <p id="label-msg" class="text-[8px] font-semibold text-blue-400 uppercase mb-1 tracking-widest">IN ASCOLTO...</p>
-                <p id="testo-msg" class="text-sm font-normal text-slate-400 uppercase italic leading-tight">In attesa di comunicazioni</p>
-                <div id="area-pulsanti" class="hidden mt-3 pt-2 border-t border-white/10"></div>
+            <div id="wrapper-msg" class="glass p-5 rounded-[2.5rem] border-l-4 border-blue-500 shadow-2xl flex flex-col justify-center">
+                <p id="label-msg" class="text-[8px] font-bold text-blue-400 uppercase mb-1 tracking-[0.2em]">IN ASCOLTO...</p>
+                <p id="testo-msg" class="text-base font-medium text-slate-300 uppercase italic leading-tight">In attesa di comunicazioni</p>
+                <div id="area-pulsanti" class="hidden mt-4 pt-3 border-t border-white/10"></div>
             </div>
         </main>
 
-        <section class="flex-1 flex flex-col justify-end space-y-3 pb-2 relative">
-            <div id="lock-screen" class="absolute inset-0 z-40 bg-slate-950/80 backdrop-blur-sm rounded-[2rem] flex flex-col items-center justify-center hidden">
-                <div class="text-red-500 text-5xl mb-3 animate-pulse">🚨</div>
-                <div class="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">SPOSTAMENTO IN CORSO...</div>
+        <section class="flex-1 flex flex-col justify-end space-y-4 pb-2 relative">
+            <div id="lock-screen" class="absolute inset-0 z-40 bg-slate-950/90 backdrop-blur-md rounded-[2.5rem] flex flex-col items-center justify-center hidden">
+                <div class="text-red-500 text-6xl mb-4 animate-pulse">🚨</div>
+                <div class="text-xs font-black uppercase tracking-[0.4em] text-white">SPOSTAMENTO IN CORSO</div>
             </div>
 
-            <div id="controls-area" class="space-y-3">
-                <div class="glass rounded-[2rem] p-3 text-center">
-                    <div id="current-status" class="text-2xl font-black text-blue-500 italic mb-3 uppercase tracking-tighter">---</div>
+            <div id="controls-area" class="space-y-4">
+                <div class="glass rounded-[2.5rem] p-4 text-center border-t border-white/5">
+                    <p class="text-[8px] font-black text-slate-500 uppercase tracking-[0.3em] mb-2">STATO ATTUALE UNITÀ</p>
+                    <div id="current-status" class="text-3xl font-black text-blue-500 italic mb-4 uppercase tracking-tighter">---</div>
                     <div class="grid grid-cols-4 gap-2">
-                        <button onclick="askStatus('Sede', '🏠')" class="bg-slate-800 py-4 rounded-xl text-[9px] uppercase">Sede</button>
-                        <button onclick="askStatus('Uscita', '🚚')" class="bg-amber-500 text-black py-4 rounded-xl text-[9px] uppercase">Uscita</button>
-                        <button onclick="askStatus('Intervento', '🚨')" class="bg-red-600 text-white py-4 rounded-xl text-[9px] uppercase">Posto</button>
-                        <button onclick="askStatus('Rientro', '🔙')" class="bg-blue-600 text-white py-4 rounded-xl text-[9px] uppercase">Rientro</button>
+                        <button onclick="askStatus('Sede', '🏠')" class="bg-slate-800/80 py-4 rounded-2xl text-[9px] font-bold uppercase border border-white/5">Sede</button>
+                        <button onclick="askStatus('Uscita', '🚚')" class="bg-amber-500 text-black py-4 rounded-2xl text-[9px] font-bold uppercase shadow-lg shadow-amber-500/20">Uscita</button>
+                        <button onclick="askStatus('Intervento', '🚨')" class="bg-red-600 text-white py-4 rounded-2xl text-[9px] font-bold uppercase shadow-lg shadow-red-600/20">Posto</button>
+                        <button onclick="askStatus('Rientro', '🔙')" class="bg-blue-600 text-white py-4 rounded-2xl text-[9px] font-bold uppercase shadow-lg shadow-blue-600/20">Rientro</button>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-3 gap-3">
-                    <button onclick="document.getElementById('in-foto').click()" class="bg-white text-black rounded-2xl py-5 flex flex-col items-center">
-                        <span class="text-2xl">📷</span><span class="text-[9px] font-bold uppercase mt-1">Foto</span>
+                    <button onclick="document.getElementById('in-foto').click()" class="bg-white text-black rounded-3xl py-6 flex flex-col items-center shadow-xl">
+                        <span class="text-2xl">📷</span><span class="text-[9px] font-black uppercase mt-1 tracking-tighter">Foto</span>
                         <input type="file" id="in-foto" accept="image/*" capture="camera" class="hidden" onchange="upFoto(this.files[0])">
                     </button>
-                    <button id="btn-voc" class="bg-slate-800 rounded-2xl py-5 flex flex-col items-center border border-white/5">
-                        <span class="text-2xl">🎤</span><span id="voc-txt" class="text-[9px] font-bold uppercase mt-1">Vocale</span>
+                    <button id="btn-voc" class="bg-slate-800 rounded-3xl py-6 flex flex-col items-center border border-white/10 shadow-xl">
+                        <span class="text-2xl">🎤</span><span id="voc-txt" class="text-[9px] font-black uppercase mt-1 tracking-tighter">Vocale</span>
                     </button>
-                    <button onclick="askGPS()" class="bg-emerald-600 rounded-2xl py-5 flex flex-col items-center">
-                        <span class="text-2xl">📍</span><span class="text-[9px] font-bold uppercase mt-1">GPS</span>
+                    <button onclick="askGPS()" class="bg-emerald-600 rounded-3xl py-6 flex flex-col items-center shadow-xl shadow-emerald-600/20">
+                        <span class="text-2xl">📍</span><span class="text-[9px] font-black uppercase mt-1 tracking-tighter">GPS</span>
                     </button>
                 </div>
 
-                <div class="glass rounded-[2rem] p-3 flex gap-2">
-                    <textarea id="msg-input" class="flex-1 bg-slate-900/50 rounded-xl p-3 text-xs text-white h-12 outline-none uppercase resize-none" placeholder="MESSAGGIO..."></textarea>
-                    <button onclick="askFreeMsg()" class="bg-blue-600 px-4 rounded-xl font-bold uppercase text-[10px]">INVIA</button>
+                <div class="glass rounded-3xl p-3 flex gap-2 border border-white/5">
+                    <textarea id="msg-input" class="flex-1 bg-slate-900/50 rounded-2xl p-4 text-xs text-white h-14 outline-none uppercase resize-none placeholder:text-slate-600" placeholder="SCRIVI UN MESSAGGIO..."></textarea>
+                    <button onclick="askFreeMsg()" class="bg-blue-600 px-6 rounded-2xl font-black uppercase text-[10px] shadow-lg shadow-blue-600/20">INVIA</button>
                 </div>
             </div>
         </section>
 
-        <footer class="shrink-0 py-2 border-t border-slate-800 flex justify-between items-center px-4 bg-slate-950">
-            <div id="ora" class="text-yellow-400 font-mono font-bold text-xs tracking-widest">00:00:00</div>
-            <div class="flex items-center gap-1">
-                <span class="text-[10px] font-black italic"><span class="text-white">JoK</span><span class="text-red-600">ART</span></span>
+        <footer class="shrink-0 py-3 border-t border-slate-800/50 flex justify-between items-center px-4 bg-slate-950/50">
+            <div id="ora" class="text-yellow-500 font-mono font-bold text-xs tracking-[0.2em]">00:00:00</div>
+            <div class="flex items-center gap-1 opacity-50">
+                <span class="text-[9px] font-black italic">JoKART 2026</span>
             </div>
         </footer>
     </div>
@@ -178,13 +171,7 @@
     window.askGPS = async () => {
         const gpsOn = document.getElementById('gps-toggle').checked;
         if (!gpsOn) {
-            const { value: via } = await Swal.fire({
-                title: 'GPS DISATTIVATO',
-                text: 'Inserisci via manualmente:',
-                input: 'text',
-                inputPlaceholder: 'Es: Via Roma 10...',
-                showCancelButton: true
-            });
+            const { value: via } = await Swal.fire({ title: 'GPS DISATTIVATO', text: 'Inserisci via manuale:', input: 'text', showCancelButton: true });
             if (via) inviaNuovo(`📍 POSIZIONE MANUALE: ${via}`, 'ATTESA');
         } else {
             Swal.fire({ title: 'GPS', text: 'Inviare posizione attuale?', icon: 'location', showCancelButton: true }).then((r) => {
@@ -239,7 +226,7 @@
             if (tLat && sala.stato !== 'OK') {
                 if(lock) lock.classList.remove('hidden');
                 if(controls) { controls.style.opacity = "0.2"; controls.style.pointerEvents = "none"; }
-                wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-red-600 bg-red-900/10 shadow-2xl flex flex-col justify-center min-h-[110px] relative z-[50]";
+                wrapper.className = "glass p-5 rounded-[2.5rem] border-l-4 border-red-600 bg-red-950/20 shadow-2xl flex flex-col justify-center min-h-[110px] relative z-[50]";
                 label.innerText = "🚨 POSIZIONE RICEVUTA:"; label.style.color = "#ef4444";
                 pulsanti.classList.remove('hidden');
                 
@@ -254,7 +241,7 @@
             } else {
                 if(lock) lock.classList.add('hidden');
                 if(controls) { controls.style.opacity = "1"; controls.style.pointerEvents = "auto"; }
-                wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-blue-500 bg-blue-500/10 shadow-2xl flex flex-col justify-center min-h-[110px]";
+                wrapper.className = "glass p-5 rounded-[2.5rem] border-l-4 border-blue-500 bg-blue-500/10 shadow-2xl flex flex-col justify-center min-h-[110px]";
                 label.innerText = (sala.stato === 'OK') ? "IN ATTESA DI ORDINI" : "✉️ COMUNICAZIONE DALLA SALA:";
                 label.style.color = "#3b82f6"; pulsanti.classList.add('hidden');
             }
