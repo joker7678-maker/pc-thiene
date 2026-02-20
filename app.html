@@ -11,10 +11,10 @@
         body { font-family: 'Inter', sans-serif; background: #020617; color: white; height: 100dvh; overflow: hidden; margin: 0; display: flex; flex-direction: column; }
         .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
         
-        /* TITOLO ALLINEATO E OTTIMIZZATO */
-        .monitor-title-pro { 
-            font-weight: 900 !important; 
-            font-size: 1.05rem !important; 
+        /* TITOLO PC THIENE GRANDE */
+        .title-pc { 
+            font-weight: 900; 
+            font-size: 1.4rem; 
             text-transform: uppercase; 
             background: linear-gradient(to bottom, #ffffff 40%, #94a3b8 100%); 
             -webkit-background-clip: text; 
@@ -22,7 +22,19 @@
             filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.3)); 
             white-space: nowrap;
             letter-spacing: -0.02em;
+            line-height: 1;
         }
+
+        /* NOMINATIVO SQUADRA INGRANDITO */
+        #sq-name { font-size: 14px; font-weight: 900; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.1em; }
+
+        /* TOGGLE GPS BELLO */
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #10b981; }
+        input:checked + .slider:before { transform: translateX(22px); }
 
         #wrapper-msg { min-height: 110px; font-weight: 400; transition: all 0.3s ease; }
         .bg-recording { background-color: #ef4444 !important; animation: pulse-red 1.5s infinite; }
@@ -34,27 +46,33 @@
 
     <div id="off-screen" class="fixed inset-0 z-[10000] bg-slate-950 flex flex-col items-center justify-center p-6 text-center hidden">
         <div class="text-slate-700 text-6xl mb-4">🌑</div>
-        <h1 class="monitor-title-pro !text-2xl mb-2">APP DISATTIVATA</h1>
+        <h1 class="title-pc !text-2xl mb-2">APP DISATTIVATA</h1>
         <p class="text-slate-500 text-[10px] uppercase tracking-[0.2em]">Contattare la Sala Operativa</p>
     </div>
 
     <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-950 flex items-center justify-center p-6 text-center">
         <div class="w-full max-w-sm glass p-8 rounded-[2.5rem] border border-blue-500/30">
-            <h1 class="monitor-title-pro mb-8 text-center w-full">PC THIENE</h1>
+            <h1 class="title-pc mb-8 text-center w-full">PROTEZIONE CIVILE THIENE</h1>
             <input type="password" id="app-password" class="w-full bg-slate-900 border-2 border-slate-700 rounded-2xl p-4 text-center text-4xl mb-6 text-white outline-none" placeholder="••••" inputmode="numeric">
             <button onclick="checkPass()" class="w-full bg-blue-600 text-white font-bold py-5 rounded-2xl uppercase tracking-widest active:bg-blue-700 shadow-lg">Accedi</button>
         </div>
     </div>
 
     <div id="main-app" class="flex-1 flex flex-col hidden h-full overflow-hidden">
-        <header class="flex justify-between items-center mb-4 shrink-0 px-1">
+        <header class="flex justify-between items-start mb-4 shrink-0 px-1">
             <div class="border-l-4 border-blue-600 pl-3">
-                <h1 class="monitor-title-pro">PC THIENE</h1>
-                <span id="sq-name" class="block text-[8px] font-medium text-blue-400 uppercase tracking-widest opacity-70">---</span>
+                <h1 class="title-pc">PROTEZIONE CIVILE THIENE</h1>
+                <div class="flex flex-col mt-1">
+                    <span id="sq-name">---</span>
+                    <span id="sq-members" class="text-[8px] text-slate-400 uppercase font-medium max-w-[200px] truncate">Caricamento operatori...</span>
+                </div>
             </div>
-            <div class="bg-slate-900/50 p-2 rounded-2xl border border-white/5 flex items-center gap-2">
-                <span class="text-[9px] font-bold text-slate-400 uppercase">GPS</span>
-                <input type="checkbox" id="gps-toggle" checked>
+            <div class="bg-slate-900/80 p-2 rounded-2xl border border-white/10 flex flex-col items-center gap-1 min-w-[60px]">
+                <span class="text-[8px] font-black text-slate-500 uppercase tracking-tighter">GPS ATTIVO</span>
+                <label class="switch">
+                    <input type="checkbox" id="gps-toggle" checked>
+                    <span class="slider"></span>
+                </label>
             </div>
         </header>
 
@@ -157,7 +175,6 @@
         });
     };
 
-    // --- GPS MANUALE CON VIA ---
     window.askGPS = async () => {
         const gpsOn = document.getElementById('gps-toggle').checked;
         if (!gpsOn) {
@@ -184,10 +201,7 @@
 
     window.cRic = () => { 
         if (idSalaAttivo) {
-            update(ref(db, `brogliaccio/${idSalaAttivo}`), { 
-                stato: 'RICEVUTO', 
-                m2: "✅ POSIZIONE RICEVUTA" 
-            }); 
+            update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'RICEVUTO', m2: "✅ POSIZIONE RICEVUTA" }); 
             Swal.fire({ icon: 'success', title: 'RICEVUTO', timer: 800, showConfirmButton: false });
         }
     };
@@ -250,6 +264,7 @@
     onValue(ref(db, `anagrafica_squadre/${sqId}`), (s) => {
         const d = s.val(); if(!d) return;
         document.getElementById('current-status').innerText = (d.stato || "---").toUpperCase();
+        document.getElementById('sq-members').innerText = (d.nomi || "OPERATORI NON SPECIFICATI");
         if(d.stato === 'DISATTIVATA' || d.attiva === false) document.getElementById('off-screen').classList.remove('hidden');
         else document.getElementById('off-screen').classList.add('hidden');
     });
