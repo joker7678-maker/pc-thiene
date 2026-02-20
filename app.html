@@ -22,7 +22,6 @@
         #sq-name { font-size: 20px; font-weight: 900; color: #3b82f6; text-transform: uppercase; line-height: 1.2; }
         #sq-members { font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
 
-        /* TOGGLE GPS MODERNO */
         .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 34px; }
@@ -30,94 +29,87 @@
         input:checked + .slider { background-color: #10b981; }
         input:checked + .slider:before { transform: translateX(22px); }
 
-        #wrapper-msg { min-height: 110px; transition: all 0.3s ease; }
-        .bg-recording { background-color: #ef4444 !important; animation: pulse-red 1.5s infinite; }
-        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
-        
-        /* FOOTER ALLINEATO A INDEX */
-        .footer-app { height: 50px; background: #010409; border-top: 1px solid #1e293b; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; flex-shrink: 0; }
+        /* FOOTER ALLINEATO */
+        .footer-app { height: 55px; background: #010409; border-top: 1px solid #1e293b; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; flex-shrink: 0; z-index: 100; }
         .alert-badge { padding: 4px 10px; border-radius: 4px; font-weight: 900; font-size: 9px; text-transform: uppercase; }
         .alert-verde { background: #065f46; color: #34d399; }
         .alert-gialla { background: #854d0e; color: #fde047; }
         .alert-arancio { background: #9a3412; color: #ffedd5; }
         .alert-rossa { background: #7f1d1d; color: #fee2e2; }
+
+        .btn-mini-nav { background: #10b981; color: white; font-size: 9px; font-weight: 900; padding: 4px 8px; border-radius: 6px; margin-top: 5px; text-transform: uppercase; }
     </style>
 </head>
 <body class="p-3">
 
-    <div id="off-screen" class="fixed inset-0 z-[10000] bg-slate-950 flex flex-col items-center justify-center p-6 text-center hidden">
-        <h1 class="title-pc !text-2xl mb-2 text-center">APP DISATTIVATA</h1>
-        <p class="text-slate-500 text-[10px] uppercase tracking-[0.2em]">Contattare la Sala Operativa</p>
-    </div>
-
     <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-950 flex items-center justify-center p-6 text-center">
-        <div class="w-full max-w-sm glass p-8 rounded-[2.5rem] border border-blue-500/30 shadow-2xl">
+        <div class="w-full max-w-sm glass p-8 rounded-[2.5rem] border border-blue-500/30">
             <h1 class="title-pc mb-8 text-center w-full">PROTEZIONE CIVILE<br>THIENE</h1>
             <input type="password" id="app-password" class="w-full bg-slate-900 border-2 border-slate-700 rounded-2xl p-4 text-center text-4xl mb-6 text-white outline-none" placeholder="••••" inputmode="numeric">
-            <button onclick="checkPass()" class="w-full bg-blue-600 text-white font-bold py-5 rounded-2xl uppercase tracking-widest active:bg-blue-700 shadow-lg">Accedi</button>
+            <button onclick="checkPass()" class="w-full bg-blue-600 text-white font-bold py-5 rounded-2xl active:bg-blue-700">Accedi</button>
         </div>
     </div>
 
-    <div id="main-app" class="flex-1 flex flex-col hidden h-full overflow-hidden">
-        <header class="flex justify-between items-start mb-6 shrink-0 px-1">
+    <div id="main-app" class="flex-1 flex flex-col hidden overflow-hidden">
+        <header class="flex justify-between items-start mb-4 shrink-0 px-1">
             <div class="flex flex-col gap-1 border-l-4 border-blue-600 pl-3">
                 <h1 class="title-pc">PROTEZIONE CIVILE<br>THIENE</h1>
                 <div class="mt-2">
                     <span id="sq-name">---</span><br>
-                    <span id="sq-members">CARICAMENTO OPERATORI...</span>
+                    <span id="sq-members">CARICAMENTO...</span>
                 </div>
             </div>
             <div class="flex flex-col items-end gap-1">
                 <span class="text-[8px] font-black text-slate-500 uppercase">GPS ATTIVO</span>
-                <label class="switch">
-                    <input type="checkbox" id="gps-toggle" checked>
-                    <span class="slider"></span>
-                </label>
+                <label class="switch"><input type="checkbox" id="gps-toggle" checked><span class="slider"></span></label>
             </div>
         </header>
 
         <main class="shrink-0 mb-4 px-1">
-            <div id="wrapper-msg" class="glass p-5 rounded-[2.5rem] border-l-4 border-blue-500 shadow-2xl flex flex-col justify-center">
+            <div id="wrapper-msg" class="glass p-4 rounded-[2.5rem] border-l-4 border-blue-500 shadow-2xl flex flex-col justify-center">
                 <p id="label-msg" class="text-[8px] font-bold text-blue-400 uppercase mb-1 tracking-[0.2em]">IN ASCOLTO...</p>
-                <p id="testo-msg" class="text-base font-medium text-slate-300 uppercase italic leading-tight">In attesa di comunicazioni</p>
-                <div id="area-pulsanti" class="hidden mt-4 pt-3 border-t border-white/10"></div>
+                <p id="testo-msg" class="text-sm font-medium text-slate-300 uppercase italic leading-tight">In attesa di comunicazioni</p>
+                <div id="area-pulsanti-nav" class="hidden">
+                    <button id="btn-re-nav" class="btn-mini-nav">📍 RAGGIUNGI POSIZIONE</button>
+                </div>
+                <div id="area-pulsanti" class="hidden mt-3 pt-2 border-t border-white/10"></div>
             </div>
         </main>
 
-        <section class="flex-1 flex flex-col justify-end space-y-4 pb-2 relative">
+        <section class="flex-1 flex flex-col justify-end space-y-3 pb-2 relative overflow-hidden">
             <div id="lock-screen" class="absolute inset-0 z-40 bg-slate-950/90 backdrop-blur-md rounded-[2.5rem] flex flex-col items-center justify-center hidden">
                 <div class="text-red-500 text-6xl mb-4 animate-pulse">🚨</div>
                 <div class="text-xs font-black uppercase tracking-[0.4em] text-white">SPOSTAMENTO IN CORSO</div>
             </div>
 
-            <div id="controls-area" class="space-y-4">
-                <div class="glass rounded-[2.5rem] p-4 text-center border-t border-white/5">
-                    <p class="text-[8px] font-black text-slate-500 uppercase tracking-[0.3em] mb-2">STATO ATTUALE UNITÀ</p>
-                    <div id="current-status" class="text-3xl font-black text-blue-500 italic mb-4 uppercase tracking-tighter">---</div>
+            <div id="controls-area" class="space-y-3 overflow-y-auto">
+                <div class="glass rounded-[2rem] p-3 text-center">
+                    <p class="text-[8px] font-black text-slate-500 uppercase mb-1">STATO ATTUALE</p>
+                    <div id="current-status" class="text-2xl font-black text-blue-500 italic mb-3 uppercase tracking-tighter">---</div>
                     <div class="grid grid-cols-4 gap-2">
-                        <button onclick="askStatus('Sede', '🏠')" class="bg-slate-800 py-4 rounded-2xl text-[9px] font-bold uppercase border border-white/5">Sede</button>
-                        <button onclick="askStatus('Uscita', '🚚')" class="bg-amber-500 text-black py-4 rounded-2xl text-[9px] font-bold uppercase shadow-lg">Uscita</button>
-                        <button onclick="askStatus('Intervento', '🚨')" class="bg-red-600 text-white py-4 rounded-2xl text-[9px] font-bold uppercase shadow-lg">Posto</button>
-                        <button onclick="askStatus('Rientro', '🔙')" class="bg-blue-600 text-white py-4 rounded-2xl text-[9px] font-bold uppercase shadow-lg">Rientro</button>
+                        <button onclick="askStatus('Sede', '🏠')" class="bg-slate-800 py-3 rounded-xl text-[9px] font-bold uppercase">Sede</button>
+                        <button onclick="askStatus('Uscita', '🚚')" class="bg-amber-500 text-black py-3 rounded-xl text-[9px] font-bold uppercase">Uscita</button>
+                        <button onclick="askStatus('Intervento', '🚨')" class="bg-red-600 text-white py-3 rounded-xl text-[9px] font-bold uppercase">Posto</button>
+                        <button onclick="askStatus('Rientro', '🔙')" class="bg-blue-600 text-white py-3 rounded-xl text-[9px] font-bold uppercase">Rientro</button>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-3">
-                    <button onclick="document.getElementById('in-foto').click()" class="bg-white text-black rounded-3xl py-6 flex flex-col items-center shadow-xl">
-                        <span class="text-2xl">📷</span><span class="text-[9px] font-black uppercase mt-1">Foto</span>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="document.getElementById('in-foto').click()" class="bg-white text-black rounded-2xl py-4 flex flex-col items-center shadow-lg">
+                        <span class="text-xl">📷</span><span class="text-[9px] font-black uppercase mt-1">Foto</span>
                         <input type="file" id="in-foto" accept="image/*" capture="camera" class="hidden" onchange="upFoto(this.files[0])">
                     </button>
-                    <button id="btn-voc" class="bg-slate-800 rounded-3xl py-6 flex flex-col items-center border border-white/10 shadow-xl">
-                        <span class="text-2xl">🎤</span><span id="voc-txt" class="text-[9px] font-black uppercase mt-1">Vocale</span>
+                    <button id="btn-voc" class="bg-slate-800 rounded-2xl py-4 flex flex-col items-center border border-white/10">
+                        <span class="text-xl">🎤</span><span id="voc-txt" class="text-[9px] font-black uppercase mt-1">Vocale</span>
                     </button>
-                    <button onclick="askGPS()" class="bg-emerald-600 rounded-3xl py-6 flex flex-col items-center shadow-xl">
-                        <span class="text-2xl">📍</span><span class="text-[9px] font-black uppercase mt-1">GPS</span>
+                    <button onclick="askGPS()" class="bg-emerald-600 rounded-2xl py-4 flex flex-col items-center shadow-lg">
+                        <span class="text-xl">📍</span><span class="text-[9px] font-black uppercase mt-1">GPS</span>
                     </button>
                 </div>
 
-                <div class="glass rounded-3xl p-3 flex gap-2 border border-white/5">
-                    <textarea id="msg-input" class="flex-1 bg-slate-900/50 rounded-2xl p-4 text-xs text-white h-14 outline-none uppercase resize-none placeholder:text-slate-600" placeholder="SCRIVI UN MESSAGGIO..."></textarea>
-                    <button onclick="askFreeMsg()" class="bg-blue-600 px-6 rounded-2xl font-black uppercase text-[10px] shadow-lg">INVIA</button>
+                <div class="glass rounded-2xl p-2 flex gap-2">
+                    <textarea id="msg-input" class="flex-1 bg-slate-900/50 rounded-xl p-3 text-xs text-white h-12 outline-none uppercase resize-none" placeholder="MESSAGGIO..."></textarea>
+                    <button onclick="askFreeMsg()" class="bg-blue-600 px-4 rounded-xl font-black uppercase text-[10px]">INVIA</button>
                 </div>
             </div>
         </section>
@@ -125,7 +117,7 @@
         <footer class="footer-app">
             <div id="app-alert-badge" class="alert-badge alert-verde">ALLERTA VERDE</div>
             <div id="ora" class="text-yellow-500 font-mono font-bold text-xs tracking-[0.2em]">00:00:00</div>
-            <div class="text-[9px] font-black italic opacity-40">EVO ULTIMATE</div>
+            <div class="text-[8px] font-black italic opacity-40">PC THIENE EVO</div>
         </footer>
     </div>
 
@@ -140,6 +132,7 @@
 
     let idSalaAttivo = null;
     let viaAttiva = "IN ATTESA DI ORDINI";
+    let ultimaPos = { lat: null, lng: null };
 
     window.checkPass = () => {
         if (document.getElementById('app-password').value === "2026") {
@@ -213,12 +206,9 @@
 
     window.navig = (lat, lng) => { window.open(`http://googleusercontent.com/maps.google.com/maps?daddr=${lat},${lng}&travelmode=driving`, '_blank'); };
 
-    // --- RICEZIONE ORDINI E SINCRONIZZAZIONE TESTI ---
     onValue(query(ref(db, 'brogliaccio'), limitToLast(15)), (snap) => {
         const data = snap.val(); if (!data) return;
         const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).sort((a, b) => b.id.localeCompare(a.id));
-        
-        // Trova l'ultimo comando della sala per questa squadra
         const sala = logs.find(l => l.dir === 'SA' && (l.squadra === sqId || l.squadra === "TUTTE"));
         
         const wrapper = document.getElementById('wrapper-msg');
@@ -227,47 +217,52 @@
         const pulsanti = document.getElementById('area-pulsanti');
         const lock = document.getElementById('lock-screen');
         const controls = document.getElementById('controls-area');
+        const reNav = document.getElementById('area-pulsanti-nav');
 
         if (sala) {
             idSalaAttivo = sala.id;
-            viaAttiva = sala.m1; // Salva la via per mostrarla anche dopo come "Ultima Destinazione"
+            viaAttiva = sala.m1;
             testo.innerText = viaAttiva;
             const tLat = sala.lat || sala.LAT;
+            const tLng = sala.lng || sala.LNG;
+
+            if (tLat && tLng) {
+                ultimaPos = { lat: tLat, lng: tLng };
+                document.getElementById('btn-re-nav').onclick = () => window.navig(tLat, tLng);
+            }
 
             if (tLat && sala.stato !== 'OK') {
                 if(lock) lock.classList.remove('hidden');
                 if(controls) { controls.style.opacity = "0.2"; controls.style.pointerEvents = "none"; }
-                wrapper.className = "glass p-5 rounded-[2.5rem] border-l-4 border-red-600 bg-red-950/20 shadow-2xl flex flex-col justify-center min-h-[110px] relative z-[50]";
+                wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-red-600 bg-red-950/20 shadow-2xl flex flex-col justify-center min-h-[110px]";
                 label.innerText = "🚨 POSIZIONE RICEVUTA:"; label.style.color = "#ef4444";
                 pulsanti.classList.remove('hidden');
+                reNav.classList.add('hidden');
                 
                 if (sala.stato === 'ATTESA') {
-                    pulsanti.innerHTML = `<button onclick="cRic()" class="w-full bg-blue-600 py-5 rounded-3xl font-bold uppercase text-lg shadow-lg">✅ RICEVI POSIZIONE</button>`;
+                    pulsanti.innerHTML = `<button onclick="cRic()" class="w-full bg-blue-600 py-4 rounded-2xl font-bold uppercase text-lg shadow-lg">✅ RICEVI POSIZIONE</button>`;
                 } else {
-                    pulsanti.innerHTML = `<div class="grid grid-cols-2 gap-3">
-                        <button onclick="window.navig(${tLat}, ${sala.lng || sala.LNG})" class="bg-emerald-600 py-5 rounded-2xl font-bold uppercase text-xs">📍 NAVIGA</button>
-                        <button onclick="cArr()" class="bg-red-600 py-5 rounded-2xl font-bold uppercase text-xs">🏁 ARRIVATI</button>
+                    pulsanti.innerHTML = `<div class="grid grid-cols-2 gap-2">
+                        <button onclick="window.navig(${tLat}, ${tLng})" class="bg-emerald-600 py-4 rounded-xl font-bold uppercase text-xs">📍 NAVIGA</button>
+                        <button onclick="cArr()" class="bg-red-600 py-4 rounded-xl font-bold uppercase text-xs">🏁 ARRIVATI</button>
                     </div>`;
                 }
             } else {
-                // STATO OK: MOSTRA ULTIMA DESTINAZIONE
                 if(lock) lock.classList.add('hidden');
                 if(controls) { controls.style.opacity = "1"; controls.style.pointerEvents = "auto"; }
-                wrapper.className = "glass p-5 rounded-[2.5rem] border-l-4 border-blue-500 bg-blue-500/10 shadow-2xl flex flex-col justify-center min-h-[110px]";
+                wrapper.className = "glass p-4 rounded-[2.5rem] border-l-4 border-blue-500 bg-blue-500/10 shadow-2xl flex flex-col justify-center min-h-[110px]";
                 label.innerText = "🏁 ULTIMA DESTINAZIONE:";
                 label.style.color = "#3b82f6"; pulsanti.classList.add('hidden');
+                if(ultimaPos.lat) reNav.classList.remove('hidden');
             }
         }
     });
 
-    // --- SINCRONIZZAZIONE ANAGRAFICA E ALLERTA ---
     onValue(ref(db, `anagrafica_squadre/${sqId}`), (s) => {
         const d = s.val(); if(!d) return;
         document.getElementById('sq-name').innerText = "UNITÀ: " + sqId;
         document.getElementById('current-status').innerText = (d.stato || "---").toUpperCase();
         document.getElementById('sq-members').innerText = (d.nomi || "OPERATORI NON SPECIFICATI");
-        if(d.stato === 'DISATTIVATA' || d.attiva === false) document.getElementById('off-screen').classList.remove('hidden');
-        else document.getElementById('off-screen').classList.add('hidden');
     });
 
     onValue(ref(db, 'configurazione/allerta_meteo'), (snap) => {
