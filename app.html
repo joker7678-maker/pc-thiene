@@ -12,16 +12,17 @@
         .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
         
         .title-pc { 
-            font-weight: 900; font-size: 1.6rem; text-transform: uppercase; 
+            font-weight: 900; font-size: 1.8rem; text-transform: uppercase; 
             background: linear-gradient(to bottom, #ffffff 40%, #94a3b8 100%); 
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
             filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.3)); 
             letter-spacing: -0.02em; line-height: 1;
         }
 
-        #sq-name { font-size: 20px; font-weight: 900; color: #3b82f6; text-transform: uppercase; line-height: 1.2; }
-        #sq-members { font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
+        #sq-name { font-size: 22px; font-weight: 900; color: #3b82f6; text-transform: uppercase; line-height: 1.2; }
+        #sq-members { font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
 
+        /* SWITCH GPS OTTIMIZZATO */
         .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 34px; }
@@ -29,87 +30,93 @@
         input:checked + .slider { background-color: #10b981; }
         input:checked + .slider:before { transform: translateX(22px); }
 
-        /* FOOTER ALLINEATO */
-        .footer-app { height: 55px; background: #010409; border-top: 1px solid #1e293b; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; flex-shrink: 0; z-index: 100; }
+        /* FOOTER FISSO */
+        .footer-app { height: 55px; background: #010409; border-top: 1px solid #1e293b; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; flex-shrink: 0; }
         .alert-badge { padding: 4px 10px; border-radius: 4px; font-weight: 900; font-size: 9px; text-transform: uppercase; }
         .alert-verde { background: #065f46; color: #34d399; }
         .alert-gialla { background: #854d0e; color: #fde047; }
         .alert-arancio { background: #9a3412; color: #ffedd5; }
         .alert-rossa { background: #7f1d1d; color: #fee2e2; }
 
-        .btn-mini-nav { background: #10b981; color: white; font-size: 9px; font-weight: 900; padding: 4px 8px; border-radius: 6px; margin-top: 5px; text-transform: uppercase; }
+        .btn-mini-nav { background: #10b981; color: white; font-size: 9px; font-weight: 900; padding: 6px 12px; border-radius: 8px; margin-top: 8px; text-transform: uppercase; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
     </style>
 </head>
 <body class="p-3">
 
+    <div id="off-screen" class="fixed inset-0 z-[10000] bg-slate-950 flex flex-col items-center justify-center p-6 text-center hidden">
+        <div class="text-slate-800 text-8xl mb-6">🌑</div>
+        <h1 class="title-pc !text-3xl mb-4">APP DISATTIVATA</h1>
+        <p class="text-slate-500 text-sm uppercase tracking-[0.3em]">Contattare la Sala Operativa</p>
+    </div>
+
     <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-950 flex items-center justify-center p-6 text-center">
         <div class="w-full max-w-sm glass p-8 rounded-[2.5rem] border border-blue-500/30">
-            <h1 class="title-pc mb-8 text-center w-full">PROTEZIONE CIVILE<br>THIENE</h1>
+            <h1 class="title-pc mb-8 text-center">PROTEZIONE CIVILE<br>THIENE</h1>
             <input type="password" id="app-password" class="w-full bg-slate-900 border-2 border-slate-700 rounded-2xl p-4 text-center text-4xl mb-6 text-white outline-none" placeholder="••••" inputmode="numeric">
-            <button onclick="checkPass()" class="w-full bg-blue-600 text-white font-bold py-5 rounded-2xl active:bg-blue-700">Accedi</button>
+            <button onclick="checkPass()" class="w-full bg-blue-600 text-white font-bold py-5 rounded-2xl uppercase active:bg-blue-700 shadow-lg">Accedi</button>
         </div>
     </div>
 
     <div id="main-app" class="flex-1 flex flex-col hidden overflow-hidden">
-        <header class="flex justify-between items-start mb-4 shrink-0 px-1">
+        <header class="flex justify-between items-start mb-6 shrink-0 px-1">
             <div class="flex flex-col gap-1 border-l-4 border-blue-600 pl-3">
                 <h1 class="title-pc">PROTEZIONE CIVILE<br>THIENE</h1>
-                <div class="mt-2">
+                <div class="mt-3">
                     <span id="sq-name">---</span><br>
                     <span id="sq-members">CARICAMENTO...</span>
                 </div>
             </div>
             <div class="flex flex-col items-end gap-1">
-                <span class="text-[8px] font-black text-slate-500 uppercase">GPS ATTIVO</span>
+                <span class="text-[8px] font-black text-slate-500 uppercase tracking-tighter">GPS ATTIVO</span>
                 <label class="switch"><input type="checkbox" id="gps-toggle" checked><span class="slider"></span></label>
             </div>
         </header>
 
         <main class="shrink-0 mb-4 px-1">
-            <div id="wrapper-msg" class="glass p-4 rounded-[2.5rem] border-l-4 border-blue-500 shadow-2xl flex flex-col justify-center">
+            <div id="wrapper-msg" class="glass p-5 rounded-[2.5rem] border-l-4 border-blue-500 shadow-2xl flex flex-col justify-center">
                 <p id="label-msg" class="text-[8px] font-bold text-blue-400 uppercase mb-1 tracking-[0.2em]">IN ASCOLTO...</p>
-                <p id="testo-msg" class="text-sm font-medium text-slate-300 uppercase italic leading-tight">In attesa di comunicazioni</p>
+                <p id="testo-msg" class="text-base font-medium text-slate-300 uppercase italic leading-tight">In attesa di comunicazioni</p>
                 <div id="area-pulsanti-nav" class="hidden">
                     <button id="btn-re-nav" class="btn-mini-nav">📍 RAGGIUNGI POSIZIONE</button>
                 </div>
-                <div id="area-pulsanti" class="hidden mt-3 pt-2 border-t border-white/10"></div>
+                <div id="area-pulsanti" class="hidden mt-4 pt-3 border-t border-white/10"></div>
             </div>
         </main>
 
-        <section class="flex-1 flex flex-col justify-end space-y-3 pb-2 relative overflow-hidden">
+        <section class="flex-1 flex flex-col justify-end space-y-4 pb-2 relative overflow-hidden">
             <div id="lock-screen" class="absolute inset-0 z-40 bg-slate-950/90 backdrop-blur-md rounded-[2.5rem] flex flex-col items-center justify-center hidden">
                 <div class="text-red-500 text-6xl mb-4 animate-pulse">🚨</div>
                 <div class="text-xs font-black uppercase tracking-[0.4em] text-white">SPOSTAMENTO IN CORSO</div>
             </div>
 
-            <div id="controls-area" class="space-y-3 overflow-y-auto">
-                <div class="glass rounded-[2rem] p-3 text-center">
-                    <p class="text-[8px] font-black text-slate-500 uppercase mb-1">STATO ATTUALE</p>
-                    <div id="current-status" class="text-2xl font-black text-blue-500 italic mb-3 uppercase tracking-tighter">---</div>
+            <div id="controls-area" class="space-y-4">
+                <div class="glass rounded-[2.5rem] p-4 text-center">
+                    <p class="text-[8px] font-black text-slate-500 uppercase tracking-[0.3em] mb-2">STATO ATTUALE UNITÀ</p>
+                    <div id="current-status" class="text-3xl font-black text-blue-500 italic mb-4 uppercase tracking-tighter">---</div>
                     <div class="grid grid-cols-4 gap-2">
-                        <button onclick="askStatus('Sede', '🏠')" class="bg-slate-800 py-3 rounded-xl text-[9px] font-bold uppercase">Sede</button>
-                        <button onclick="askStatus('Uscita', '🚚')" class="bg-amber-500 text-black py-3 rounded-xl text-[9px] font-bold uppercase">Uscita</button>
-                        <button onclick="askStatus('Intervento', '🚨')" class="bg-red-600 text-white py-3 rounded-xl text-[9px] font-bold uppercase">Posto</button>
-                        <button onclick="askStatus('Rientro', '🔙')" class="bg-blue-600 text-white py-3 rounded-xl text-[9px] font-bold uppercase">Rientro</button>
+                        <button onclick="askStatus('Sede', '🏠')" class="bg-slate-800 py-4 rounded-2xl text-[9px] font-bold uppercase border border-white/5">Sede</button>
+                        <button onclick="askStatus('Uscita', '🚚')" class="bg-amber-500 text-black py-4 rounded-2xl text-[9px] font-bold uppercase">Uscita</button>
+                        <button onclick="askStatus('Intervento', '🚨')" class="bg-red-600 text-white py-4 rounded-2xl text-[9px] font-bold uppercase">Posto</button>
+                        <button onclick="askStatus('Rientro', '🔙')" class="bg-blue-600 text-white py-4 rounded-2xl text-[9px] font-bold uppercase">Rientro</button>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-3 gap-2">
-                    <button onclick="document.getElementById('in-foto').click()" class="bg-white text-black rounded-2xl py-4 flex flex-col items-center shadow-lg">
-                        <span class="text-xl">📷</span><span class="text-[9px] font-black uppercase mt-1">Foto</span>
+                    <button onclick="document.getElementById('in-foto').click()" class="bg-white text-black rounded-3xl py-5 flex flex-col items-center shadow-lg">
+                        <span class="text-2xl">📷</span><span class="text-[9px] font-black uppercase mt-1">Foto</span>
                         <input type="file" id="in-foto" accept="image/*" capture="camera" class="hidden" onchange="upFoto(this.files[0])">
                     </button>
-                    <button id="btn-voc" class="bg-slate-800 rounded-2xl py-4 flex flex-col items-center border border-white/10">
-                        <span class="text-xl">🎤</span><span id="voc-txt" class="text-[9px] font-black uppercase mt-1">Vocale</span>
+                    <button id="btn-voc" class="bg-slate-800 rounded-3xl py-5 flex flex-col items-center border border-white/10">
+                        <span class="text-2xl">🎤</span><span id="voc-txt" class="text-[9px] font-black uppercase mt-1">Vocale</span>
                     </button>
-                    <button onclick="askGPS()" class="bg-emerald-600 rounded-2xl py-4 flex flex-col items-center shadow-lg">
-                        <span class="text-xl">📍</span><span class="text-[9px] font-black uppercase mt-1">GPS</span>
+                    <button onclick="askGPS()" class="bg-emerald-600 rounded-3xl py-5 flex flex-col items-center shadow-lg">
+                        <span class="text-2xl">📍</span><span class="text-[9px] font-black uppercase mt-1">GPS</span>
                     </button>
                 </div>
 
                 <div class="glass rounded-2xl p-2 flex gap-2">
-                    <textarea id="msg-input" class="flex-1 bg-slate-900/50 rounded-xl p-3 text-xs text-white h-12 outline-none uppercase resize-none" placeholder="MESSAGGIO..."></textarea>
-                    <button onclick="askFreeMsg()" class="bg-blue-600 px-4 rounded-xl font-black uppercase text-[10px]">INVIA</button>
+                    <textarea id="msg-input" class="flex-1 bg-slate-900/50 rounded-xl p-3 text-xs text-white h-12 outline-none uppercase resize-none placeholder:text-slate-700" placeholder="MESSAGGIO..."></textarea>
+                    <button onclick="askFreeMsg()" class="bg-blue-600 px-6 rounded-xl font-black uppercase text-[10px]">INVIA</button>
                 </div>
             </div>
         </section>
@@ -258,11 +265,20 @@
         }
     });
 
+    // --- LOGICA SINCRONIZZATA PER DISATTIVAZIONE ---
     onValue(ref(db, `anagrafica_squadre/${sqId}`), (s) => {
         const d = s.val(); if(!d) return;
         document.getElementById('sq-name').innerText = "UNITÀ: " + sqId;
         document.getElementById('current-status').innerText = (d.stato || "---").toUpperCase();
         document.getElementById('sq-members').innerText = (d.nomi || "OPERATORI NON SPECIFICATI");
+        
+        // Controllo disattivazione istantanea
+        const offScreen = document.getElementById('off-screen');
+        if(d.stato === 'DISATTIVATA' || d.attiva === false) {
+            offScreen.classList.remove('hidden');
+        } else {
+            offScreen.classList.add('hidden');
+        }
     });
 
     onValue(ref(db, 'configurazione/allerta_meteo'), (snap) => {
