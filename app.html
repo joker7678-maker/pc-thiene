@@ -7,22 +7,22 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@700&display=swap');
         body { font-family: 'Inter', sans-serif; background: #020617; color: white; height: 100dvh; overflow: hidden; margin: 0; display: flex; flex-direction: column; }
         .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
         
         .title-pc { 
-            font-weight: 900; font-size: 1.5rem; text-transform: uppercase; 
+            font-weight: 900; font-size: 1.6rem; text-transform: uppercase; 
             background: linear-gradient(to bottom, #ffffff 40%, #94a3b8 100%); 
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
             filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.3)); 
-            letter-spacing: -0.02em; line-height: 1.1;
+            letter-spacing: -0.02em; line-height: 1;
         }
 
-        #sq-name { font-size: 18px; font-weight: 900; color: #3b82f6; text-transform: uppercase; line-height: 1; }
-        #sq-members { font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: 500; }
+        #sq-name { font-size: 20px; font-weight: 900; color: #3b82f6; text-transform: uppercase; line-height: 1.2; }
+        #sq-members { font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
 
-        /* TOGGLE GPS */
+        /* TOGGLE GPS MODERNO */
         .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 34px; }
@@ -33,20 +33,26 @@
         #wrapper-msg { min-height: 110px; transition: all 0.3s ease; }
         .bg-recording { background-color: #ef4444 !important; animation: pulse-red 1.5s infinite; }
         @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
-        .swal2-popup { border-radius: 2rem !important; background: #1e293b !important; color: white !important; }
+        
+        /* FOOTER ALLINEATO A INDEX */
+        .footer-app { height: 50px; background: #010409; border-top: 1px solid #1e293b; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; flex-shrink: 0; }
+        .alert-badge { padding: 4px 10px; border-radius: 4px; font-weight: 900; font-size: 9px; text-transform: uppercase; }
+        .alert-verde { background: #065f46; color: #34d399; }
+        .alert-gialla { background: #854d0e; color: #fde047; }
+        .alert-arancio { background: #9a3412; color: #ffedd5; }
+        .alert-rossa { background: #7f1d1d; color: #fee2e2; }
     </style>
 </head>
 <body class="p-3">
 
     <div id="off-screen" class="fixed inset-0 z-[10000] bg-slate-950 flex flex-col items-center justify-center p-6 text-center hidden">
-        <div class="text-slate-700 text-6xl mb-4">🌑</div>
-        <h1 class="title-pc !text-2xl mb-2">APP DISATTIVATA</h1>
+        <h1 class="title-pc !text-2xl mb-2 text-center">APP DISATTIVATA</h1>
         <p class="text-slate-500 text-[10px] uppercase tracking-[0.2em]">Contattare la Sala Operativa</p>
     </div>
 
     <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-950 flex items-center justify-center p-6 text-center">
-        <div class="w-full max-w-sm glass p-8 rounded-[2.5rem] border border-blue-500/30">
-            <h1 class="title-pc mb-8 text-center w-full">PROTEZIONE CIVILE THIENE</h1>
+        <div class="w-full max-w-sm glass p-8 rounded-[2.5rem] border border-blue-500/30 shadow-2xl">
+            <h1 class="title-pc mb-8 text-center w-full">PROTEZIONE CIVILE<br>THIENE</h1>
             <input type="password" id="app-password" class="w-full bg-slate-900 border-2 border-slate-700 rounded-2xl p-4 text-center text-4xl mb-6 text-white outline-none" placeholder="••••" inputmode="numeric">
             <button onclick="checkPass()" class="w-full bg-blue-600 text-white font-bold py-5 rounded-2xl uppercase tracking-widest active:bg-blue-700 shadow-lg">Accedi</button>
         </div>
@@ -55,12 +61,14 @@
     <div id="main-app" class="flex-1 flex flex-col hidden h-full overflow-hidden">
         <header class="flex justify-between items-start mb-6 shrink-0 px-1">
             <div class="flex flex-col gap-1 border-l-4 border-blue-600 pl-3">
-                <h1 class="title-pc mb-1">PROTEZIONE CIVILE<br>THIENE</h1>
-                <span id="sq-name">---</span>
-                <span id="sq-members">CARICAMENTO...</span>
+                <h1 class="title-pc">PROTEZIONE CIVILE<br>THIENE</h1>
+                <div class="mt-2">
+                    <span id="sq-name">---</span><br>
+                    <span id="sq-members">CARICAMENTO OPERATORI...</span>
+                </div>
             </div>
             <div class="flex flex-col items-end gap-1">
-                <span class="text-[8px] font-black text-slate-500 uppercase">GPS</span>
+                <span class="text-[8px] font-black text-slate-500 uppercase">GPS ATTIVO</span>
                 <label class="switch">
                     <input type="checkbox" id="gps-toggle" checked>
                     <span class="slider"></span>
@@ -87,38 +95,37 @@
                     <p class="text-[8px] font-black text-slate-500 uppercase tracking-[0.3em] mb-2">STATO ATTUALE UNITÀ</p>
                     <div id="current-status" class="text-3xl font-black text-blue-500 italic mb-4 uppercase tracking-tighter">---</div>
                     <div class="grid grid-cols-4 gap-2">
-                        <button onclick="askStatus('Sede', '🏠')" class="bg-slate-800/80 py-4 rounded-2xl text-[9px] font-bold uppercase border border-white/5">Sede</button>
-                        <button onclick="askStatus('Uscita', '🚚')" class="bg-amber-500 text-black py-4 rounded-2xl text-[9px] font-bold uppercase shadow-lg shadow-amber-500/20">Uscita</button>
-                        <button onclick="askStatus('Intervento', '🚨')" class="bg-red-600 text-white py-4 rounded-2xl text-[9px] font-bold uppercase shadow-lg shadow-red-600/20">Posto</button>
-                        <button onclick="askStatus('Rientro', '🔙')" class="bg-blue-600 text-white py-4 rounded-2xl text-[9px] font-bold uppercase shadow-lg shadow-blue-600/20">Rientro</button>
+                        <button onclick="askStatus('Sede', '🏠')" class="bg-slate-800 py-4 rounded-2xl text-[9px] font-bold uppercase border border-white/5">Sede</button>
+                        <button onclick="askStatus('Uscita', '🚚')" class="bg-amber-500 text-black py-4 rounded-2xl text-[9px] font-bold uppercase shadow-lg">Uscita</button>
+                        <button onclick="askStatus('Intervento', '🚨')" class="bg-red-600 text-white py-4 rounded-2xl text-[9px] font-bold uppercase shadow-lg">Posto</button>
+                        <button onclick="askStatus('Rientro', '🔙')" class="bg-blue-600 text-white py-4 rounded-2xl text-[9px] font-bold uppercase shadow-lg">Rientro</button>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-3 gap-3">
                     <button onclick="document.getElementById('in-foto').click()" class="bg-white text-black rounded-3xl py-6 flex flex-col items-center shadow-xl">
-                        <span class="text-2xl">📷</span><span class="text-[9px] font-black uppercase mt-1 tracking-tighter">Foto</span>
+                        <span class="text-2xl">📷</span><span class="text-[9px] font-black uppercase mt-1">Foto</span>
                         <input type="file" id="in-foto" accept="image/*" capture="camera" class="hidden" onchange="upFoto(this.files[0])">
                     </button>
                     <button id="btn-voc" class="bg-slate-800 rounded-3xl py-6 flex flex-col items-center border border-white/10 shadow-xl">
-                        <span class="text-2xl">🎤</span><span id="voc-txt" class="text-[9px] font-black uppercase mt-1 tracking-tighter">Vocale</span>
+                        <span class="text-2xl">🎤</span><span id="voc-txt" class="text-[9px] font-black uppercase mt-1">Vocale</span>
                     </button>
-                    <button onclick="askGPS()" class="bg-emerald-600 rounded-3xl py-6 flex flex-col items-center shadow-xl shadow-emerald-600/20">
-                        <span class="text-2xl">📍</span><span class="text-[9px] font-black uppercase mt-1 tracking-tighter">GPS</span>
+                    <button onclick="askGPS()" class="bg-emerald-600 rounded-3xl py-6 flex flex-col items-center shadow-xl">
+                        <span class="text-2xl">📍</span><span class="text-[9px] font-black uppercase mt-1">GPS</span>
                     </button>
                 </div>
 
                 <div class="glass rounded-3xl p-3 flex gap-2 border border-white/5">
                     <textarea id="msg-input" class="flex-1 bg-slate-900/50 rounded-2xl p-4 text-xs text-white h-14 outline-none uppercase resize-none placeholder:text-slate-600" placeholder="SCRIVI UN MESSAGGIO..."></textarea>
-                    <button onclick="askFreeMsg()" class="bg-blue-600 px-6 rounded-2xl font-black uppercase text-[10px] shadow-lg shadow-blue-600/20">INVIA</button>
+                    <button onclick="askFreeMsg()" class="bg-blue-600 px-6 rounded-2xl font-black uppercase text-[10px] shadow-lg">INVIA</button>
                 </div>
             </div>
         </section>
 
-        <footer class="shrink-0 py-3 border-t border-slate-800/50 flex justify-between items-center px-4 bg-slate-950/50">
+        <footer class="footer-app">
+            <div id="app-alert-badge" class="alert-badge alert-verde">ALLERTA VERDE</div>
             <div id="ora" class="text-yellow-500 font-mono font-bold text-xs tracking-[0.2em]">00:00:00</div>
-            <div class="flex items-center gap-1 opacity-50">
-                <span class="text-[9px] font-black italic">JoKART 2026</span>
-            </div>
+            <div class="text-[9px] font-black italic opacity-40">EVO ULTIMATE</div>
         </footer>
     </div>
 
@@ -130,10 +137,9 @@
     const app = initializeApp(cfg); const db = getDatabase(app);
     const urlParams = new URLSearchParams(window.location.search);
     const sqId = (urlParams.get('id') || "TEST").toUpperCase();
-    document.getElementById('sq-name').innerText = "UNITÀ: " + sqId;
 
     let idSalaAttivo = null;
-    let viaAttiva = "";
+    let viaAttiva = "IN ATTESA DI ORDINI";
 
     window.checkPass = () => {
         if (document.getElementById('app-password').value === "2026") {
@@ -207,9 +213,12 @@
 
     window.navig = (lat, lng) => { window.open(`http://googleusercontent.com/maps.google.com/maps?daddr=${lat},${lng}&travelmode=driving`, '_blank'); };
 
-    onValue(query(ref(db, 'brogliaccio'), limitToLast(12)), (snap) => {
+    // --- RICEZIONE ORDINI E SINCRONIZZAZIONE TESTI ---
+    onValue(query(ref(db, 'brogliaccio'), limitToLast(15)), (snap) => {
         const data = snap.val(); if (!data) return;
         const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).sort((a, b) => b.id.localeCompare(a.id));
+        
+        // Trova l'ultimo comando della sala per questa squadra
         const sala = logs.find(l => l.dir === 'SA' && (l.squadra === sqId || l.squadra === "TUTTE"));
         
         const wrapper = document.getElementById('wrapper-msg');
@@ -220,7 +229,9 @@
         const controls = document.getElementById('controls-area');
 
         if (sala) {
-            idSalaAttivo = sala.id; viaAttiva = sala.m1; testo.innerText = viaAttiva;
+            idSalaAttivo = sala.id;
+            viaAttiva = sala.m1; // Salva la via per mostrarla anche dopo come "Ultima Destinazione"
+            testo.innerText = viaAttiva;
             const tLat = sala.lat || sala.LAT;
 
             if (tLat && sala.stato !== 'OK') {
@@ -239,21 +250,31 @@
                     </div>`;
                 }
             } else {
+                // STATO OK: MOSTRA ULTIMA DESTINAZIONE
                 if(lock) lock.classList.add('hidden');
                 if(controls) { controls.style.opacity = "1"; controls.style.pointerEvents = "auto"; }
                 wrapper.className = "glass p-5 rounded-[2.5rem] border-l-4 border-blue-500 bg-blue-500/10 shadow-2xl flex flex-col justify-center min-h-[110px]";
-                label.innerText = (sala.stato === 'OK') ? "IN ATTESA DI ORDINI" : "✉️ COMUNICAZIONE DALLA SALA:";
+                label.innerText = "🏁 ULTIMA DESTINAZIONE:";
                 label.style.color = "#3b82f6"; pulsanti.classList.add('hidden');
             }
         }
     });
 
+    // --- SINCRONIZZAZIONE ANAGRAFICA E ALLERTA ---
     onValue(ref(db, `anagrafica_squadre/${sqId}`), (s) => {
         const d = s.val(); if(!d) return;
+        document.getElementById('sq-name').innerText = "UNITÀ: " + sqId;
         document.getElementById('current-status').innerText = (d.stato || "---").toUpperCase();
         document.getElementById('sq-members').innerText = (d.nomi || "OPERATORI NON SPECIFICATI");
         if(d.stato === 'DISATTIVATA' || d.attiva === false) document.getElementById('off-screen').classList.remove('hidden');
         else document.getElementById('off-screen').classList.add('hidden');
+    });
+
+    onValue(ref(db, 'configurazione/allerta_meteo'), (snap) => {
+        const val = snap.val() || 'VERDE';
+        const b = document.getElementById('app-alert-badge');
+        b.innerText = `ALLERTA ${val}`;
+        b.className = `alert-badge alert-${val.toLowerCase()}`;
     });
 
     window.upFoto = (f) => {
