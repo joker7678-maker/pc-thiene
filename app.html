@@ -3,229 +3,351 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PC THIENE - APP OPERATIVA</title>
+    <title>PC THIENE - EVO ULTIMATE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-        .btn-status { @apply flex flex-col items-center justify-center rounded-2xl transition-all active:scale-95 border-b-4 font-bold uppercase text-xs p-3; }
-        .btn-media { @apply flex flex-col items-center justify-center rounded-xl bg-slate-800 border border-slate-700 active:bg-slate-700 h-16; }
-        #lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-        .btn-lock-main { @apply w-full py-6 rounded-3xl font-black uppercase text-xl shadow-2xl transition-all active:scale-95; }
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-        .animate-pulse-red { animation: pulse-red 1.5s infinite; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@700&display=swap');
+        
+        :root { --vh: 1vh; }
+        html, body { height: 100vh; height: calc(var(--vh, 1vh) * 100); margin: 0; padding: 0; overflow: hidden; }
+        
+/* Forza un peso leggero su tutta la pagina */
+body { 
+    font-family: 'Inter', sans-serif; 
+    font-weight: 400 !important; 
+    color: #1e293b;
+}
+
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        
+        .title-pc { 
+            font-weight: 900; font-size: 1.4rem; text-transform: uppercase; 
+            background: linear-gradient(to bottom, #ffffff 40%, #94a3b8 100%); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+            line-height: 1; letter-spacing: -0.02em;
+        }
+
+        #sq-name { font-size: 20px; font-weight: 900; color: #3b82f6; text-transform: uppercase; line-height: 1.1; }
+        #sq-members { font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: 600; }
+
+        .footer-app { 
+            height: 50px; 
+            background: #010409; 
+            border-top: 1px solid #1e293b; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 0 15px; 
+            flex-shrink: 0;
+        }
+
+        .alert-badge { padding: 4px 10px; border-radius: 4px; font-weight: 900; font-size: 9px; text-transform: uppercase; }
+        .alert-verde { background: #065f46; color: #34d399; }
+        .alert-gialla { background: #854d0e; color: #fde047; }
+        .alert-arancio { background: #9a3412; color: #ffedd5; }
+        .alert-rossa { background: #7f1d1d; color: #fee2e2; }
+
+        .switch { position: relative; display: inline-block; width: 38px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #10b981; }
+        input:checked + .slider:before { transform: translateX(18px); }
+
+        .btn-mini-nav { background: #10b981; color: white; font-size: 10px; font-weight: 900; padding: 6px 12px; border-radius: 8px; margin-top: 8px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-    <div id="lock-screen" class="hidden">
-        <div class="mb-6">
-            <span class="text-7xl block mb-2">📍</span>
-            <h2 id="label-msg" class="text-red-500 font-black tracking-tighter text-3xl uppercase">TARGET</h2>
-        </div>
-        <div class="bg-white/10 p-6 rounded-3xl border border-white/20 w-full mb-8 shadow-inner">
-            <p id="testo-msg" class="text-2xl font-bold italic text-white leading-tight">Attendere...</p>
-        </div>
-        <div id="lock-actions" class="w-full flex flex-col gap-4"></div>
+    <div id="off-screen" class="fixed inset-0 z-[10000] bg-slate-950 flex flex-col items-center justify-center p-6 text-center hidden">
+        <h1 class="title-pc !text-2xl mb-2">APP DISATTIVATA</h1>
+        <p class="text-slate-500 text-[10px] uppercase tracking-[0.2em]">Contattare la Sala Operativa</p>
     </div>
 
-    <header class="p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0">
-        <div>
-            <h1 id="display-sq" class="font-black text-2xl tracking-tighter text-blue-400 leading-none">---</h1>
-            <p class="text-[9px] text-slate-500 uppercase font-bold tracking-[0.2em] mt-1">Protezione Civile Thiene</p>
+    <div id="login-overlay" class="fixed inset-0 z-[9999] bg-slate-950 flex items-center justify-center p-6 text-center hidden">
+        <div class="w-full max-w-sm glass p-8 rounded-[2.5rem] border border-blue-500/30">
+            <h1 class="title-pc mb-8 text-center">PROTEZIONE CIVILE<br>THIENE</h1>
+            <input type="password" id="app-password" class="w-full bg-slate-900 border-2 border-slate-700 rounded-2xl p-4 text-center text-4xl mb-6 text-white outline-none" placeholder="••••" inputmode="numeric">
+            <button onclick="checkPass(true)" class="w-full bg-blue-600 text-white font-bold py-5 rounded-2xl active:bg-blue-700">Accedi</button>
         </div>
-        <div class="text-right">
-            <div id="clock" class="font-mono text-xl font-bold text-yellow-500 leading-none">00:00</div>
-            <div class="text-[8px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 font-bold uppercase mt-1">Link Attivo</div>
-        </div>
-    </header>
+    </div>
 
-    <main class="flex-1 overflow-y-auto p-4 space-y-6">
-        <div class="grid grid-cols-3 gap-3">
-            <button onclick="window.askStatus('Sede', '🏠')" class="btn-status bg-emerald-600 border-emerald-800 text-white">
-                <span class="text-2xl mb-1">🏠</span> Sede
-            </button>
-            <button onclick="window.askStatus('Uscita', '🚚')" class="btn-status bg-amber-500 border-amber-700 text-white">
-                <span class="text-2xl mb-1">🚚</span> Uscita
-            </button>
-            <button onclick="window.askStatus('Rientro', '🔙')" class="btn-status bg-sky-500 border-sky-700 text-white">
-                <span class="text-2xl mb-1">🔙</span> Rientro
-            </button>
+    <div id="main-app" class="flex-1 flex flex-col hidden h-full overflow-hidden">
+        
+        <div id="lock-screen" class="fixed inset-0 z-[999] bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 hidden">
+            <div class="text-red-500 text-6xl mb-4 animate-pulse">🚨</div>
+            <h2 class="text-white font-black text-xl uppercase tracking-tighter mb-2">SPOSTAMENTO IN CORSO</h2>
+            <div id="lock-actions" class="w-full max-w-xs space-y-3 mt-4"></div>
         </div>
 
-        <div class="space-y-3">
-            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Comunicazioni Multimediali</label>
+<header class="header-compact bg-slate-950 flex items-center justify-between px-6 border-b-2 border-blue-600 z-[100] shadow-2xl">
+    
+    <div class="flex flex-col justify-center border-l-4 border-blue-600 pl-4 shrink-0">
+        <span class="monitor-title-pro text-white leading-none" style="font-weight: 400 !important; font-size: 1.5rem !important;">PROTEZIONE CIVILE THIENE</span>
+        <span class="text-[9px] text-blue-400 uppercase tracking-[0.3em] mt-1" style="font-weight: 400 !important;">Master Dashboard v78.14</span>
+    </div>
+
+    <div class="flex gap-2 items-center bg-slate-900/40 p-2 rounded-2xl border border-slate-800 mx-4">
+        <div class="stat-box">
+            <span id="stat-sq-tot" class="stat-value">0</span>
+            <span class="stat-label">Squadre</span>
+        </div>
+        <div class="stat-box">
+            <span id="stat-log-tot" class="stat-value">0</span>
+            <span class="stat-label">Log Tot</span>
+        </div>
+        <div id="box-attesa" class="stat-box">
+            <span id="stat-attesa" class="stat-value text-red-500">0</span>
+            <span class="stat-label text-red-500">Attesa</span>
+        </div>
+    </div>
+
+    <div class="flex items-center gap-4">
+        <button id="btn-op-gestione" onclick="window.gestioneOperatore()" class="bg-slate-800 hover:bg-slate-700 text-white rounded-xl border border-slate-600 uppercase transition-all" style="height: 60px !important; min-width: 120px !important; font-weight: 400 !important;">
+            👤 O.RADIO
+        </button>
+    </div>
+</header>
+
+        <main class="px-4 mb-4 shrink-0">
+            <div id="wrapper-msg" class="glass p-5 rounded-[2rem] border-l-4 border-blue-500 shadow-xl flex flex-col justify-center min-h-[120px]">
+                <p id="label-msg" class="text-[8px] font-bold text-blue-400 uppercase mb-1 tracking-[0.1em]">IN ASCOLTO...</p>
+                <p id="testo-msg" class="text-[17px] font-semibold text-slate-100 uppercase italic leading-snug">In attesa di ordini</p>
+                <div id="area-pulsanti-nav" class="hidden"><button id="btn-re-nav" class="btn-mini-nav">📍 RAGGIUNGI POSIZIONE</button></div>
+                <div id="area-pulsanti" class="hidden mt-3 pt-2 border-t border-white/10"></div>
+            </div>
+        </main>
+
+        <section id="controls-area" class="flex-1 px-4 flex flex-col justify-between space-y-4 pb-4">
+            <div class="glass rounded-[2rem] p-4 text-center">
+                <p class="text-[8px] font-black text-slate-500 uppercase mb-1 tracking-[0.2em]">STATO ATTUALE UNITÀ</p>
+                <div id="current-status" class="text-3xl font-black text-blue-500 italic mb-4 uppercase tracking-tighter">---</div>
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="askStatus('Sede', '🏠')" class="bg-slate-800 py-4 rounded-xl text-[9px] font-bold uppercase">Sede</button>
+                    <button onclick="askStatus('Uscita', '🚚')" class="bg-amber-500 text-black py-4 rounded-xl text-[9px] font-bold uppercase">Uscita</button>
+                    <button onclick="askStatus('Intervento', '🚨')" class="bg-red-600 text-white py-4 rounded-xl text-[9px] font-bold uppercase">Posto</button>
+                    <button onclick="askStatus('Rientro', '🔙')" class="bg-blue-600 text-white py-4 rounded-xl text-[9px] font-bold uppercase">Rientro</button>
+                </div>
+            </div>
+
             <div class="grid grid-cols-3 gap-3">
-                <button onclick="document.getElementById('file-foto').click()" class="btn-media text-white">
-                    <span class="text-xl">📷</span><span class="text-[10px] mt-1 font-bold">FOTO</span>
+                <button onclick="document.getElementById('in-foto').click()" class="bg-white text-black rounded-2xl py-5 flex flex-col items-center shadow-lg">
+                    <span class="text-2xl">📷</span><span class="text-[9px] font-black uppercase mt-1">Foto</span>
+                    <input type="file" id="in-foto" accept="image/*" capture="camera" class="hidden" onchange="upFoto(this.files[0])">
                 </button>
-                <button id="btn-voc" class="btn-media text-white">
-                    <span id="voc-icon" class="text-xl">🎤</span><span id="voc-txt" class="text-[10px] mt-1 font-bold">VOCALE</span>
+                <button id="btn-voc" class="bg-slate-800 rounded-2xl py-5 flex flex-col items-center border border-white/10">
+                    <span class="text-2xl">🎤</span><span id="voc-txt" class="text-[9px] font-black uppercase mt-1">Vocale</span>
                 </button>
-                <button onclick="window.askGPS()" class="btn-media text-emerald-400">
-                    <span class="text-xl">📍</span><span class="text-[10px] mt-1 font-bold">GPS</span>
+                <button onclick="askGPS()" class="bg-emerald-600 rounded-2xl py-5 flex flex-col items-center shadow-lg">
+                    <span class="text-2xl">📍</span><span class="text-[9px] font-black uppercase mt-1">GPS</span>
                 </button>
             </div>
-            <input type="file" id="file-foto" accept="image/*" capture="camera" class="hidden" onchange="window.upFoto(this.files[0])">
-        </div>
 
-        <div class="bg-slate-800/50 p-4 rounded-2xl border border-slate-700">
-            <textarea id="msg-input" class="w-full bg-transparent border-none focus:ring-0 text-base placeholder-slate-600 resize-none h-20" placeholder="Scrivi un messaggio..."></textarea>
-            <button onclick="window.askFreeMsg()" class="w-full mt-2 py-4 bg-blue-600 rounded-xl font-bold uppercase text-xs shadow-lg">Invia alla Sala</button>
-        </div>
-    </main>
+            <div class="glass rounded-xl p-2 flex gap-2 border border-white/10">
+                <textarea id="msg-input" class="flex-1 bg-slate-900/50 rounded-lg p-3 text-[12px] text-white h-12 outline-none uppercase resize-none placeholder:text-slate-700" placeholder="MESSAGGIO..."></textarea>
+                <button onclick="askFreeMsg()" class="bg-blue-600 px-5 rounded-xl font-black uppercase text-[10px]">INVIA</button>
+            </div>
+        </section>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getDatabase, ref, push, onValue, update, query, limitToLast, set } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+        <footer class="footer-app">
+            <div id="app-alert-badge" class="alert-badge alert-verde">ALLERTA VERDE</div>
+            <div id="ora" class="text-yellow-500 font-mono font-bold text-[12px]">00:00:00</div>
+            <div class="text-[8px] font-black italic opacity-30">PC THIENE EVO</div>
+        </footer>
+    </div>
 
-        const cfg = { apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54", databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com" };
-        const app = initializeApp(cfg); const db = getDatabase(app);
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import { getDatabase, ref, push, onValue, update, query, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const sqId = (urlParams.get('id') || "TEST").trim().toUpperCase();
-        document.getElementById('display-sq').innerText = sqId;
+    const cfg = { apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54", databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com" };
+    const app = initializeApp(cfg); const db = getDatabase(app);
 
-        let idSalaAttivo = null, viaAttiva = "", coordinateAttive = { lat: null, lng: null };
+    const updateVH = () => {
+        let vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+    window.addEventListener('resize', updateVH);
+    updateVH();
 
-        // --- INVIO LOG CON FEEDBACK ---
-        async function inviaLog(testo, extra = {}) {
-            const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-            try {
-                await push(ref(db, 'brogliaccio'), { ora, data: new Date().toLocaleDateString('it-IT'), squadra: sqId, m1: testo.toUpperCase(), dir: 'SQ', stato: 'OK', ...extra });
-                Swal.fire({ icon: 'success', title: 'INVIATO', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
-            } catch (e) { Swal.fire('Errore', 'Connessione Fallita', 'error'); }
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 600;
+
+    window.checkPass = (force = false) => {
+        const pass = document.getElementById('app-password').value;
+        if (force || pass === "2026" || isMobile) {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('main-app').classList.remove('hidden');
+            updateVH();
+        } else {
+            document.getElementById('login-overlay').classList.remove('hidden');
         }
+    };
 
-        // --- DOPPIA CONFERMA STATI ---
-        window.askStatus = (s, icon) => {
-            Swal.fire({ title: `CONFERMI?`, html: `${icon} <b>${s.toUpperCase()}</b>`, showCancelButton: true, confirmButtonText: 'SÌ', confirmButtonColor: '#2563eb' })
-            .then((r) => { if(r.isConfirmed) { update(ref(db, `anagrafica_squadre/${sqId}`), { stato: s }); inviaLog(`STATO: ${icon} ${s}`); } });
-        };
+    if (isMobile) { checkPass(true); } else { document.getElementById('login-overlay').classList.remove('hidden'); }
 
-        // --- DOPPIA CONFERMA GPS ---
-        window.askGPS = () => {
-            Swal.fire({ title: 'INVIARE GPS?', text: 'Aggiorna la tua posizione attuale', icon: 'question', showCancelButton: true })
-            .then((r) => { if(r.isConfirmed) { 
-                navigator.geolocation.getCurrentPosition(async (p) => { 
-                    const coords = { lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) }; 
-                    await update(ref(db, `anagrafica_squadre/${sqId}`), coords); 
-                    inviaLog("📍 GPS AGGIORNATO", coords); 
-                }); 
-            }});
-        };
+    const urlParams = new URLSearchParams(window.location.search);
+    const sqId = (urlParams.get('id') || "TEST").toUpperCase();
 
-        // --- DOPPIA CONFERMA FOTO ---
-        window.upFoto = (f) => {
-            if (!f) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                Swal.fire({ title: 'INVIARE FOTO?', html: `<img src="${e.target.result}" class="w-full rounded-lg">`, showCancelButton: true, confirmButtonText: 'INVIA' })
-                .then((r) => { if(r.isConfirmed) inviaLog("📷 FOTO INVIATA", { mediaUrl: e.target.result, mediaType: 'IMG' }); });
-            }; reader.readAsDataURL(f);
-        };
+    let idSalaAttivo = null;
+    let viaAttiva = "IN ATTESA DI ORDINI";
+    let ultimaPos = { lat: null, lng: null };
 
-        // --- DOPPIA CONFERMA AUDIO ---
-        let mediaRecorder; let audioChunks = [];
-        document.getElementById('btn-voc').onclick = async () => {
-            const btn = document.getElementById('btn-voc');
-            if (!mediaRecorder || mediaRecorder.state === "inactive") {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream); audioChunks = [];
-                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const r = new FileReader();
-                    r.onload = (e) => {
-                        Swal.fire({ title: 'INVIARE VOCALE?', html: `<audio controls class="w-full mt-2"><source src="${e.target.result}"></audio>`, showCancelButton: true, confirmButtonText: 'INVIA' })
-                        .then((res) => { if(res.isConfirmed) inviaLog("🎤 VOCALE INVIATO", { mediaUrl: e.target.result, mediaType: 'AUDIO' }); });
-                    }; r.readAsDataURL(audioBlob);
-                };
-                mediaRecorder.start(); btn.classList.add('bg-red-600', 'animate-pulse'); document.getElementById('voc-icon').innerText = "🛑";
-            } else { mediaRecorder.stop(); btn.classList.remove('bg-red-600', 'animate-pulse'); document.getElementById('voc-icon').innerText = "🎤"; }
-        };
+    setInterval(() => { document.getElementById('ora').innerText = new Date().toLocaleTimeString('it-IT'); }, 1000);
 
-        window.askFreeMsg = () => {
-            const m = document.getElementById('msg-input').value.trim();
-            if(!m) return;
-            inviaLog(m).then(() => document.getElementById('msg-input').value = "");
-        };
+    // ... (Logica Firebase Invariata) ...
+    async function inviaNuovo(testo, stato = 'OK', extra = {}) {
+        const ora = new Date().toLocaleTimeString('it-IT').slice(0,5);
+        let pos = { lat: '', lng: '' };
+        if (navigator.geolocation && document.getElementById('gps-toggle').checked) {
+            try {
+                const p = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3000 }));
+                pos = { lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) };
+                update(ref(db, `anagrafica_squadre/${sqId}`), { ...pos, ultimo_contatto: ora });
+            } catch (e) {}
+        }
+        return push(ref(db, 'brogliaccio'), { ora, squadra: sqId, m1: testo.toUpperCase(), dir: 'SQ', stato, ...pos, ...extra });
+    }
 
-        // --- GESTIONE TARGET OPERATIVO ---
-
-        window.confermaDestinazione = async () => {
-            if (idSalaAttivo) {
-                await update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'RICEVUTO' });
-                inviaLog(`✅ DESTINAZIONE RICEVUTA: ${viaAttiva}`);
+    window.askStatus = (s, icon) => {
+        Swal.fire({ title: 'STATO?', text: s, showCancelButton: true }).then((r) => {
+            if(r.isConfirmed) { 
+                update(ref(db, `anagrafica_squadre/${sqId}`), { stato: s }); 
+                inviaNuovo(`STATO: ${icon} ${s}`, 'ATTESA'); 
             }
-        };
+        });
+    };
 
-        window.apriNavigatore = () => {
-            if (coordinateAttive.lat) {
-                const url = `https://www.google.com/maps/dir/?api=1&destination=${coordinateAttive.lat},${coordinateAttive.lng}&travelmode=driving`;
-                window.open(url, '_blank');
-            }
-        };
+    window.askGPS = () => inviaNuovo("📍 AGGIORNAMENTO GPS", 'ATTESA');
+    window.askFreeMsg = () => {
+        const t = document.getElementById('msg-input').value.trim();
+        if(!t) return;
+        inviaNuovo(t, 'ATTESA').then(() => { document.getElementById('msg-input').value = ""; });
+    };
 
-        window.confermaArrivo = () => {
-            Swal.fire({ 
-                title: 'CONFERMI ARRIVO?', 
-                text: 'Siete fisicamente sul posto?', 
-                icon: 'warning', 
-                showCancelButton: true, 
-                confirmButtonText: 'SÌ, SUL POSTO!', 
-                confirmButtonColor: '#dc2626' 
-            }).then(async (r) => {
-                if (r.isConfirmed) {
-                    await update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'OK', m2: 'SQUADRA ARRIVATA' });
-                    await update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: coordinateAttive.lat, lng: coordinateAttive.lng });
-                    inviaLog(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`);
-                    idSalaAttivo = null;
-                }
-            });
-        };
+    window.cRic = () => { if (idSalaAttivo) update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'RICEVUTO', m2: "✅ RICEVUTA" }); };
+    window.cArr = () => {
+        if (!idSalaAttivo) return;
+        update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'OK' });
+        inviaNuovo(`🏁 ARRIVATI: ${viaAttiva}`, 'ATTESA');
+        update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
+        idSalaAttivo = null;
+    };
+    window.navig = (lat, lng) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank'); };
 
-        // --- ASCOLTO PERENNE TARGET ---
-        onValue(query(ref(db, 'brogliaccio'), limitToLast(10)), (snap) => {
-            const data = snap.val(); if (!data) return;
-            const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).reverse();
-            
-            // Trova l'ultimo target per questa squadra specifica che non sia già completato (OK)
-            const target = logs.find(l => l.squadra === sqId && l.m1 && l.m1.includes('📍') && l.stato !== 'OK');
-            
-            const lock = document.getElementById('lock-screen');
-            const lockActions = document.getElementById('lock-actions');
-            const testoMsg = document.getElementById('testo-msg');
-            const labelMsg = document.getElementById('label-msg');
+    onValue(query(ref(db, 'brogliaccio'), limitToLast(15)), (snap) => {
+        const data = snap.val(); if (!data) return;
+        const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).sort((a, b) => b.id.localeCompare(a.id));
+        const sala = logs.find(l => l.dir === 'SA' && (l.squadra === sqId || l.squadra === "TUTTE"));
+        const wrapper = document.getElementById('wrapper-msg');
+        const label = document.getElementById('label-msg');
+        const testo = document.getElementById('testo-msg');
+        const lock = document.getElementById('lock-screen');
+        const lockActions = document.getElementById('lock-actions');
+        const controls = document.getElementById('controls-area');
+        const reNav = document.getElementById('area-pulsanti-nav');
 
-            if (target) {
-                idSalaAttivo = target.id;
-                viaAttiva = target.m1.replace('📍', '').trim();
-                coordinateAttive = { lat: target.lat, lng: target.lng };
-                
-                testoMsg.innerText = viaAttiva; // Forza la scrittura del testo
+        if (sala) {
+            idSalaAttivo = sala.id; viaAttiva = sala.m1; testo.innerText = viaAttiva;
+            const tLat = sala.lat || sala.LAT; const tLng = sala.lng || sala.LNG;
+            if (tLat && tLng) { ultimaPos = { lat: tLat, lng: tLng }; document.getElementById('btn-re-nav').onclick = () => window.navig(tLat, tLng); }
+            if (tLat && sala.stato !== 'OK') {
                 lock.classList.remove('hidden');
-
-                if (target.stato === 'ATTESA') {
-                    labelMsg.innerText = "🚨 NUOVO TARGET";
-                    labelMsg.className = "text-red-500 font-black text-3xl uppercase animate-pulse";
-                    lockActions.innerHTML = `<button onclick="confermaDestinazione()" class="btn-lock-main bg-blue-600 text-white animate-pulse-red">✅ OK, RICEVUTO</button>`;
+                controls.style.opacity = "0.1"; controls.style.pointerEvents = "none";
+                wrapper.className = "glass p-5 rounded-[2rem] border-l-4 border-red-600 bg-red-950/20 shadow-xl flex flex-col justify-center min-h-[120px]";
+                label.innerText = "🚨 ORDINE RICEVUTO:"; label.style.color = "#ef4444";
+                reNav.classList.add('hidden');
+                if (sala.stato === 'ATTESA') {
+                    lockActions.innerHTML = `<button onclick="cRic()" class="w-full bg-blue-600 py-5 rounded-3xl font-black uppercase text-xl">✅ RICEVUTO</button>`;
                 } else {
-                    labelMsg.innerText = "🚚 IN VIAGGIO...";
-                    labelMsg.className = "text-blue-400 font-black text-2xl uppercase";
                     lockActions.innerHTML = `
-                        <button onclick="apriNavigatore()" class="btn-lock-main bg-emerald-600 text-white">📍 APRI NAVIGATORE</button>
-                        <button onclick="confermaArrivo()" class="btn-lock-main bg-red-600 text-white text-sm py-4">🏁 CONFERMA ARRIVO</button>
-                    `;
+                        <button onclick="window.navig(${tLat}, ${tLng})" class="w-full bg-emerald-600 py-4 rounded-2xl font-black uppercase text-sm mb-3">📍 NAVIGA</button>
+                        <button onclick="cArr()" class="w-full bg-red-600 py-4 rounded-2xl font-black uppercase text-sm">🏁 ARRIVATI</button>`;
                 }
             } else {
                 lock.classList.add('hidden');
+                controls.style.opacity = "1"; controls.style.pointerEvents = "auto";
+                wrapper.className = "glass p-5 rounded-[2rem] border-l-4 border-blue-500 bg-blue-500/10 shadow-xl flex flex-col justify-center min-h-[120px]";
+                label.innerText = "🏁 ULTIMA DESTINAZIONE:"; label.style.color = "#3b82f6";
+                if(ultimaPos.lat) reNav.classList.remove('hidden');
             }
-        });
+        }
+    });
 
-        setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }); }, 1000);
+// --- ASCOLTO SQUADRE E AGGIORNAMENTO BOTTONE APP ON/OFF ---
+    onValue(ref(db, 'anagrafica_squadre'), (snapshot) => {
+        const data = snapshot.val() || {};
+        window.ana = data;
+        
+        // 1. Renderizza la lista
+        if (typeof window.renderizzaSquadre === 'function') {
+            window.renderizzaSquadre(data);
+        }
 
-    </script>
+        // 2. Controlla lo stato generale e aggiorna il bottone "APP ON"
+        const btnMaster = document.getElementById('btn-master-toggle');
+        if (btnMaster) {
+            let isAttivo = false;
+            // Se c'è almeno una squadra attiva, il sistema è considerato ON
+            for (let key in data) {
+                if (key !== "COMUNICAZIONE GENERALE" && data[key].attiva !== false) {
+                    isAttivo = true;
+                    break;
+                }
+            }
+            
+            if (isAttivo) {
+                btnMaster.innerHTML = '⚡ APP ON';
+                btnMaster.style.backgroundColor = '#10b981'; // Verde Smeraldo
+                btnMaster.style.color = '#ffffff';
+                btnMaster.style.borderColor = '#047857';
+            } else {
+                btnMaster.innerHTML = '🛑 APP OFF';
+                btnMaster.style.backgroundColor = '#dc2626'; // Rosso Allarme
+                btnMaster.style.color = '#ffffff';
+                btnMaster.style.borderColor = '#991b1b';
+            }
+        }
+    });
+
+    onValue(ref(db, 'configurazione/allerta_meteo'), (snap) => {
+        const val = snap.val() || 'VERDE';
+        const b = document.getElementById('app-alert-badge');
+        b.innerText = `ALLERTA ${val}`;
+        b.className = `alert-badge alert-${val.toLowerCase()}`;
+    });
+
+    window.upFoto = (f) => {
+        if (!f) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            Swal.fire({ title: 'FOTO?', html: `<img src="${e.target.result}" class="w-full rounded-lg">`, showCancelButton: true }).then((r) => {
+                if(r.isConfirmed) inviaNuovo("📷 FOTO", 'ATTESA', { mediaUrl: e.target.result, mediaType: 'IMG' });
+            });
+        }; reader.readAsDataURL(f);
+    };
+
+    let mediaRecorder; let audioChunks = [];
+    document.getElementById('btn-voc').onclick = async () => {
+        const btn = document.getElementById('btn-voc');
+        if (!mediaRecorder || mediaRecorder.state === "inactive") {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream); audioChunks = [];
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const r = new FileReader();
+                r.onload = (e) => {
+                    Swal.fire({ title: 'VOCALE?', html: `<audio controls class="w-full mt-2"><source src="${e.target.result}"></audio>`, showCancelButton: true }).then((res) => {
+                        if(res.isConfirmed) inviaNuovo("🎤 VOCALE", 'ATTESA', { mediaUrl: e.target.result, mediaType: 'AUDIO' });
+                    });
+                }; r.readAsDataURL(audioBlob);
+            };
+            mediaRecorder.start(); btn.classList.add('bg-recording'); document.getElementById('voc-txt').innerText = "REC";
+        } else {
+            mediaRecorder.stop(); btn.classList.remove('bg-recording'); document.getElementById('voc-txt').innerText = "VOCALE";
+        }
+    };
+</script>
 </body>
 </html>
