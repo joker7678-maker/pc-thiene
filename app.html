@@ -16,6 +16,10 @@
             overflow: hidden; display: flex; flex-direction: column; margin: 0; font-weight: 500; 
         }
         
+        /* SCHERMATE DI BLOCCO (Login, App Spenta) */
+        #off-screen, #login-screen { position: fixed; inset: 0; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; background: #020617; }
+        #login-screen { z-index: 20000; } /* Il login sta sopra tutto */
+
         /* BOTTONI DI STATO COMPATTI */
         .btn-status { 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
@@ -35,9 +39,6 @@
         .btn-media span:first-child { font-size: 20px; margin-bottom: 2px; }
         .btn-media:active { background: #334155; transform: scale(0.95); }
         
-        /* BLOCCO APP SPENTA */
-        #off-screen { position: fixed; inset: 0; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; background: #020617; }
-        
         /* ANIMAZIONI TARGET */
         .pulse-red-border { animation: p-red-border 1.5s infinite; border: 2px solid #ef4444; }
         @keyframes p-red-border { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
@@ -47,6 +48,14 @@
     </style>
 </head>
 <body>
+
+    <div id="login-screen">
+        <div class="text-blue-500 text-6xl mb-4">🛡️</div>
+        <h1 class="font-bold text-2xl mb-2 text-white tracking-wide">ACCESSO RISERVATO</h1>
+        <p class="text-slate-400 text-xs mb-8">Inserisci il codice di sicurezza per attivare l'app.</p>
+        <input type="password" id="pin-input" class="bg-slate-900 border-2 border-slate-700 rounded-xl text-center text-3xl text-white py-3 w-full max-w-[200px] mb-4 tracking-widest outline-none focus:border-blue-500 transition-colors" placeholder="****" inputmode="numeric" maxlength="4">
+        <button onclick="window.checkPin()" class="w-full max-w-[200px] bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-bold uppercase text-sm shadow-lg active:scale-95 transition-all text-white">ACCEDI</button>
+    </div>
 
     <div id="off-screen" style="display: none;">
         <div class="text-slate-600 text-6xl mb-4">🛑</div>
@@ -90,17 +99,17 @@
         </div>
         <input type="file" id="file-foto" accept="image/*" capture="camera" class="hidden" onchange="window.upFoto(this.files[0])">
 
-        <div id="last-msg-banner" class="shrink-0 w-full bg-slate-800/80 rounded-lg p-2 border border-slate-600 flex flex-col justify-center" style="display: none;">
-            <div class="flex justify-between items-center mb-0.5 border-b border-white/10 pb-0.5">
-                <span id="last-msg-title" class="text-[9px] font-bold text-blue-400 uppercase tracking-widest">🎧 DALLA SALA</span>
-                <span id="last-msg-time" class="text-[9px] font-mono text-slate-400">--:--</span>
+        <div id="last-msg-banner" class="shrink-0 w-full bg-slate-800/80 rounded-xl p-3 border border-slate-600 flex flex-col justify-center" style="display: none;">
+            <div class="flex justify-between items-center mb-1 border-b border-white/10 pb-1">
+                <span id="last-msg-title" class="text-[10px] font-bold text-blue-400 uppercase tracking-widest">🎧 DALLA SALA</span>
+                <span id="last-msg-time" class="text-[10px] font-mono text-slate-400">--:--</span>
             </div>
-            <span id="last-msg-text" class="text-[11px] text-white font-medium italic leading-tight truncate"></span>
+            <span id="last-msg-text" class="text-[13px] text-white font-medium italic leading-snug"></span>
         </div>
 
         <div class="mt-auto shrink-0 bg-slate-800/40 p-2 rounded-xl border border-slate-700 flex flex-col gap-2">
-            <textarea id="msg-input" class="w-full bg-slate-900/60 border border-slate-700 rounded-lg p-2 text-xs placeholder-slate-500 resize-none h-11 text-white leading-tight" placeholder="Messaggio libero per la sala..."></textarea>
-            <button onclick="window.askFreeMsg()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold uppercase text-[10px] shadow-lg active:scale-95 transition-all tracking-widest text-white">Invia alla Sala</button>
+            <textarea id="msg-input" class="w-full bg-slate-900/60 border border-slate-700 rounded-lg p-2.5 text-sm placeholder-slate-500 resize-none h-14 text-white leading-tight" placeholder="Messaggio libero per la sala..."></textarea>
+            <button onclick="window.askFreeMsg()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold uppercase text-[11px] shadow-lg active:scale-95 transition-all tracking-widest text-white">Invia alla Sala</button>
         </div>
 
     </main>
@@ -112,6 +121,24 @@
         const cfg = { apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54", databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com" };
         const app = initializeApp(cfg); const db = getDatabase(app);
 
+        // --- GESTIONE PIN / LOGIN ---
+        window.checkPin = () => {
+            const pin = document.getElementById('pin-input').value;
+            if(pin === '2026') {
+                localStorage.setItem('pc_app_auth', 'true');
+                document.getElementById('login-screen').style.display = 'none';
+            } else {
+                Swal.fire({ icon: 'error', title: 'Codice Errato', text: 'Riprova', background: '#1e293b', color: '#fff' });
+                document.getElementById('pin-input').value = '';
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if(localStorage.getItem('pc_app_auth') === 'true') {
+                document.getElementById('login-screen').style.display = 'none';
+            }
+        });
+
         // OROLOGIO
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }); }, 1000);
 
@@ -121,7 +148,7 @@
         const sqId = (sqIdRaw ? sqIdRaw : "TEST").trim().toUpperCase();
         document.getElementById('display-sq').innerText = sqId;
 
-        // RETE E SINCRONIZZAZIONE
+        // RETE
         onValue(ref(db, ".info/connected"), (snap) => {
             const badge = document.getElementById('net-badge');
             if(snap.val() === true) {
@@ -358,13 +385,13 @@
                 document.getElementById('last-msg-text').innerText = `"${lastMsgText}"`;
                 
                 if (isBroadcast) {
-                    msgBanner.className = "shrink-0 w-full bg-amber-900/40 rounded-lg p-2 border border-amber-600/50 flex flex-col justify-center";
+                    msgBanner.className = "shrink-0 w-full bg-amber-900/40 rounded-xl p-3 border border-amber-600/50 flex flex-col justify-center";
                     document.getElementById('last-msg-title').innerText = "📢 COMUNICAZIONE GENERALE";
-                    document.getElementById('last-msg-title').className = "text-[9px] font-bold text-amber-400 uppercase tracking-widest";
+                    document.getElementById('last-msg-title').className = "text-[10px] font-bold text-amber-400 uppercase tracking-widest";
                 } else {
-                    msgBanner.className = "shrink-0 w-full bg-slate-800/80 rounded-lg p-2 border border-slate-600 flex flex-col justify-center";
+                    msgBanner.className = "shrink-0 w-full bg-slate-800/80 rounded-xl p-3 border border-slate-600 flex flex-col justify-center";
                     document.getElementById('last-msg-title').innerText = "🎧 DALLA SALA";
-                    document.getElementById('last-msg-title').className = "text-[9px] font-bold text-blue-400 uppercase tracking-widest";
+                    document.getElementById('last-msg-title').className = "text-[10px] font-bold text-blue-400 uppercase tracking-widest";
                 }
             } else {
                 msgBanner.style.display = 'none';
