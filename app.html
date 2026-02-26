@@ -20,19 +20,19 @@
         .btn-status { 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
             border-radius: 12px; transition: 0.2s; border-bottom-width: 4px; 
-            height: 60px; font-weight: 700; text-transform: uppercase; font-size: 10px; 
+            height: 55px; font-weight: 700; text-transform: uppercase; font-size: 10px; 
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); cursor: pointer; outline: none; line-height: 1;
         }
-        .btn-status span { font-size: 24px; margin-bottom: 4px; }
+        .btn-status span { font-size: 22px; margin-bottom: 2px; }
         .btn-status:active { transform: scale(0.95); }
         
         /* BOTTONI MULTIMEDIALI COMPATTI */
         .btn-media { 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
             border-radius: 12px; background: #1e293b; border: 1px solid #334155; 
-            height: 65px; transition: 0.2s; cursor: pointer; outline: none; 
+            height: 60px; transition: 0.2s; cursor: pointer; outline: none; 
         }
-        .btn-media span:first-child { font-size: 22px; margin-bottom: 2px; }
+        .btn-media span:first-child { font-size: 20px; margin-bottom: 2px; }
         .btn-media:active { background: #334155; transform: scale(0.95); }
         
         /* BLOCCO APP SPENTA */
@@ -65,9 +65,9 @@
         </div>
     </header>
 
-    <main class="flex-1 flex flex-col w-full px-3 py-3 gap-3 overflow-hidden">
+    <main class="flex-1 flex flex-col w-full px-3 py-3 gap-2.5 overflow-hidden">
         
-        <div id="target-banner" class="shrink-0 w-full bg-slate-800/50 rounded-xl p-3 border border-slate-700/50 shadow-inner flex flex-col justify-center min-h-[70px]">
+        <div id="target-banner" class="shrink-0 w-full bg-slate-800/50 rounded-xl p-3 border border-slate-700/50 shadow-inner flex flex-col justify-center min-h-[60px]">
             <div class="text-center text-slate-500 text-[10px] uppercase font-bold italic tracking-widest">Nessun Target in corso</div>
         </div>
 
@@ -90,9 +90,17 @@
         </div>
         <input type="file" id="file-foto" accept="image/*" capture="camera" class="hidden" onchange="window.upFoto(this.files[0])">
 
+        <div id="last-msg-banner" class="shrink-0 w-full bg-slate-800/80 rounded-lg p-2 border border-slate-600 flex flex-col justify-center" style="display: none;">
+            <div class="flex justify-between items-center mb-0.5 border-b border-white/10 pb-0.5">
+                <span id="last-msg-title" class="text-[9px] font-bold text-blue-400 uppercase tracking-widest">🎧 DALLA SALA</span>
+                <span id="last-msg-time" class="text-[9px] font-mono text-slate-400">--:--</span>
+            </div>
+            <span id="last-msg-text" class="text-[11px] text-white font-medium italic leading-tight truncate"></span>
+        </div>
+
         <div class="mt-auto shrink-0 bg-slate-800/40 p-2 rounded-xl border border-slate-700 flex flex-col gap-2">
-            <textarea id="msg-input" class="w-full bg-slate-900/60 border border-slate-700 rounded-lg p-2 text-xs placeholder-slate-500 resize-none h-12 text-white leading-tight" placeholder="Messaggio libero per la sala..."></textarea>
-            <button onclick="window.askFreeMsg()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold uppercase text-[10px] shadow-lg active:scale-95 transition-all tracking-widest text-white">Invia alla Sala</button>
+            <textarea id="msg-input" class="w-full bg-slate-900/60 border border-slate-700 rounded-lg p-2 text-xs placeholder-slate-500 resize-none h-11 text-white leading-tight" placeholder="Messaggio libero per la sala..."></textarea>
+            <button onclick="window.askFreeMsg()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold uppercase text-[10px] shadow-lg active:scale-95 transition-all tracking-widest text-white">Invia alla Sala</button>
         </div>
 
     </main>
@@ -113,7 +121,7 @@
         const sqId = (sqIdRaw ? sqIdRaw : "TEST").trim().toUpperCase();
         document.getElementById('display-sq').innerText = sqId;
 
-        // RETE
+        // RETE E SINCRONIZZAZIONE
         onValue(ref(db, ".info/connected"), (snap) => {
             const badge = document.getElementById('net-badge');
             if(snap.val() === true) {
@@ -144,7 +152,6 @@
             }
 
             try {
-                // Imposta 'stato' di default a 'OK', ma può essere sovrascritto da extra (es. per l'arrivo)
                 await push(ref(db, 'brogliaccio'), { 
                     ora, data: new Date().toLocaleDateString('it-IT'), 
                     squadra: sqId, m1: testo.toUpperCase(), 
@@ -228,9 +235,7 @@
         // --- MOTORE TARGET (NAVIGAZIONE E RISPOSTA INCROCIATA) ---
         window.cRic = async () => {
             if (idSalaAttivo) {
-                // Modifica 1: Scrive la risposta DIRETTAMENTE sul log generato dalla sala
                 await update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'RICEVUTO', m2: '✅ IN VIAGGIO' });
-                // Cambia stato squadra
                 update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Trasferimento' });
             }
         };
@@ -244,19 +249,16 @@
                 icon: 'warning', showCancelButton: true, confirmButtonText: 'SÌ, SUL POSTO', confirmButtonColor: '#dc2626', background: '#1e293b', color: '#fff'
             }).then(async (r) => {
                 if (r.isConfirmed) {
-                    // Chiude il Target aperto
                     await update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'OK', m2: '🏁 SUL POSTO' });
                     
-                    // Forza stato e coordinate in anagrafica
                     const updData = { stato: 'Intervento' };
                     if (ultimaPos.lat && ultimaPos.lng) { updData.lat = ultimaPos.lat; updData.lng = ultimaPos.lng; }
                     await update(ref(db, `anagrafica_squadre/${sqId}`), updData);
                     
-                    // Modifica 2: Crea un NUOVO log di Arrivo, colorato di ROSSO ('ATTESA') così la sala deve prenderne visione e rispondere
                     window.inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, { stato: 'ATTESA' });
 
-                    idSalaAttivo = null; // Libera il target
-                    window.disegnaBannerUltimaDest(); // Lascia il nav disponibile
+                    idSalaAttivo = null; 
+                    window.disegnaBannerUltimaDest(); 
                 }
             });
         };
@@ -273,17 +275,17 @@
                     <button onclick="window.navig(${ultimaPos.lat}, ${ultimaPos.lng})" class="w-[30%] bg-slate-700 hover:bg-slate-600 text-emerald-400 py-2 rounded-lg font-bold text-[9px] uppercase border border-slate-600">📍 NAVIGA</button>
                 `;
             } else {
-                banner.className = "shrink-0 w-full bg-slate-800/50 rounded-xl p-3 border border-slate-700/50 shadow-inner flex flex-col justify-center min-h-[70px]";
+                banner.className = "shrink-0 w-full bg-slate-800/50 rounded-xl p-3 border border-slate-700/50 shadow-inner flex flex-col justify-center min-h-[60px]";
                 banner.innerHTML = `<div class="text-center text-slate-500 text-[10px] uppercase font-bold italic tracking-widest">Nessun Target in corso</div>`;
             }
         };
 
-        // --- ASCOLTO TARGET DA SALA RADIO ---
-        onValue(query(ref(db, 'brogliaccio'), limitToLast(15)), (snap) => {
+        // --- ASCOLTO DATI DA SALA RADIO E GESTIONE RISPOSTE ---
+        onValue(query(ref(db, 'brogliaccio'), limitToLast(20)), (snap) => {
             const data = snap.val(); if (!data) return;
             const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).reverse();
             
-            // Cerca un Target da accettare o in corso
+            // 1. Gestione Target GPS
             const target = logs.find(l => l.dir === 'SA' && l.squadra === sqId && l.m1 && l.m1.includes('📍') && l.stato !== 'OK');
             const banner = document.getElementById('target-banner');
 
@@ -298,23 +300,21 @@
                 }
 
                 if (target.stato === 'ATTESA') {
-                    // DA ACCETTARE (Rosso)
-                    banner.className = "shrink-0 w-full bg-red-900/80 rounded-xl p-3 border pulse-red-border shadow-lg flex flex-col gap-2";
+                    banner.className = "shrink-0 w-full bg-red-900/80 rounded-xl p-2.5 border pulse-red-border shadow-lg flex flex-col gap-2";
                     banner.innerHTML = `
                         <div class="flex items-center gap-2">
                             <span class="text-3xl animate-bounce">🚨</span>
                             <div class="flex flex-col flex-1 overflow-hidden">
                                 <span class="text-[9px] text-red-300 font-bold uppercase tracking-widest">NUOVO ORDINE DALLA SALA</span>
-                                <span class="text-[13px] text-white font-black truncate">${viaAttiva}</span>
+                                <span class="text-[12px] text-white font-black truncate">${viaAttiva}</span>
                             </div>
                         </div>
-                        <button onclick="window.cRic()" class="w-full bg-red-600 py-3 rounded-lg font-black uppercase text-xs shadow active:scale-95 text-white">✅ CONFERMA RICEZIONE</button>
+                        <button onclick="window.cRic()" class="w-full bg-red-600 py-2.5 rounded-lg font-black uppercase text-[10px] shadow active:scale-95 text-white">✅ CONFERMA RICEZIONE</button>
                     `;
                 } else if (target.stato === 'RICEVUTO') {
-                    // IN VIAGGIO (Blu)
-                    banner.className = "shrink-0 w-full bg-blue-900/80 rounded-xl p-3 border pulse-blue-border shadow-lg flex flex-col gap-2";
+                    banner.className = "shrink-0 w-full bg-blue-900/80 rounded-xl p-2.5 border pulse-blue-border shadow-lg flex flex-col gap-2";
                     banner.innerHTML = `
-                        <div class="flex items-center gap-2 mb-1">
+                        <div class="flex items-center gap-2 mb-0.5">
                             <span class="text-2xl">🚐</span>
                             <div class="flex flex-col flex-1 overflow-hidden">
                                 <span class="text-[9px] text-blue-300 font-bold uppercase tracking-widest">IN VIAGGIO VERSO:</span>
@@ -322,8 +322,8 @@
                             </div>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="window.navig(${ultimaPos.lat}, ${ultimaPos.lng})" class="flex-1 bg-emerald-600 py-3 rounded-lg font-bold uppercase text-[10px] shadow active:scale-95 text-white">📍 NAVIGA</button>
-                            <button onclick="window.cArr()" class="flex-1 bg-red-600 py-3 rounded-lg font-bold uppercase text-[10px] shadow active:scale-95 text-white border-2 border-red-800">🏁 SUL POSTO</button>
+                            <button onclick="window.navig(${ultimaPos.lat}, ${ultimaPos.lng})" class="flex-1 bg-emerald-600 py-2.5 rounded-lg font-bold uppercase text-[9px] shadow active:scale-95 text-white">📍 NAVIGA</button>
+                            <button onclick="window.cArr()" class="flex-1 bg-red-600 py-2.5 rounded-lg font-bold uppercase text-[9px] shadow active:scale-95 text-white border border-red-800">🏁 SUL POSTO</button>
                         </div>
                     `;
                 }
@@ -331,6 +331,45 @@
                 idSalaAttivo = null;
                 window.disegnaBannerUltimaDest();
             }
+
+            // 2. Gestione "Ultimo Messaggio dalla Sala"
+            const msgBanner = document.getElementById('last-msg-banner');
+            const myLogs = logs.filter(l => l.squadra === sqId || l.squadra === 'COMUNICAZIONE GENERALE');
+            
+            let lastMsgText = null;
+            let lastMsgTime = '';
+            let isBroadcast = false;
+
+            for (let l of myLogs) {
+                if (l.m1 && l.m1.includes('📍')) continue; // Salta i target GPS perché hanno il banner dedicato
+                
+                if (l.squadra === 'COMUNICAZIONE GENERALE') {
+                    lastMsgText = l.m1; lastMsgTime = l.ora; isBroadcast = true; break;
+                } else if (l.dir === 'SA' && l.m1 && l.m1 !== '---') {
+                    lastMsgText = l.m1; lastMsgTime = l.ora; isBroadcast = false; break;
+                } else if (l.dir === 'SQ' && l.m2 && l.m2 !== '---' && l.stato === 'OK') {
+                    lastMsgText = l.m2; lastMsgTime = l.ora; isBroadcast = false; break;
+                }
+            }
+
+            if (lastMsgText) {
+                msgBanner.style.display = 'flex';
+                document.getElementById('last-msg-time').innerText = lastMsgTime;
+                document.getElementById('last-msg-text').innerText = `"${lastMsgText}"`;
+                
+                if (isBroadcast) {
+                    msgBanner.className = "shrink-0 w-full bg-amber-900/40 rounded-lg p-2 border border-amber-600/50 flex flex-col justify-center";
+                    document.getElementById('last-msg-title').innerText = "📢 COMUNICAZIONE GENERALE";
+                    document.getElementById('last-msg-title').className = "text-[9px] font-bold text-amber-400 uppercase tracking-widest";
+                } else {
+                    msgBanner.className = "shrink-0 w-full bg-slate-800/80 rounded-lg p-2 border border-slate-600 flex flex-col justify-center";
+                    document.getElementById('last-msg-title').innerText = "🎧 DALLA SALA";
+                    document.getElementById('last-msg-title').className = "text-[9px] font-bold text-blue-400 uppercase tracking-widest";
+                }
+            } else {
+                msgBanner.style.display = 'none';
+            }
+
         });
 
         // --- ASCOLTO BLOCCO APP E STATO ---
@@ -338,7 +377,6 @@
             const sq = snap.val();
             if (sq) {
                 document.getElementById('current-status').innerText = sq.stato ? sq.stato.toUpperCase() : 'ATTESA';
-                
                 const offScreen = document.getElementById('off-screen');
                 if (sq.attiva === false) { offScreen.style.display = 'flex'; } 
                 else { offScreen.style.display = 'none'; }
