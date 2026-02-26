@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         
         /* IMPEDISCE LO SCROLLING E TIENE TUTTO SU UNA SCHERMATA */
         body { 
@@ -39,14 +39,14 @@
         .btn-media span:first-child { font-size: 20px; margin-bottom: 2px; }
         .btn-media:active { background: #334155; transform: scale(0.95); }
         
-        /* ANIMAZIONI TARGET E GPS TOGGLE */
+        /* ANIMAZIONI TARGET E REC */
         .pulse-red-border { animation: p-red-border 1.5s infinite; border: 2px solid #ef4444; }
         @keyframes p-red-border { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
         
         .pulse-blue-border { animation: p-blue-border 2s infinite; border: 2px solid #3b82f6; }
         @keyframes p-blue-border { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); } 70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
 
-        /* Stile Toggle Switch Custom */
+        /* Stile Toggle Switch Custom GPS */
         .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #475569; transition: .4s; border-radius: 34px; }
@@ -58,17 +58,24 @@
 <body>
 
     <div id="login-screen">
-        <div class="text-blue-500 text-6xl mb-4">🛡️</div>
-        <h1 class="font-bold text-2xl mb-2 text-white tracking-wide">ACCESSO RISERVATO</h1>
-        <p class="text-slate-400 text-xs mb-8">Inserisci il codice di sicurezza per attivare l'app.</p>
-        <input type="password" id="pin-input" class="bg-slate-900 border-2 border-slate-700 rounded-xl text-center text-3xl text-white py-3 w-full max-w-[200px] mb-4 tracking-widest outline-none focus:border-blue-500 transition-colors" placeholder="****" inputmode="numeric" maxlength="4">
-        <button onclick="window.checkPin()" class="w-full max-w-[200px] bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-bold uppercase text-sm shadow-lg active:scale-95 transition-all text-white">ACCEDI</button>
+        <div class="bg-slate-800 p-2 rounded-full h-32 w-32 flex items-center justify-center overflow-hidden shadow-inner border border-slate-700 mb-6 relative">
+            <img src="logo.png" alt="Logo PC Thiene" class="w-full h-full object-contain drop-shadow-lg" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\'text-5xl\'>🛡️</span>';">
+        </div>
+        <h1 class="font-black text-3xl mb-1 text-white tracking-tight uppercase">PC Thiene</h1>
+        <h2 class="font-bold text-lg mb-8 text-blue-400 tracking-widest uppercase">Accesso Operativo</h2>
+        <p class="text-slate-400 text-xs mb-4">Inserisci il codice di sicurezza di squadra.</p>
+        <input type="password" id="pin-input" class="bg-slate-900 border-2 border-slate-700 rounded-xl text-center text-3xl text-white py-3 w-full max-w-[200px] mb-6 tracking-widest outline-none focus:border-blue-500 transition-colors" placeholder="****" inputmode="numeric" maxlength="4">
+        <button onclick="window.checkPin()" class="w-full max-w-[200px] bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-bold uppercase text-sm shadow-lg active:scale-95 transition-all text-white">SBLOCCA APP</button>
     </div>
 
     <div id="off-screen" style="display: none;">
-        <div class="text-slate-600 text-6xl mb-4">🛑</div>
-        <h1 class="font-bold text-2xl mb-2 text-white tracking-wide">APP IN PAUSA</h1>
-        <p class="text-slate-500 text-[10px] uppercase tracking-widest">In attesa di sblocco dalla Sala Radio</p>
+        <div class="bg-slate-800 p-2 rounded-full h-32 w-32 flex items-center justify-center overflow-hidden shadow-inner border border-slate-700 mb-6 relative">
+            <img src="logo.png" alt="Logo PC Thiene" class="w-full h-full object-contain drop-shadow-lg opacity-40" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\'text-5xl\'>🛡️</span>';">
+            <div class="absolute inset-0 flex items-center justify-center"><span class="text-6xl drop-shadow-xl animate-pulse">🛑</span></div>
+        </div>
+        <h1 class="font-black text-3xl mb-1 text-white tracking-tight uppercase">PC Thiene</h1>
+        <h2 class="font-bold text-xl mb-4 text-red-500 tracking-widest uppercase">Servizio in Pausa</h2>
+        <p class="text-slate-400 text-xs uppercase tracking-widest leading-relaxed">Le comunicazioni sono state<br>bloccate dalla Sala Radio.</p>
     </div>
 
     <header class="px-3 py-2 bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0 shadow-md h-[60px]">
@@ -151,7 +158,6 @@
         };
 
         // --- GESTIONE PRIVACY GPS ---
-        // Default a TRUE. Se disabilitato, il tel non invia il GPS in background con i log.
         window.gpsAutoEnabled = localStorage.getItem('app_gps_auto') !== 'false';
         
         function updateGpsBadge() {
@@ -172,10 +178,13 @@
             updateGpsBadge();
         });
 
-        // OROLOGIO E URL PARAMS
+        // OROLOGIO
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }); }, 1000);
+
+        // ID SQUADRA DA URL
         const urlParams = new URLSearchParams(window.location.search);
-        const sqId = (urlParams.get('id') || "TEST").trim().toUpperCase();
+        const sqIdRaw = urlParams.get('id');
+        const sqId = (sqIdRaw ? sqIdRaw : "TEST").trim().toUpperCase();
         document.getElementById('display-sq').innerText = sqId;
 
         // RETE
@@ -190,17 +199,15 @@
             }
         });
 
-        // VARIABILI TARGET
         let idSalaAttivo = null;
         let viaAttiva = localStorage.getItem('app_ultima_via') || "";
         let ultimaPos = JSON.parse(localStorage.getItem('app_ultima_pos')) || { lat: null, lng: null };
 
-        // --- MOTORE DI INVIO DATI (CON CONTROLLO GPS) ---
+        // --- MOTORE DI INVIO DATI ---
         window.inviaNuovo = async (testo, extra = {}) => {
             const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
             let pos = { lat: '', lng: '' };
             
-            // INVIA POSIZIONE AUTOMATICA SOLO SE IL TOGGLE È ON
             if (window.gpsAutoEnabled && navigator.geolocation) {
                 try {
                     const p = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 4000, maximumAge: 10000 }));
@@ -222,7 +229,7 @@
             }
         };
 
-        // --- PANNELLO GESTIONE GPS (AUTO/MANUALE) ---
+        // --- PANNELLO GESTIONE GPS ---
         window.openGPSPanel = () => {
             const isChecked = window.gpsAutoEnabled ? 'checked' : '';
             Swal.fire({
@@ -242,7 +249,7 @@
                         </div>
                         
                         <div style="background: #1e293b; padding: 12px; border-radius: 12px; border: 1px solid #334155;">
-                            <span style="font-size: 10px; font-weight: bold; color: #3b82f6; text-transform: uppercase; margin-bottom: 8px; display: block;">INSERIMENTO MANUALE</span>
+                            <span style="font-size: 10px; font-weight: bold; color: #3b82f6; text-transform: uppercase; margin-bottom: 8px; display: block;">INVIA POSIZIONE MANUALE</span>
                             <div style="display: flex; gap: 6px; margin-bottom: 8px;">
                                 <input type="text" id="app-man-ind" placeholder="Es. Via Roma, Thiene" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; font-size: 13px; outline: none;">
                                 <button onclick="window.cercaViaApp()" style="background: #3b82f6; color: white; padding: 0 14px; border-radius: 8px; font-weight: bold;">🔍</button>
@@ -253,7 +260,6 @@
                             </div>
                             <button onclick="window.inviaGPSManuale()" style="width: 100%; padding: 12px; background: #10b981; color: white; border-radius: 8px; font-weight: bold; margin-top: 12px; text-transform: uppercase; font-size: 12px;">🚀 Invia Dati Manuali</button>
                         </div>
-
                     </div>
                 `,
                 showConfirmButton: true, confirmButtonText: 'CHIUDI PANNELLO', confirmButtonColor: '#475569', background: '#0f172a', color: '#fff'
@@ -277,9 +283,7 @@
                     document.getElementById('app-man-lat').value = parseFloat(data[0].lat).toFixed(6);
                     document.getElementById('app-man-lng').value = parseFloat(data[0].lon).toFixed(6);
                     document.getElementById('app-man-ind').value = data[0].display_name.split(',')[0].toUpperCase();
-                } else {
-                    Swal.showValidationMessage('Indirizzo non trovato');
-                }
+                } else { Swal.showValidationMessage('Indirizzo non trovato'); }
             } catch(e) {}
         };
 
@@ -289,13 +293,11 @@
             const via = document.getElementById('app-man-ind').value || "POSIZIONE MANUALE";
             if(!lat || !lng) return Swal.showValidationMessage('Cerca un indirizzo prima di inviare');
             
-            // Forza invio con i parametri inseriti ignorando il sensore automatico
             window.inviaNuovo(`📍 RIFERIMENTO: ${via}`, { lat: lat, lng: lng });
             Swal.close();
         };
 
-
-        // --- UI E MULTIMEDIA ---
+        // --- UI BASE ---
         window.askStatus = (s, icon) => {
             Swal.fire({
                 title: `CONFERMI STATO?`, html: `<span class="text-4xl block mb-2">${icon}</span><b class="text-lg">${s.toUpperCase()}</b>`,
@@ -318,39 +320,60 @@
             }; reader.readAsDataURL(f);
         };
 
-        // FIX MICROFONO PER IOS / SAFARI
+        // --- MOTORE AUDIO RIPARATO (HTTPS/IOS) ---
+        let mediaRecorder; let audioChunks = [];
         document.getElementById('btn-voc').onclick = async () => {
             const btn = document.getElementById('btn-voc');
+            const icon = document.getElementById('voc-icon');
+            const txt = document.getElementById('voc-txt');
+
             if (!mediaRecorder || mediaRecorder.state === "inactive") {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream); audioChunks = [];
-                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRecorder = new MediaRecorder(stream); 
+                    audioChunks = [];
+                    
+                    mediaRecorder.ondataavailable = e => { if(e.data.size > 0) audioChunks.push(e.data); };
+                    
                     mediaRecorder.onstop = () => {
-                        // Tolto type: webm per permettere l'encoding nativo del dispositivo (es. AAC su iOS)
-                        const audioBlob = new Blob(audioChunks); 
+                        const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/mp4' });
                         const reader = new FileReader();
                         reader.onload = (e) => {
                             Swal.fire({
-                                title: 'INVIARE AUDIO?', html: `<audio controls class="w-full mt-2"><source src="${e.target.result}"></audio>`,
-                                showCancelButton: true, confirmButtonText: 'INVIA', confirmButtonColor: '#2563eb', background: '#1e293b', color: '#fff'
+                                title: 'ANTEPRIMA VOCALE', 
+                                html: `<div class="text-slate-300 text-xs mb-3">Ascolta il messaggio prima di inviarlo:</div><audio controls class="w-full mt-2" style="height: 40px;"><source src="${e.target.result}"></audio>`,
+                                showCancelButton: true, confirmButtonText: 'INVIA VOCALE', confirmButtonColor: '#2563eb', background: '#1e293b', color: '#fff'
                             }).then((res) => { if(res.isConfirmed) window.inviaNuovo("🎤 MESSAGGIO VOCALE", { mediaUrl: e.target.result, mediaType: 'AUDIO' }); });
                         }; reader.readAsDataURL(audioBlob);
                     };
+                    
                     mediaRecorder.start(); 
-                    btn.classList.replace('bg-slate-800', 'bg-red-600'); btn.classList.add('animate-pulse');
-                    document.getElementById('voc-icon').innerText = "🛑"; document.getElementById('voc-txt').innerText = "STOP";
+                    
+                    // Modifica Grafica Registrazione in corso
+                    btn.classList.add('pulse-red-border');
+                    btn.style.backgroundColor = 'rgba(220, 38, 38, 0.2)';
+                    icon.innerText = "🔴";
+                    icon.classList.add('animate-pulse');
+                    txt.innerText = "STOP REC";
+                    txt.classList.replace('text-slate-300', 'text-red-400');
+                    
                 } catch(err) { 
-                    Swal.fire({ title: 'Errore Microfono', text: 'Per registrare l\'audio il sito deve avere i permessi ed essere aperto in HTTPS.', icon: 'error', background: '#1e293b', color: '#fff' }); 
+                    Swal.fire({ title: 'Microfono Bloccato', html: 'Assicurati di aver dato i <b>Permessi</b> al microfono.<br><br><b>Per iPhone (Safari):</b><br>1. Vai su Impostazioni > Safari > Microfono<br>2. Imposta su "Consenti".', icon: 'error', background: '#1e293b', color: '#fff' }); 
                 }
             } else {
                 mediaRecorder.stop(); 
-                btn.classList.replace('bg-red-600', 'bg-slate-800'); btn.classList.remove('animate-pulse');
-                document.getElementById('voc-icon').innerText = "🎤"; document.getElementById('voc-txt').innerText = "VOCALE";
+                mediaRecorder.stream.getTracks().forEach(t => t.stop()); // Spegne la spia sul telefono
+                
+                btn.classList.remove('pulse-red-border');
+                btn.style.backgroundColor = '';
+                icon.innerText = "🎤";
+                icon.classList.remove('animate-pulse');
+                txt.innerText = "VOCALE";
+                txt.classList.replace('text-red-400', 'text-slate-300');
             }
         };
 
-        // --- MOTORE TARGET (NAVIGAZIONE) ---
+        // --- MOTORE TARGET E NAVIGAZIONE ---
         window.cRic = async () => {
             if (idSalaAttivo) {
                 await update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'RICEVUTO', m2: '✅ IN VIAGGIO' });
