@@ -7,67 +7,79 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; height: 100vh; overflow: hidden; display: flex; flex-direction: column; margin: 0; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
-        .btn-status { @apply flex flex-col items-center justify-center rounded-2xl transition-all active:scale-95 border-b-4 font-bold uppercase text-xs p-4 shadow-lg; }
-        .btn-media { @apply flex flex-col items-center justify-center rounded-xl bg-slate-800 border border-slate-700 active:bg-slate-700 h-20 transition-all; }
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; height: 100vh; overflow: hidden; display: flex; flex-direction: column; margin: 0; font-weight: 400; }
         
-        /* Schermate di Blocco */
-        #off-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #020617; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-        #lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.98); backdrop-filter: blur(10px); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        /* BOTTONI DI STATO */
+        .btn-status { display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 16px; transition: 0.2s; border-bottom-width: 4px; padding: 14px 8px; font-weight: 600; text-transform: uppercase; font-size: 11px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); cursor: pointer; outline: none; }
+        .btn-status:active { transform: scale(0.95); }
         
-        .btn-lock-main { @apply w-full py-6 rounded-3xl font-black uppercase text-xl shadow-2xl transition-all active:scale-95; }
+        /* BOTTONI MULTIMEDIALI */
+        .btn-media { display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 12px; background: #1e293b; border: 1px solid #334155; height: 75px; transition: 0.2s; cursor: pointer; outline: none; }
+        .btn-media:active { background: #334155; transform: scale(0.95); }
+        
+        /* OVERLAYS (BLOCCHI SCHERMO) FIXATI */
+        .screen-overlay { position: fixed; inset: 0; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+        
         .pulse-red { animation: p-red 2s infinite; }
-        @keyframes p-red { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
+        @keyframes p-red { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); } 70% { box-shadow: 0 0 0 20px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
+        
+        textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.3); }
+        
+        /* Scorrimento fluido */
+        .custom-scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; }
     </style>
 </head>
 <body>
 
-    <div id="off-screen" class="hidden">
-        <div class="text-slate-600 text-6xl mb-4">🛑</div>
-        <h1 class="font-black text-2xl mb-2 text-white">APP DISATTIVATA</h1>
-        <p class="text-slate-500 text-[10px] uppercase tracking-[0.2em]">In attesa di sblocco dalla Sala Radio</p>
+    <div id="off-screen" class="screen-overlay bg-slate-950 z-[10000]" style="display: none;">
+        <div class="text-slate-600 text-7xl mb-6">🛑</div>
+        <h1 class="font-semibold text-2xl mb-2 text-white tracking-wide">APP DISATTIVATA</h1>
+        <p class="text-slate-500 text-[10px] uppercase tracking-widest">In attesa di sblocco dalla Sala Radio</p>
     </div>
 
-    <div id="lock-screen" class="hidden">
+    <div id="lock-screen" class="screen-overlay bg-slate-900/95 backdrop-blur-sm" style="display: none;">
         </div>
 
-    <header class="p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0">
+    <header class="p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0 shadow-md">
         <div>
-            <h1 id="display-sq" class="font-black text-3xl tracking-tighter text-blue-400 leading-none">---</h1>
-            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-1">App Operativa</p>
+            <h1 id="display-sq" class="font-bold text-3xl tracking-tighter text-blue-400 leading-none">---</h1>
+            <p class="text-[9px] text-slate-500 uppercase font-semibold tracking-widest mt-1">App Operativa</p>
         </div>
         <div class="text-right">
-            <div id="clock" class="font-mono text-xl font-bold text-yellow-500 leading-none mb-1">00:00</div>
-            <div class="text-[9px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 font-bold uppercase">Online</div>
+            <div id="clock" class="font-mono text-xl font-medium text-yellow-500 leading-none mb-1">00:00</div>
+            <div id="net-badge" class="inline-block text-[8px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 font-semibold uppercase">ONLINE</div>
         </div>
     </header>
 
-    <main class="flex-1 overflow-y-auto p-4 flex flex-col gap-6">
+    <main class="flex-1 custom-scroll p-4 flex flex-col gap-5">
         
-        <div class="bg-slate-800/50 rounded-2xl p-4 text-center border border-slate-700">
-            <p class="text-[10px] font-black text-slate-500 uppercase mb-1 tracking-[0.2em]">Stato Attuale</p>
-            <div id="current-status" class="text-3xl font-black text-white uppercase tracking-tighter">ATTESA...</div>
+        <div class="bg-slate-800/40 rounded-2xl p-4 text-center border border-slate-700/50 shadow-inner">
+            <p class="text-[9px] font-semibold text-slate-500 uppercase mb-1 tracking-[0.2em]">Stato Attuale</p>
+            <div id="current-status" class="text-2xl font-bold text-white uppercase tracking-tight">ATTESA...</div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
-            <button onclick="window.askStatus('Sede', '🏠')" class="btn-status bg-emerald-600 border-emerald-800 text-white"><span class="text-3xl mb-1">🏠</span> Sede</button>
-            <button onclick="window.askStatus('Uscita', '🚚')" class="btn-status bg-amber-500 border-amber-700 text-black"><span class="text-3xl mb-1">🚚</span> Uscita</button>
-            <button onclick="window.askStatus('Intervento', '🚨')" class="btn-status bg-red-600 border-red-800 text-white"><span class="text-3xl mb-1">🚨</span> Sul Posto</button>
-            <button onclick="window.askStatus('Rientro', '🔙')" class="btn-status bg-sky-500 border-sky-700 text-white"><span class="text-3xl mb-1">🔙</span> Rientro</button>
+        <div class="flex flex-col gap-3">
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="window.askStatus('Sede', '🏠')" class="btn-status bg-emerald-600 border-emerald-800 text-white"><span class="text-3xl mb-1.5">🏠</span> Sede</button>
+                <button onclick="window.askStatus('Uscita', '🚚')" class="btn-status bg-amber-500 border-amber-700 text-slate-900"><span class="text-3xl mb-1.5">🚚</span> Uscita</button>
+                <button onclick="window.askStatus('Trasferimento', '🚐')" class="btn-status bg-violet-600 border-violet-800 text-white"><span class="text-3xl mb-1.5">🚐</span> Trasf.</button>
+                <button onclick="window.askStatus('Intervento', '🚨')" class="btn-status bg-red-600 border-red-800 text-white"><span class="text-3xl mb-1.5">🚨</span> Posto</button>
+            </div>
+            <button onclick="window.askStatus('Rientro', '🔙')" class="btn-status bg-sky-500 border-sky-700 text-white !py-3 flex-row gap-3"><span class="text-2xl">🔙</span> Rientro in Sede</button>
         </div>
 
         <div class="grid grid-cols-3 gap-3">
-            <button onclick="document.getElementById('file-foto').click()" class="btn-media text-white"><span class="text-2xl mb-1">📷</span><span class="text-[10px] font-bold">FOTO</span></button>
-            <button id="btn-voc" class="btn-media text-white"><span id="voc-icon" class="text-2xl mb-1">🎤</span><span id="voc-txt" class="text-[10px] font-bold">VOCALE</span></button>
-            <button onclick="window.askGPS()" class="btn-media text-emerald-400"><span class="text-2xl mb-1">📍</span><span class="text-[10px] font-bold">POSIZIONE</span></button>
+            <button onclick="document.getElementById('file-foto').click()" class="btn-media text-white"><span class="text-2xl mb-1">📷</span><span class="text-[9px] font-medium text-slate-300">FOTO</span></button>
+            <button id="btn-voc" class="btn-media text-white"><span id="voc-icon" class="text-2xl mb-1">🎤</span><span id="voc-txt" class="text-[9px] font-medium text-slate-300">VOCALE</span></button>
+            <button onclick="window.askGPS()" class="btn-media text-emerald-400"><span class="text-2xl mb-1">📍</span><span class="text-[9px] font-medium text-emerald-500">POSIZIONE</span></button>
         </div>
         <input type="file" id="file-foto" accept="image/*" capture="camera" class="hidden" onchange="window.upFoto(this.files[0])">
 
-        <div class="bg-slate-800/50 p-3 rounded-2xl border border-slate-700 mt-auto">
-            <textarea id="msg-input" class="w-full bg-transparent border-none focus:ring-0 text-base placeholder-slate-500 resize-none h-16 outline-none" placeholder="Messaggio per la sala..."></textarea>
-            <button onclick="window.askFreeMsg()" class="w-full mt-2 py-4 bg-blue-600 rounded-xl font-bold uppercase text-xs shadow-lg active:scale-95 transition-all">Invia Messaggio</button>
+        <div class="bg-slate-800/40 p-3 rounded-2xl border border-slate-700 mt-auto">
+            <textarea id="msg-input" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-3 text-sm placeholder-slate-500 resize-none h-20 text-white mb-2" placeholder="Scrivi un messaggio per la Sala Radio..."></textarea>
+            <button onclick="window.askFreeMsg()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold uppercase text-xs shadow-lg active:scale-95 transition-all tracking-wide">Invia Messaggio</button>
         </div>
     </main>
 
@@ -81,27 +93,41 @@
         // Orologio
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }); }, 1000);
 
-        // Prende l'ID dall'indirizzo (es. app.html?id=ALFA1)
+        // Parametri URL (Identificazione Squadra)
         const urlParams = new URLSearchParams(window.location.search);
-        const sqId = (urlParams.get('id') || "TEST").trim().toUpperCase();
+        const sqIdRaw = urlParams.get('id');
+        const sqId = (sqIdRaw ? sqIdRaw : "TEST").trim().toUpperCase();
         document.getElementById('display-sq').innerText = sqId;
+
+        // Rete
+        onValue(ref(db, ".info/connected"), (snap) => {
+            const badge = document.getElementById('net-badge');
+            if(snap.val() === true) {
+                badge.className = "inline-block text-[8px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30 font-semibold uppercase";
+                badge.innerText = "ONLINE";
+            } else {
+                badge.className = "inline-block text-[8px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded border border-red-500/30 font-semibold uppercase animate-pulse";
+                badge.innerText = "OFFLINE";
+            }
+        });
 
         let idSalaAttivo = null;
         let viaAttiva = "";
         let ultimaPos = { lat: null, lng: null };
 
-        // --- MOTORE DI INVIO BASE ---
+        // --- MOTORE DI INVIO DATI ---
         async function inviaNuovo(testo, extra = {}) {
             const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
             let pos = { lat: '', lng: '' };
             
-            // Prova a recuperare la posizione GPS in background per allegarla al messaggio
+            // Prova a recuperare coordinate
             if (navigator.geolocation) {
                 try {
-                    const p = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3000 }));
+                    const p = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 4000, maximumAge: 10000 }));
                     pos = { lat: p.coords.latitude.toFixed(6), lng: p.coords.longitude.toFixed(6) };
+                    // Aggiorna anche anagrafica silenziosamente
                     await update(ref(db, `anagrafica_squadre/${sqId}`), pos);
-                } catch (e) { /* Se il GPS fallisce, invia senza coordinate */ }
+                } catch (e) { /* Ignora e invia senza GPS */ }
             }
 
             try {
@@ -113,15 +139,15 @@
                 });
                 Swal.fire({ icon: 'success', title: 'INVIATO', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
             } catch (e) {
-                Swal.fire('Errore', 'Impossibile connettersi al server', 'error');
+                Swal.fire('Errore', 'Connessione assente. Riprova.', 'error');
             }
         }
 
-        // --- DOPPIA CONFERMA STATI ---
+        // --- DOPPIE CONFERME UI ---
         window.askStatus = (s, icon) => {
             Swal.fire({
-                title: `CONFERMI STATO?`, html: `<span class="text-5xl block mb-2">${icon}</span><b class="text-2xl">${s.toUpperCase()}</b>`,
-                showCancelButton: true, confirmButtonText: 'SÌ, CONFERMA', confirmButtonColor: '#2563eb', cancelButtonText: 'ANNULLA'
+                title: `CONFERMI STATO?`, html: `<span class="text-5xl block mb-2">${icon}</span><b class="text-xl">${s.toUpperCase()}</b>`,
+                showCancelButton: true, confirmButtonText: 'SÌ, AGGIORNA', confirmButtonColor: '#2563eb', cancelButtonText: 'ANNULLA', background: '#1e293b', color: '#fff'
             }).then((r) => {
                 if(r.isConfirmed) { 
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: s }); 
@@ -130,67 +156,65 @@
             });
         };
 
-        // --- DOPPIA CONFERMA GPS ---
         window.askGPS = () => {
             Swal.fire({
-                title: 'INVIARE GPS?', text: 'Aggiorna la tua posizione reale in Sala Radio.',
-                icon: 'question', showCancelButton: true, confirmButtonText: 'INVIA ORA', confirmButtonColor: '#10b981'
+                title: 'INVIARE POSIZIONE?', text: 'Trasmette il GPS alla Mappa Tattica in Sala Radio.',
+                icon: 'question', showCancelButton: true, confirmButtonText: 'INVIA ORA', confirmButtonColor: '#10b981', background: '#1e293b', color: '#fff'
             }).then((r) => {
-                if(r.isConfirmed) inviaNuovo("📍 AGGIORNAMENTO GPS SQUADRA");
+                if(r.isConfirmed) inviaNuovo("📍 AGGIORNAMENTO GPS MANUALE");
             });
         };
 
-        // --- DOPPIA CONFERMA MESSAGGIO LIBERO ---
         window.askFreeMsg = () => {
             const t = document.getElementById('msg-input').value.trim();
             if(!t) return;
             Swal.fire({
-                title: 'INVIARE ALLA SALA?', text: `"${t}"`,
-                icon: 'question', showCancelButton: true, confirmButtonText: 'INVIA', confirmButtonColor: '#2563eb'
+                title: 'INVIARE MESSAGGIO?', text: `"${t}"`,
+                icon: 'question', showCancelButton: true, confirmButtonText: 'INVIA', confirmButtonColor: '#2563eb', background: '#1e293b', color: '#fff'
             }).then((r) => {
                 if(r.isConfirmed) inviaNuovo(t).then(() => { document.getElementById('msg-input').value = ""; });
             });
         };
 
-        // --- DOPPIA CONFERMA FOTO ---
         window.upFoto = (f) => {
             if (!f) return;
             const reader = new FileReader();
             reader.onload = (e) => {
                 Swal.fire({
-                    title: 'INVIARE QUESTA FOTO?', html: `<img src="${e.target.result}" class="w-full rounded-lg border-2 border-slate-200 mt-2">`,
-                    showCancelButton: true, confirmButtonText: 'INVIA FOTO', confirmButtonColor: '#2563eb'
+                    title: 'INVIARE FOTO?', html: `<img src="${e.target.result}" class="w-full rounded-lg border border-slate-600 mt-2">`,
+                    showCancelButton: true, confirmButtonText: 'INVIA', confirmButtonColor: '#2563eb', background: '#1e293b', color: '#fff'
                 }).then((r) => {
-                    if(r.isConfirmed) inviaNuovo("📷 FOTO INVIATA", { mediaUrl: e.target.result, mediaType: 'IMG' });
+                    if(r.isConfirmed) inviaNuovo("📷 FOTO INVIATA DAL CAMPO", { mediaUrl: e.target.result, mediaType: 'IMG' });
                 });
             }; reader.readAsDataURL(f);
         };
 
-        // --- DOPPIA CONFERMA AUDIO ---
         let mediaRecorder; let audioChunks = [];
         document.getElementById('btn-voc').onclick = async () => {
             const btn = document.getElementById('btn-voc');
             if (!mediaRecorder || mediaRecorder.state === "inactive") {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream); audioChunks = [];
-                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        Swal.fire({
-                            title: 'INVIARE VOCALE?', html: `<audio controls class="w-full mt-4"><source src="${e.target.result}"></audio>`,
-                            showCancelButton: true, confirmButtonText: 'INVIA AUDIO', confirmButtonColor: '#2563eb'
-                        }).then((res) => {
-                            if(res.isConfirmed) inviaNuovo("🎤 VOCALE INVIATO", { mediaUrl: e.target.result, mediaType: 'AUDIO' });
-                        });
-                    }; reader.readAsDataURL(audioBlob);
-                };
-                mediaRecorder.start(); 
-                btn.classList.replace('bg-slate-800', 'bg-red-600');
-                btn.classList.add('animate-pulse');
-                document.getElementById('voc-icon').innerText = "🛑";
-                document.getElementById('voc-txt').innerText = "STOP REC";
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream); audioChunks = [];
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            Swal.fire({
+                                title: 'INVIARE AUDIO?', html: `<audio controls class="w-full mt-4"><source src="${e.target.result}"></audio>`,
+                                showCancelButton: true, confirmButtonText: 'INVIA', confirmButtonColor: '#2563eb', background: '#1e293b', color: '#fff'
+                            }).then((res) => {
+                                if(res.isConfirmed) inviaNuovo("🎤 MESSAGGIO VOCALE", { mediaUrl: e.target.result, mediaType: 'AUDIO' });
+                            });
+                        }; reader.readAsDataURL(audioBlob);
+                    };
+                    mediaRecorder.start(); 
+                    btn.classList.replace('bg-slate-800', 'bg-red-600');
+                    btn.classList.add('animate-pulse');
+                    document.getElementById('voc-icon').innerText = "🛑";
+                    document.getElementById('voc-txt').innerText = "STOP REC";
+                } catch(err) { Swal.fire('Errore', 'Microfono non autorizzato', 'error'); }
             } else {
                 mediaRecorder.stop(); 
                 btn.classList.replace('bg-red-600', 'bg-slate-800');
@@ -200,95 +224,96 @@
             }
         };
 
-        // --- MOTORE TARGET (NAVIGAZIONE GUIDATA) ---
+        // --- MOTORE TARGET (SCHERMATE RICEZIONE) ---
         window.cRic = async () => {
             if (idSalaAttivo) {
                 await update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'RICEVUTO' });
-                inviaNuovo(`✅ DESTINAZIONE RICEVUTA: ${viaAttiva}`);
+                inviaNuovo(`✅ TARGET RICEVUTO: IN VIAGGIO VERSO ${viaAttiva}`);
             }
         };
 
         window.navig = (lat, lng) => { 
-            // URL ufficiale Google Maps per percorsi
             window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank'); 
         };
 
         window.cArr = () => {
             if (!idSalaAttivo) return;
             Swal.fire({
-                title: 'SIETE SUL POSTO?',
-                text: "Confermate l'arrivo a destinazione? Il mirino sparirà dalla mappa in Sala Radio.",
-                icon: 'warning', showCancelButton: true, confirmButtonText: 'SÌ, SIAMO ARRIVATI!', confirmButtonColor: '#dc2626', cancelButtonText: 'ANNULLA'
+                title: 'CONFERMA ARRIVO',
+                text: "Siete fisicamente sul target? Lo stato passerà a 'Sul Posto'.",
+                icon: 'warning', showCancelButton: true, confirmButtonText: 'SÌ, SIAMO SUL POSTO', confirmButtonColor: '#dc2626', background: '#1e293b', color: '#fff'
             }).then(async (r) => {
                 if (r.isConfirmed) {
                     await update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'OK', m2: 'SQUADRA ARRIVATA SUL POSTO' });
-                    await update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento', lat: ultimaPos.lat, lng: ultimaPos.lng });
+                    
+                    const updData = { stato: 'Intervento' };
+                    if (ultimaPos.lat && ultimaPos.lng) {
+                        updData.lat = ultimaPos.lat; updData.lng = ultimaPos.lng;
+                    }
+                    await update(ref(db, `anagrafica_squadre/${sqId}`), updData);
                     inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`);
                 }
             });
         };
 
-        // --- ASCOLTO PERENNE LOG E TARGET DA SALA ---
-        onValue(query(ref(db, 'brogliaccio'), limitToLast(10)), (snap) => {
+        // --- ASCOLTO TARGET DA SALA RADIO ---
+        onValue(query(ref(db, 'brogliaccio'), limitToLast(15)), (snap) => {
             const data = snap.val(); if (!data) return;
             const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).reverse();
             
-            // Cerca il target attivo
+            // Cerca un Target destinato a Me che non sia ancora stato evaso (OK)
             const target = logs.find(l => l.dir === 'SA' && l.squadra === sqId && l.m1 && l.m1.includes('📍') && l.stato !== 'OK');
             const lock = document.getElementById('lock-screen');
 
             if (target) {
                 idSalaAttivo = target.id; 
                 viaAttiva = target.m1.replace('📍', '').trim();
-                
-                if (target.lat && target.lng) {
-                    ultimaPos = { lat: target.lat, lng: target.lng };
-                }
+                if (target.lat && target.lng) { ultimaPos = { lat: target.lat, lng: target.lng }; }
 
-                lock.classList.remove('hidden');
+                lock.style.display = 'flex'; // Mostra l'overlay
 
                 if (target.stato === 'ATTESA') {
                     lock.innerHTML = `
                         <div class="text-red-500 text-7xl mb-4 animate-pulse">🚨</div>
-                        <h2 class="text-white font-black text-2xl uppercase tracking-tighter mb-2">NUOVO TARGET RICEVUTO</h2>
-                        <div class="bg-white/10 p-6 rounded-2xl border border-white/20 w-full mb-8">
-                            <p class="text-3xl font-bold text-blue-400 italic leading-tight">${viaAttiva}</p>
+                        <h2 class="text-white font-bold text-xl uppercase tracking-widest mb-3 text-slate-300">NUOVO TARGET</h2>
+                        <div class="bg-white/10 p-6 rounded-2xl border border-white/20 w-full max-w-sm mb-8 shadow-xl">
+                            <p class="text-2xl font-bold text-blue-400 leading-tight">${viaAttiva}</p>
                         </div>
-                        <div class="w-full max-w-sm space-y-4">
-                            <button onclick="window.cRic()" class="w-full bg-blue-600 py-6 rounded-3xl font-black uppercase text-xl shadow-lg active:scale-95 pulse-red">✅ CONFERMA RICEZIONE</button>
+                        <div class="w-full max-w-sm">
+                            <button onclick="window.cRic()" class="w-full bg-blue-600 hover:bg-blue-500 py-5 rounded-2xl font-bold uppercase text-lg shadow-lg active:scale-95 pulse-red transition-all text-white">✅ CONFERMA RICEZIONE</button>
                         </div>
                     `;
                 } else if (target.stato === 'RICEVUTO') {
                     lock.innerHTML = `
-                        <div class="text-blue-500 text-7xl mb-4">🚚</div>
-                        <h2 class="text-white font-black text-xl uppercase tracking-tighter mb-2">IN VIAGGIO VERSO:</h2>
-                        <div class="bg-white/10 p-4 rounded-2xl border border-white/20 w-full mb-8">
-                            <p class="text-2xl font-bold text-blue-400 italic leading-tight">${viaAttiva}</p>
+                        <div class="text-blue-500 text-6xl mb-4">🚐</div>
+                        <h2 class="text-white font-medium text-sm uppercase tracking-widest mb-2 text-slate-400">IN VIAGGIO VERSO:</h2>
+                        <div class="bg-white/5 p-4 rounded-xl border border-white/10 w-full max-w-sm mb-8">
+                            <p class="text-xl font-bold text-blue-300 leading-tight">${viaAttiva}</p>
                         </div>
-                        <div class="w-full max-w-sm space-y-4">
-                            <button onclick="window.navig(${ultimaPos.lat}, ${ultimaPos.lng})" class="w-full bg-emerald-600 py-5 rounded-2xl font-black uppercase text-lg shadow-lg active:scale-95">📍 APRI NAVIGATORE</button>
-                            <button onclick="window.cArr()" class="w-full bg-red-600 py-5 rounded-2xl font-black uppercase text-lg shadow-lg active:scale-95">🏁 ARRIVATI SUL POSTO</button>
+                        <div class="w-full max-w-sm flex flex-col gap-4">
+                            <button onclick="window.navig(${ultimaPos.lat}, ${ultimaPos.lng})" class="w-full bg-emerald-600 hover:bg-emerald-500 py-4 rounded-xl font-bold uppercase text-base shadow-lg active:scale-95 transition-all text-white">📍 APRI NAVIGATORE</button>
+                            <button onclick="window.cArr()" class="w-full bg-red-600 hover:bg-red-500 py-4 rounded-xl font-bold uppercase text-base shadow-lg active:scale-95 transition-all text-white border-2 border-red-800">🏁 SIAMO SUL POSTO</button>
                         </div>
                     `;
                 }
             } else {
-                lock.classList.add('hidden');
+                lock.style.display = 'none'; // Nascondi l'overlay se non ci sono target
                 idSalaAttivo = null;
             }
         });
 
-        // --- ASCOLTO PER STATUS APP ON/OFF E STATO ATTUALE SQUADRA ---
+        // --- ASCOLTO BLOCCO APP E STATO ---
         onValue(ref(db, `anagrafica_squadre/${sqId}`), (snap) => {
             const sq = snap.val();
             if (sq) {
-                // Aggiorna l'etichetta di stato
                 document.getElementById('current-status').innerText = sq.stato ? sq.stato.toUpperCase() : 'ATTESA';
                 
-                // Schermata di blocco generale se disattivata dalla sala
+                const offScreen = document.getElementById('off-screen');
+                // Se la sala blocca l'app, mostra l'avviso a schermo intero
                 if (sq.attiva === false) {
-                    document.getElementById('off-screen').classList.remove('hidden');
+                    offScreen.style.display = 'flex';
                 } else {
-                    document.getElementById('off-screen').classList.add('hidden');
+                    offScreen.style.display = 'none';
                 }
             }
         });
