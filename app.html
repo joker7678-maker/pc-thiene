@@ -16,9 +16,9 @@
             overflow: hidden; display: flex; flex-direction: column; margin: 0; font-weight: 500; 
         }
         
-        /* SCHERMATE DI BLOCCO (Login, App Spenta) */
+        /* SCHERMATE DI BLOCCO */
         #off-screen, #login-screen { position: fixed; inset: 0; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; background: #020617; }
-        #login-screen { z-index: 20000; } /* Il login sta sopra tutto */
+        #login-screen { z-index: 20000; } 
 
         /* BOTTONI DI STATO COMPATTI */
         .btn-status { 
@@ -63,12 +63,18 @@
         <p class="text-slate-500 text-[10px] uppercase tracking-widest">In attesa di sblocco dalla Sala Radio</p>
     </div>
 
-    <header class="px-4 py-2 bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0 shadow-md h-[55px]">
-        <div>
-            <h1 id="display-sq" class="font-black text-2xl tracking-tighter text-blue-400 leading-none">---</h1>
-            <div id="current-status" class="text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-0.5">ATTESA...</div>
+    <header class="px-3 py-2 bg-slate-900 border-b border-slate-800 flex justify-between items-center shrink-0 shadow-md h-[60px]">
+        <div class="flex items-center gap-3">
+            <div class="bg-slate-800 p-0.5 rounded-full h-10 w-10 flex items-center justify-center overflow-hidden shadow-inner shrink-0 border border-slate-700">
+                <img src="logo.png" alt="Logo" class="w-full h-full object-contain drop-shadow-md" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\'text-xl\'>🛡️</span>';">
+            </div>
+            <div class="flex flex-col">
+                <h1 id="display-sq" class="font-black text-2xl tracking-tighter text-blue-400 leading-none">---</h1>
+                <div id="current-status" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">ATTESA...</div>
+            </div>
         </div>
-        <div class="text-right flex flex-col items-end">
+        
+        <div class="text-right flex flex-col items-end shrink-0">
             <div id="clock" class="font-mono text-lg font-bold text-yellow-500 leading-none mb-1">00:00</div>
             <div id="net-badge" class="inline-block text-[7px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 font-bold uppercase">ONLINE</div>
         </div>
@@ -368,7 +374,7 @@
             let isBroadcast = false;
 
             for (let l of myLogs) {
-                if (l.m1 && l.m1.includes('📍')) continue; // Salta i target GPS perché hanno il banner dedicato
+                if (l.m1 && l.m1.includes('📍')) continue; 
                 
                 if (l.squadra === 'COMUNICAZIONE GENERALE') {
                     lastMsgText = l.m1; lastMsgTime = l.ora; isBroadcast = true; break;
