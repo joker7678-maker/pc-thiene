@@ -375,58 +375,54 @@
             }
         };
 
-window.cRic = async () => {
+        // --- MOTORE TARGET E NAVIGAZIONE ---
+       // PUNTO 2: L'operatore preme RICEVUTO
+        window.cRic = async () => {
             if (idSalaAttivo) {
-                // Aggiorna il log esistente in Sala per farlo diventare Blu (Ricevuto)
+                // Chiude il log della sala (punto 2 della tua sequenza)
                 await update(ref(db, `brogliaccio/${idSalaAttivo}`), { 
-                    stato: 'RICEVUTO', 
-                    m2: '✅ IN VIAGGIO',
+                    stato: 'OK', 
+                    m2: '✅ RICEVUTO / IN VIAGGIO',
                     ora_risposta: new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
                 });
-                // Aggiorna lo stato squadra in Viola (Trasferimento)
+                // Aggiorna lo stato squadra in Trasferimento (Viola)
                 await update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Trasferimento' });
+                
                 Swal.fire({ icon: 'success', title: 'Ricevuto!', toast: true, position: 'top', timer: 2000, showConfirmButton: false });
+                
+                // NOTA: idSalaAttivo rimane popolato così il banner resta visibile per premere "Arrivati"
             }
         };
 
+        // PUNTO 3: L'operatore preme ARRIVATI
         window.cArr = () => {
             if (!idSalaAttivo) return;
             Swal.fire({ 
                 title: 'CONFERMA ARRIVO', 
-                text: "Siete sul target? Avviseremo la Sala.", 
+                text: "Verrà inviata la richiesta di 'Arrivati sul posto' alla Sala.", 
                 icon: 'warning', 
                 showCancelButton: true, 
-                confirmButtonText: 'SÌ, SUL POSTO', 
+                confirmButtonText: 'SÌ, INVIA', 
                 confirmButtonColor: '#dc2626', 
-                background: '#0f172a', 
-                color: '#fff' 
+                background: '#0f172a', color: '#fff' 
             }).then(async (r) => {
                 if (r.isConfirmed) {
-                    // 1. Chiude il log del target (Diventa OK e sparisce la X sulla mappa della Dashboard)
-                    await update(ref(db, `brogliaccio/${idSalaAttivo}`), { 
-                        stato: 'OK', 
-                        m2: '🏁 SUL POSTO' 
+                    // Crea un NUOVO LOG in ATTESA (punto 3 della tua sequenza)
+                    // Questo log apparirà ROSSO sulla Dashboard e richiederà una risposta dalla Sala
+                    await window.inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, { 
+                        stato: 'ATTESA', 
+                        dir: 'SQ' // Indica che arriva dalla squadra
                     });
 
-                    // 2. Aggiorna stato squadra in Rosso (Intervento) e GPS
-                    const updData = { stato: 'Intervento' };
-                    if (navigator.geolocation) {
-                        try {
-                            const p = await new Promise((res) => navigator.geolocation.getCurrentPosition(res, null, {timeout:3000}));
-                            updData.lat = p.coords.latitude.toFixed(6);
-                            updData.lng = p.coords.longitude.toFixed(6);
-                        } catch(e){}
-                    }
-                    await update(ref(db, `anagrafica_squadre/${sqId}`), updData);
-
-                    // 3. Crea un NUOVO LOG pulito di conferma arrivo
-                    await window.inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, { stato: 'OK' });
+                    // Aggiorna lo stato squadra in Intervento (Rosso)
+                    await update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
                     
                     idSalaAttivo = null; 
                     window.disegnaBannerUltimaDest(); 
                 }
             });
         };
+
         window.disegnaBannerUltimaDest = () => {
             const banner = document.getElementById('target-banner');
             if (viaAttiva && ultimaPos.lat) {
@@ -511,22 +507,7 @@ window.cRic = async () => {
                 else { offScreen.style.display = 'none'; }
             }
         });
-        // Ascolta il blocco globale della Sala Radio
-        onValue(ref(db, 'impostazioni/stato_servizio'), (snap) => {
-            const attivo = snap.val() !== false;
-            const offScreen = document.getElementById('off-screen');
-            if (!attivo) {
-                offScreen.style.display = 'flex';
-            } else {
-                // Se il servizio è attivo, controlla se la singola squadra è bloccata
-                onValue(ref(db, `anagrafica_squadre/${sqId}/attiva`), (s2) => {
-                    if (s2.val() === false) offScreen.style.display = 'flex';
-                    else offScreen.style.display = 'none';
-                }, { onlyOnce: true });
-            }
-        });
 
     </script>
 </body>
 </html>
-
