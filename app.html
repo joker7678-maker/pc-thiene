@@ -181,13 +181,45 @@
             updateGpsBadge();
         });
 
-        // OROLOGIO E URL PARAMS
+// OROLOGIO E URL PARAMS
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }); }, 1000);
+        
         const urlParams = new URLSearchParams(window.location.search);
         const sqIdRaw = urlParams.get('id');
-        const sqId = (sqIdRaw ? sqIdRaw : "TEST").trim().toUpperCase();
+        
+        // Se sqIdRaw è nullo, o è la stringa "undefined", o è vuoto, lo blocchiamo
+        if (!sqIdRaw || sqIdRaw === "undefined" || sqIdRaw.trim() === "") {
+            document.body.innerHTML = `
+                <div class="h-screen bg-slate-900 flex items-center justify-center p-6 text-center">
+                    <div class="bg-red-900/20 border border-red-500 p-8 rounded-2xl shadow-2xl">
+                        <span class="text-6xl block mb-4">⚠️</span>
+                        <h1 class="text-white text-xl font-black mb-2 uppercase">ID SQUADRA MANCANTE</h1>
+                        <p class="text-red-200 text-sm">L'app non può avviarsi senza un identificativo valido.<br>Chiudi e riapri dal link corretto.</p>
+                    </div>
+                </div>`;
+            throw new Error("ID Squadra non valido"); // Blocca l'esecuzione degli script successivi
+        }
+
+        const sqId = sqIdRaw.trim().toUpperCase();
         document.getElementById('display-sq').innerText = sqId;
 
+        // --- BLOCCO DI VERIFICA SUL DATABASE ---
+        // Controlla se questa squadra esiste davvero nella lista autorizzata dalla Sala
+        db.ref('anagrafica_squadre/' + sqId).once('value').then(snap => {
+            if (!snap.exists()) {
+                document.body.innerHTML = `
+                    <div class="h-screen bg-slate-900 flex items-center justify-center p-6 text-center">
+                        <div class="bg-amber-900/20 border border-amber-500 p-8 rounded-2xl shadow-2xl">
+                            <span class="text-6xl block mb-4">🚫</span>
+                            <h1 class="text-white text-xl font-black mb-2 uppercase">SQUADRA NON REGISTRATA</h1>
+                            <p class="text-amber-200 text-sm">La squadra <b>${sqId}</b> non risulta nel database.<br>Registrala prima dalla Dashboard Sala Radio.</p>
+                            <button onclick="location.href='index.html'" class="mt-6 bg-amber-600 text-white px-4 py-2 rounded-lg font-bold text-xs uppercase">Torna alla Dashboard</button>
+                        </div>
+                    </div>`;
+                // Opzionale: cancella il log sporco se si era creato
+                db.ref('anagrafica_squadre/undefined').remove(); 
+            }
+        });
         // RETE
         onValue(ref(db, ".info/connected"), (snap) => {
             const badge = document.getElementById('net-badge');
