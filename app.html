@@ -376,21 +376,21 @@
         };
 
         // --- MOTORE TARGET E NAVIGAZIONE ---
-       // PUNTO 2: L'operatore preme RICEVUTO
+// PUNTO 2: L'operatore preme RICEVUTO -> Deve chiudere il log in Dash (stato OK)
         window.cRic = async () => {
             if (idSalaAttivo) {
-                // Chiude il log della sala (punto 2 della tua sequenza)
+                const oraRisp = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                
                 await update(ref(db, `brogliaccio/${idSalaAttivo}`), { 
-                    stato: 'OK', 
+                    stato: 'OK', // <--- Fondamentale: deve essere OK per diventare bianco
                     m2: '✅ RICEVUTO / IN VIAGGIO',
-                    ora_risposta: new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+                    ora_risposta: oraRisp
                 });
-                // Aggiorna lo stato squadra in Trasferimento (Viola)
+                
+                // Aggiorna anche lo stato visivo della squadra
                 await update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Trasferimento' });
                 
                 Swal.fire({ icon: 'success', title: 'Ricevuto!', toast: true, position: 'top', timer: 2000, showConfirmButton: false });
-                
-                // NOTA: idSalaAttivo rimane popolato così il banner resta visibile per premere "Arrivati"
             }
         };
 
