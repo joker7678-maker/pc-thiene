@@ -299,15 +299,14 @@
             Swal.close();
         };
 
-// 1. CAMBIO STATO: Ora cambia SOLO lo stato, senza scrivere nulla nel log (come richiesto)
-        window.askStatus = (s, icon) => {
+window.askStatus = (s, icon) => {
             Swal.fire({
                 title: `CONFERMI STATO?`, html: `<span class="text-4xl block mb-2">${icon}</span><b class="text-lg">${s.toUpperCase()}</b>`,
-                showCancelButton: true, confirmButtonText: 'SÌ, AGGIORNA', confirmButtonColor: '#2563eb', cancelButtonText: 'ANNULLA', background: '#1e293b', color: '#fff'
+                showCancelButton: true, confirmButtonText: 'SÌ, AGGIORNA', confirmButtonColor: '#2563eb', background: '#1e293b', color: '#fff'
             }).then((r) => {
                 if(r.isConfirmed) { 
+                    // Aggiorna solo l'anagrafica, non invia log
                     update(ref(db, `anagrafica_squadre/${sqId}`), { stato: s }); 
-                    // Rimosso window.inviaNuovo da qui
                 }
             });
         };
@@ -378,47 +377,49 @@
             }
         };
 
-// 2. TASTO RICEVUTO: Chiude il log della sala (Step 2 della tua sequenza)
+// PUNTO 2: L'operatore preme RICEVUTO
         window.cRic = async () => {
             if (idSalaAttivo) {
+                // Chiude il log originale (diventa bianco in Dash)
                 await update(ref(db, `brogliaccio/${idSalaAttivo}`), { 
                     stato: 'OK', 
                     m2: '✅ RICEVUTO',
                     ora_risposta: new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
                 });
+                // Aggiorna lo stato squadra
                 await update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Trasferimento' });
                 Swal.fire({ icon: 'success', title: 'Ricevuto!', toast: true, position: 'top', timer: 2000, showConfirmButton: false });
+                
+                // IMPORTANTE: NON resettiamo idSalaAttivo, serve per il banner "Sul Posto"
             }
         };
 
-// PUNTO 3: L'operatore preme ARRIVATI
+        // PUNTO 3: L'operatore preme ARRIVATI
         window.cArr = () => {
-            if (!viaAttiva) return;
+            if (!idSalaAttivo) return;
             Swal.fire({ 
                 title: 'CONFERMA ARRIVO', 
-                text: "Verrà aperto un NUOVO log in attesa per la Sala Radio.", 
+                text: "Verrà aperto un nuovo log in attesa per la Sala.", 
                 icon: 'warning', 
                 showCancelButton: true, 
-                confirmButtonText: 'SÌ, INVIA', 
+                confirmButtonText: 'SÌ, SUL POSTO', 
                 confirmButtonColor: '#dc2626', 
                 background: '#0f172a', color: '#fff' 
             }).then(async (r) => {
                 if (r.isConfirmed) {
-                    // --- MODIFICA FONDAMENTALE ---
-                    // 1. NON facciamo più update(ref(db, `brogliaccio/${idSalaAttivo}`...))
-                    // Questo impedisce di sovrascrivere il log "In Viaggio"
-                    
-                    // 2. Aggiorniamo lo stato della squadra nel suo database (diventa rossa)
+                    // 1. Memorizziamo che questo target è completato per nascondere il banner
+                    window.targetCompletato = idSalaAttivo;
+
+                    // 2. Aggiorna stato squadra
                     await update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
 
-                    // 3. Creiamo il NUOVO log forzando lo stato ATTESA
-                    // Usiamo push per creare una voce fresca e indipendente
+                    // 3. Crea il NUOVO LOG (Punto 3 della sequenza)
+                    // Lo impostiamo in 'ATTESA' così appare ROSSO in Dashboard
                     await window.inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, { 
-                        stato: 'ATTESA', // <--- Questo lo rende ROSSO in Dashboard
-                        dir: 'SQ'        // Viene dalla squadra
+                        stato: 'ATTESA', 
+                        dir: 'SQ' 
                     });
                     
-                    // 4. Puliamo la memoria locale del target
                     idSalaAttivo = null; 
                     window.disegnaBannerUltimaDest(); 
                 }
@@ -447,8 +448,8 @@
             const data = snap.val(); if (!data) return;
             const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).reverse();
             
-            const target = logs.find(l => l.dir === 'SA' && l.squadra === sqId && l.m1 && l.m1.includes('📍') && l.stato !== 'OK');
-            const banner = document.getElementById('target-banner');
+// Cerca l'ultimo target inviato dalla sala, anche se già ricevuto (OK)
+const target = logs.find(l => l.dir === 'SA' && l.squadra === sqId && l.m1 && l.m1.includes('📍') && l.id !== window.targetCompletato);            const banner = document.getElementById('target-banner');
 
             if (target) {
                 idSalaAttivo = target.id; 
