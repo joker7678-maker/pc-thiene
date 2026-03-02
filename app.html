@@ -391,25 +391,34 @@
             }
         };
 
-        // 3. TASTO ARRIVATI: Crea un NUOVO log in attesa (Step 3 della tua sequenza)
+// PUNTO 3: L'operatore preme ARRIVATI
         window.cArr = () => {
             if (!viaAttiva) return;
             Swal.fire({ 
-                title: 'CONFERMA ARRIVO', text: "Invia richiesta di 'Arrivati sul posto' alla Sala?", icon: 'warning', 
-                showCancelButton: true, confirmButtonText: 'SÌ, INVIA', confirmButtonColor: '#dc2626', background: '#0f172a', color: '#fff' 
+                title: 'CONFERMA ARRIVO', 
+                text: "Verrà aperto un NUOVO log in attesa per la Sala Radio.", 
+                icon: 'warning', 
+                showCancelButton: true, 
+                confirmButtonText: 'SÌ, INVIA', 
+                confirmButtonColor: '#dc2626', 
+                background: '#0f172a', color: '#fff' 
             }).then(async (r) => {
                 if (r.isConfirmed) {
-                    // --- CORREZIONE: NON USIAMO PIU' idSalaAttivo qui ---
+                    // --- MODIFICA FONDAMENTALE ---
+                    // 1. NON facciamo più update(ref(db, `brogliaccio/${idSalaAttivo}`...))
+                    // Questo impedisce di sovrascrivere il log "In Viaggio"
                     
-                    // Crea un log COMPLETAMENTE NUOVO in stato ATTESA (diventa rosso in Dash)
-                    await window.inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, { 
-                        stato: 'ATTESA', 
-                        dir: 'SQ' 
-                    });
-
-                    // Aggiorna lo stato della squadra
+                    // 2. Aggiorniamo lo stato della squadra nel suo database (diventa rossa)
                     await update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
+
+                    // 3. Creiamo il NUOVO log forzando lo stato ATTESA
+                    // Usiamo push per creare una voce fresca e indipendente
+                    await window.inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, { 
+                        stato: 'ATTESA', // <--- Questo lo rende ROSSO in Dashboard
+                        dir: 'SQ'        // Viene dalla squadra
+                    });
                     
+                    // 4. Puliamo la memoria locale del target
                     idSalaAttivo = null; 
                     window.disegnaBannerUltimaDest(); 
                 }
