@@ -375,30 +375,58 @@
             }
         };
 
-        // --- MOTORE TARGET E NAVIGAZIONE ---
-        window.cRic = async () => {
+window.cRic = async () => {
             if (idSalaAttivo) {
-                await update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'RICEVUTO', m2: '✅ IN VIAGGIO' });
-                update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Trasferimento' });
+                // Aggiorna il log esistente in Sala per farlo diventare Blu (Ricevuto)
+                await update(ref(db, `brogliaccio/${idSalaAttivo}`), { 
+                    stato: 'RICEVUTO', 
+                    m2: '✅ IN VIAGGIO',
+                    ora_risposta: new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+                });
+                // Aggiorna lo stato squadra in Viola (Trasferimento)
+                await update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Trasferimento' });
+                Swal.fire({ icon: 'success', title: 'Ricevuto!', toast: true, position: 'top', timer: 2000, showConfirmButton: false });
             }
         };
 
-        window.navig = (lat, lng) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`, '_blank'); };
-
         window.cArr = () => {
             if (!idSalaAttivo) return;
-            Swal.fire({ title: 'CONFERMA ARRIVO', text: "Siete sul target? Avviseremo la Sala.", icon: 'warning', showCancelButton: true, confirmButtonText: 'SÌ, SUL POSTO', confirmButtonColor: '#dc2626', background: '#1e293b', color: '#fff' }).then(async (r) => {
+            Swal.fire({ 
+                title: 'CONFERMA ARRIVO', 
+                text: "Siete sul target? Avviseremo la Sala.", 
+                icon: 'warning', 
+                showCancelButton: true, 
+                confirmButtonText: 'SÌ, SUL POSTO', 
+                confirmButtonColor: '#dc2626', 
+                background: '#0f172a', 
+                color: '#fff' 
+            }).then(async (r) => {
                 if (r.isConfirmed) {
-                    await update(ref(db, `brogliaccio/${idSalaAttivo}`), { stato: 'OK', m2: '🏁 SUL POSTO' });
+                    // 1. Chiude il log del target (Diventa OK e sparisce la X sulla mappa della Dashboard)
+                    await update(ref(db, `brogliaccio/${idSalaAttivo}`), { 
+                        stato: 'OK', 
+                        m2: '🏁 SUL POSTO' 
+                    });
+
+                    // 2. Aggiorna stato squadra in Rosso (Intervento) e GPS
                     const updData = { stato: 'Intervento' };
-                    if (ultimaPos.lat && ultimaPos.lng) { updData.lat = ultimaPos.lat; updData.lng = ultimaPos.lng; }
+                    if (navigator.geolocation) {
+                        try {
+                            const p = await new Promise((res) => navigator.geolocation.getCurrentPosition(res, null, {timeout:3000}));
+                            updData.lat = p.coords.latitude.toFixed(6);
+                            updData.lng = p.coords.longitude.toFixed(6);
+                        } catch(e){}
+                    }
                     await update(ref(db, `anagrafica_squadre/${sqId}`), updData);
-                    window.inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, { stato: 'ATTESA' });
-                    idSalaAttivo = null; window.disegnaBannerUltimaDest(); 
+
+                    // 3. Crea un NUOVO LOG pulito di conferma arrivo
+                    await window.inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, { stato: 'OK' });
+                    
+                    idSalaAttivo = null; 
+                    window.disegnaBannerUltimaDest(); 
                 }
             });
         };
-
         window.disegnaBannerUltimaDest = () => {
             const banner = document.getElementById('target-banner');
             if (viaAttiva && ultimaPos.lat) {
@@ -483,7 +511,22 @@
                 else { offScreen.style.display = 'none'; }
             }
         });
+        // Ascolta il blocco globale della Sala Radio
+        onValue(ref(db, 'impostazioni/stato_servizio'), (snap) => {
+            const attivo = snap.val() !== false;
+            const offScreen = document.getElementById('off-screen');
+            if (!attivo) {
+                offScreen.style.display = 'flex';
+            } else {
+                // Se il servizio è attivo, controlla se la singola squadra è bloccata
+                onValue(ref(db, `anagrafica_squadre/${sqId}/attiva`), (s2) => {
+                    if (s2.val() === false) offScreen.style.display = 'flex';
+                    else offScreen.style.display = 'none';
+                }, { onlyOnce: true });
+            }
+        });
 
     </script>
 </body>
 </html>
+
