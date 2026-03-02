@@ -299,13 +299,16 @@
             Swal.close();
         };
 
-        // --- UI BASE ---
+// 1. CAMBIO STATO: Ora cambia SOLO lo stato, senza scrivere nulla nel log (come richiesto)
         window.askStatus = (s, icon) => {
             Swal.fire({
                 title: `CONFERMI STATO?`, html: `<span class="text-4xl block mb-2">${icon}</span><b class="text-lg">${s.toUpperCase()}</b>`,
                 showCancelButton: true, confirmButtonText: 'SÌ, AGGIORNA', confirmButtonColor: '#2563eb', cancelButtonText: 'ANNULLA', background: '#1e293b', color: '#fff'
             }).then((r) => {
-                if(r.isConfirmed) { update(ref(db, `anagrafica_squadre/${sqId}`), { stato: s }); window.inviaNuovo(`STATO: ${icon} ${s}`); }
+                if(r.isConfirmed) { 
+                    update(ref(db, `anagrafica_squadre/${sqId}`), { stato: s }); 
+                    // Rimosso window.inviaNuovo da qui
+                }
             });
         };
 
@@ -375,46 +378,36 @@
             }
         };
 
-        // --- MOTORE TARGET E NAVIGAZIONE ---
-// PUNTO 2: L'operatore preme RICEVUTO -> Deve chiudere il log in Dash (stato OK)
+// 2. TASTO RICEVUTO: Chiude il log della sala (Step 2 della tua sequenza)
         window.cRic = async () => {
             if (idSalaAttivo) {
-                const oraRisp = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-                
                 await update(ref(db, `brogliaccio/${idSalaAttivo}`), { 
-                    stato: 'OK', // <--- Fondamentale: deve essere OK per diventare bianco
-                    m2: '✅ RICEVUTO / IN VIAGGIO',
-                    ora_risposta: oraRisp
+                    stato: 'OK', 
+                    m2: '✅ RICEVUTO',
+                    ora_risposta: new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
                 });
-                
-                // Aggiorna anche lo stato visivo della squadra
                 await update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Trasferimento' });
-                
                 Swal.fire({ icon: 'success', title: 'Ricevuto!', toast: true, position: 'top', timer: 2000, showConfirmButton: false });
             }
         };
 
-        // PUNTO 3: L'operatore preme ARRIVATI
+        // 3. TASTO ARRIVATI: Crea un NUOVO log in attesa (Step 3 della tua sequenza)
         window.cArr = () => {
-            if (!idSalaAttivo) return;
+            if (!viaAttiva) return;
             Swal.fire({ 
-                title: 'CONFERMA ARRIVO', 
-                text: "Verrà inviata la richiesta di 'Arrivati sul posto' alla Sala.", 
-                icon: 'warning', 
-                showCancelButton: true, 
-                confirmButtonText: 'SÌ, INVIA', 
-                confirmButtonColor: '#dc2626', 
-                background: '#0f172a', color: '#fff' 
+                title: 'CONFERMA ARRIVO', text: "Invia richiesta di 'Arrivati sul posto' alla Sala?", icon: 'warning', 
+                showCancelButton: true, confirmButtonText: 'SÌ, INVIA', confirmButtonColor: '#dc2626', background: '#0f172a', color: '#fff' 
             }).then(async (r) => {
                 if (r.isConfirmed) {
-                    // Crea un NUOVO LOG in ATTESA (punto 3 della tua sequenza)
-                    // Questo log apparirà ROSSO sulla Dashboard e richiederà una risposta dalla Sala
+                    // --- CORREZIONE: NON USIAMO PIU' idSalaAttivo qui ---
+                    
+                    // Crea un log COMPLETAMENTE NUOVO in stato ATTESA (diventa rosso in Dash)
                     await window.inviaNuovo(`🏁 ARRIVATI SUL POSTO: ${viaAttiva}`, { 
                         stato: 'ATTESA', 
-                        dir: 'SQ' // Indica che arriva dalla squadra
+                        dir: 'SQ' 
                     });
 
-                    // Aggiorna lo stato squadra in Intervento (Rosso)
+                    // Aggiorna lo stato della squadra
                     await update(ref(db, `anagrafica_squadre/${sqId}`), { stato: 'Intervento' });
                     
                     idSalaAttivo = null; 
