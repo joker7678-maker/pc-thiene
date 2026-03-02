@@ -443,13 +443,22 @@ window.askStatus = (s, icon) => {
             }
         };
 
-        // --- ASCOLTO DATI DA SALA RADIO E GESTIONE RISPOSTE ---
-        onValue(query(ref(db, 'brogliaccio'), limitToLast(20)), (snap) => {
+// --- ASCOLTO DATI DA SALA RADIO E GESTIONE RISPOSTE ---
+        // Aumentato a 100 per non perdere i messaggi se il brogliaccio è lungo
+        onValue(query(ref(db, 'brogliaccio'), limitToLast(100)), (snap) => {
             const data = snap.val(); if (!data) return;
             const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).reverse();
             
-// Cerca l'ultimo target inviato dalla sala, anche se già ricevuto (OK)
-const target = logs.find(l => l.dir === 'SA' && l.squadra === sqId && l.m1 && l.m1.includes('📍') && l.id !== window.targetCompletato);            const banner = document.getElementById('target-banner');
+            // Cerca l'ultimo target inviato dalla sala. 
+            // Lo mostra finché non è stato marcato come "targetCompletato" dall'app (tasto Sul Posto)
+            const target = logs.find(l => 
+                l.dir === 'SA' && 
+                l.squadra === sqId && 
+                l.m1 && l.m1.includes('📍') && 
+                l.id !== window.targetCompletato
+            );
+
+            const banner = document.getElementById('target-banner');
 
             if (target) {
                 idSalaAttivo = target.id; 
@@ -461,18 +470,45 @@ const target = logs.find(l => l.dir === 'SA' && l.squadra === sqId && l.m1 && l.
                     localStorage.setItem('app_ultima_pos', JSON.stringify(ultimaPos));
                 }
 
+                // LOGICA STATI BANNER
                 if (target.stato === 'ATTESA') {
+                    // 1. STATO ATTESA: Banner Rosso (Nuovo Ordine)
                     banner.className = "shrink-0 w-full bg-red-900/80 rounded-xl p-2.5 border pulse-red-border shadow-lg flex flex-col gap-2";
-                    banner.innerHTML = `<div class="flex items-center gap-2"><span class="text-3xl animate-bounce">🚨</span><div class="flex flex-col flex-1 overflow-hidden"><span class="text-[9px] text-red-300 font-bold uppercase tracking-widest">NUOVO ORDINE DALLA SALA</span><span class="text-[12px] text-white font-black truncate">${viaAttiva}</span></div></div><button onclick="window.cRic()" class="w-full bg-red-600 py-2.5 rounded-lg font-black uppercase text-[10px] shadow active:scale-95 text-white">✅ CONFERMA RICEZIONE</button>`;
-                } else if (target.stato === 'RICEVUTO') {
+                    banner.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <span class="text-3xl animate-bounce">🚨</span>
+                            <div class="flex flex-col flex-1 overflow-hidden">
+                                <span class="text-[9px] text-red-300 font-bold uppercase tracking-widest">NUOVO ORDINE DALLA SALA</span>
+                                <span class="text-[12px] text-white font-black truncate">${viaAttiva}</span>
+                            </div>
+                        </div>
+                        <button onclick="window.cRic()" class="w-full bg-red-600 py-2.5 rounded-lg font-black uppercase text-[10px] shadow active:scale-95 text-white">✅ CONFERMA RICEZIONE</button>
+                    `;
+                } else {
+                    // 2. STATO OK (Già ricevuto): Banner Blu (In Viaggio / Naviga)
+                    // Usiamo 'else' perché se non è più in ATTESA significa che l'hai ricevuto
                     banner.className = "shrink-0 w-full bg-blue-900/80 rounded-xl p-2.5 border pulse-blue-border shadow-lg flex flex-col gap-2";
-                    banner.innerHTML = `<div class="flex items-center gap-2 mb-0.5"><span class="text-2xl">🚐</span><div class="flex flex-col flex-1 overflow-hidden"><span class="text-[9px] text-blue-300 font-bold uppercase tracking-widest">IN VIAGGIO VERSO:</span><span class="text-[12px] text-white font-bold truncate">${viaAttiva}</span></div></div><div class="flex gap-2"><button onclick="window.navig(${ultimaPos.lat}, ${ultimaPos.lng})" class="flex-1 bg-emerald-600 py-2.5 rounded-lg font-bold uppercase text-[9px] shadow active:scale-95 text-white">📍 NAVIGA</button><button onclick="window.cArr()" class="flex-1 bg-red-600 py-2.5 rounded-lg font-bold uppercase text-[9px] shadow active:scale-95 text-white border border-red-800">🏁 SUL POSTO</button></div>`;
+                    banner.innerHTML = `
+                        <div class="flex items-center gap-2 mb-0.5">
+                            <span class="text-2xl">🚐</span>
+                            <div class="flex flex-col flex-1 overflow-hidden">
+                                <span class="text-[9px] text-blue-300 font-bold uppercase tracking-widest">IN VIAGGIO VERSO:</span>
+                                <span class="text-[12px] text-white font-bold truncate">${viaAttiva}</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="window.navig(${ultimaPos.lat}, ${ultimaPos.lng})" class="flex-1 bg-emerald-600 py-2.5 rounded-lg font-bold uppercase text-[9px] shadow active:scale-95 text-white">📍 NAVIGA</button>
+                            <button onclick="window.cArr()" class="flex-1 bg-red-600 py-2.5 rounded-lg font-bold uppercase text-[9px] shadow active:scale-95 text-white border border-red-800">🏁 SUL POSTO</button>
+                        </div>
+                    `;
                 }
             } else {
+                // Nessun target attivo o target completato: mostra ultima destinazione statica
                 idSalaAttivo = null;
                 window.disegnaBannerUltimaDest();
             }
 
+            // --- GESTIONE ALTRI MESSAGGI (BROADCAST E SALA) ---
             const msgBanner = document.getElementById('last-msg-banner');
             const myLogs = logs.filter(l => l.squadra === sqId || l.squadra === 'COMUNICAZIONE GENERALE');
             let lastMsgText = null; let lastMsgTime = ''; let isBroadcast = false;
