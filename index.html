@@ -11,6 +11,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="config.js"></script>
 
     <style>
@@ -19,7 +20,6 @@
         
         .swal2-container { z-index: 99999 !important; }
         
-        /* TEMA NOTTE TATTICO */
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #050b14; 
@@ -33,7 +33,6 @@
             height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; margin: 0; font-weight: 500; 
         }
 
-        /* Barre di scorrimento stilizzate interne */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.8); border-radius: 4px; }
@@ -42,11 +41,16 @@
         .safe-top { padding-top: calc(12px + env(safe-area-inset-top)) !important; }
         .safe-bottom { padding-bottom: calc(12px + env(safe-area-inset-bottom)) !important; }
 
-        #off-screen, #login-screen, #team-select-screen { 
+        /* Aggiunti i nuovi schermi ai container in overlay */
+        #off-screen, #login-screen, #team-select-screen, #home-screen, #scanner-screen, #gestionale-screen { 
             position: fixed; inset: 0; z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; text-align: center; background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(15px); overflow: hidden; 
             padding-top: calc(16px + env(safe-area-inset-top)); padding-bottom: calc(16px + env(safe-area-inset-bottom));
         }
-        #login-screen { z-index: 20000; } #team-select-screen { z-index: 30000; }
+        #login-screen { z-index: 20000; } 
+        #team-select-screen { z-index: 30000; }
+        #home-screen { z-index: 40000; }
+        #scanner-screen { z-index: 50000; background: #000; }
+        #gestionale-screen { z-index: 15000; background: #0f172a; justify-content: flex-start; padding: 0; }
 
         .screen-enter { animation: fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes fadeInScale { 0% { opacity: 0; transform: scale(0.95) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
@@ -56,7 +60,6 @@
         
         .chasing-border-blue { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, transparent 70%, #3b82f6 100%); animation: spin-chase 2s linear infinite; }
         .inner-circle { position: absolute; inset: 4px; background-color: #0f172a; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; box-shadow: inset 0px 0px 20px rgba(0,0,0,0.9); overflow: hidden; }
-
         .glass-panel { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); border-radius: 12px; }
         
         .btn-status { background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.4); }
@@ -90,9 +93,73 @@
         .msg-box-in { background: rgba(30, 58, 138, 0.2); border: 1px solid rgba(59, 130, 246, 0.3); }
         .msg-box-in-gen { background: rgba(120, 53, 15, 0.3); border: 1px solid rgba(245, 158, 11, 0.3); }
         .msg-box-out { background: rgba(2, 44, 34, 0.3); border: 1px solid rgba(16, 185, 129, 0.2); }
+
+        /* Stile Inquadratura Fotocamera */
+        #qr-reader { width: 100%; max-width: 400px; border-radius: 12px; overflow: hidden; border: 4px solid #10b981; }
+        #qr-reader video { object-fit: cover; }
     </style>
 </head>
 <body>
+
+    <div id="home-screen" style="display: none;">
+        <div class="relative h-40 w-40 shrink-0 mb-6 mx-auto rounded-full logo-container" style="box-shadow: 0 0 40px rgba(59, 130, 246, 0.5);">
+            <div class="chasing-border-blue"></div>
+            <div class="inner-circle p-0 bg-white"><img src="logosala.png" alt="Logo" class="w-full h-full object-contain drop-shadow-lg relative z-20 scale-[1.2]"></div>
+        </div>
+        <h1 class="font-black text-2xl mb-1 text-white tracking-tight uppercase leading-none">Protezione Civile Thiene</h1>
+        <h2 class="font-black text-[11px] mb-8 text-slate-400 tracking-[0.4em] uppercase text-center drop-shadow">SELEZIONA ACCESSO</h2>
+        
+        <div class="w-full max-w-[320px] flex flex-col gap-4 screen-enter">
+            <button onclick="window.apriScannerQR()" class="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 py-4 rounded-2xl font-black uppercase text-sm shadow-[0_0_20px_rgba(16,185,129,0.4)] active:scale-95 transition-all text-white border border-emerald-400/50 flex flex-col items-center gap-1">
+                <span class="text-2xl">📷</span>
+                <span>TESSERINO PERSONALE</span>
+            </button>
+            
+            <div class="flex items-center gap-2 opacity-50 my-1">
+                <div class="h-px bg-white flex-1"></div><span class="text-[10px] uppercase font-bold">OPPURE</span><div class="h-px bg-white flex-1"></div>
+            </div>
+
+            <button onclick="window.apriAccessoGenerico()" class="w-full bg-slate-800 hover:bg-slate-700 py-4 rounded-2xl font-black uppercase text-sm shadow-lg active:scale-95 transition-all text-slate-300 border border-slate-600 flex flex-col items-center gap-1">
+                <span class="text-xl">🚒</span>
+                <span>ACCESSO UNITÀ / VEICOLO</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="scanner-screen" style="display: none;">
+        <h2 class="font-black text-lg mb-4 text-emerald-400 tracking-[0.2em] uppercase text-center">INQUADRA QR CODE</h2>
+        <div id="qr-reader"></div>
+        <button onclick="window.chiudiScannerQR()" class="mt-8 px-6 py-3 bg-red-600 text-white font-bold rounded-xl uppercase tracking-widest shadow-lg active:scale-95 border border-red-400">✖ ANNULLA</button>
+    </div>
+
+    <div id="gestionale-screen" style="display: none;">
+        <div class="w-full bg-slate-800/90 border-b border-slate-700 p-4 pt-8 shadow-lg shrink-0 flex justify-between items-center z-10">
+            <div>
+                <div class="text-[10px] text-blue-400 font-bold uppercase tracking-widest">AREA PERSONALE S.O.T.</div>
+                <div id="nome-volontario-display" class="text-xl font-black text-white uppercase mt-0.5">---</div>
+            </div>
+            <button onclick="window.logoutPersonale()" class="bg-slate-900 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase border border-slate-600 text-slate-400 hover:text-white hover:border-red-500 transition-colors">🚪 ESCI</button>
+        </div>
+
+        <div class="flex-1 w-full p-4 overflow-y-auto pb-24">
+            <h3 class="text-slate-400 text-xs font-bold uppercase mb-2 tracking-widest">📅 I Tuoi Turni</h3>
+            <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700/50 mb-5 shadow-inner text-center text-slate-500 text-sm font-medium">
+                Nessun turno assegnato dalla segreteria.
+            </div>
+
+            <h3 class="text-slate-400 text-xs font-bold uppercase mb-2 tracking-widest">🦺 Magazzino DPI</h3>
+            <div class="bg-slate-800/50 p-5 rounded-xl border border-slate-700/50 shadow-inner text-center text-slate-500 text-sm font-medium">
+                Tutte le dotazioni sono in regola.
+            </div>
+        </div>
+
+        <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-slate-900 via-slate-900 to-transparent pt-10 pb-8">
+            <button onclick="window.entraInEmergenzaDalGestionale()" class="w-full bg-red-600 hover:bg-red-500 text-white font-black text-xl py-5 rounded-2xl shadow-[0_0_30px_rgba(220,38,38,0.5)] uppercase tracking-[0.2em] transition-all active:scale-95 border-2 border-red-400 flex flex-col items-center">
+                <span>🚨 ENTRA IN SERVIZIO</span>
+                <span class="text-[9px] font-medium tracking-widest opacity-80 mt-1">ATTIVA MAPPA E GPS</span>
+            </button>
+        </div>
+    </div>
 
     <div id="team-select-screen" style="display: none;">
         <div class="relative h-48 w-48 shrink-0 mb-6 mx-auto rounded-full logo-container" style="box-shadow: 0 0 40px rgba(59, 130, 246, 0.5);">
@@ -105,11 +172,7 @@
             <div class="flex items-center gap-2 mb-2"><span class="animate-pulse text-emerald-400">●</span><p class="text-emerald-400 text-[10px] font-bold uppercase tracking-widest">Identificativo Unità</p></div>
             <input type="text" id="team-input" class="bg-slate-900 border-2 border-slate-600 focus:border-emerald-500 focus:bg-slate-800 rounded-2xl text-center text-4xl text-white py-3 w-full tracking-[0.2em] outline-none uppercase mb-5 font-black shadow-inner transition-all" placeholder="SQ1">            
             <button onclick="window.saveNewTeam()" class="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 py-3.5 rounded-2xl font-black uppercase text-xs shadow-lg active:scale-95 transition-all text-white border border-emerald-400/50">INIZIALIZZA TERMINALE</button>
-        </div>
-        
-        <div class="mt-8 flex items-center justify-center gap-1 opacity-60">
-            <img src="jokart.png" onerror="this.style.display='none'" class="h-6 object-contain drop-shadow-lg">
-            <div class="text-xl font-black italic tracking-widest drop-shadow-md"><span class="text-white">JOK</span><span class="text-red-500">ART</span></div>
+            <button onclick="window.tornaAllaHome()" class="mt-4 text-[9px] font-black text-slate-400 hover:text-white uppercase tracking-[0.2em] transition-colors">🔙 INDIETRO</button>
         </div>
     </div>
 
@@ -123,7 +186,7 @@
         <div class="relative z-20 bg-slate-800/80 border border-slate-600/50 rounded-3xl p-5 w-full max-w-[320px] shadow-2xl flex flex-col items-center backdrop-blur-xl screen-enter">
             <div class="flex items-center gap-2 mb-2"><span class="animate-pulse text-blue-400">🔒</span><p class="text-blue-400 text-[10px] font-bold uppercase tracking-widest">Codice per <b id="login-sq-name" class="text-white ml-1">...</b></p></div>
             <input type="password" id="pin-input" class="bg-slate-900 border-2 border-slate-600 focus:border-blue-500 focus:bg-slate-800 rounded-2xl text-center text-4xl text-white py-3 w-full mb-5 tracking-[0.4em] outline-none font-black shadow-inner transition-all" placeholder="****" inputmode="numeric" maxlength="4">            
-<button onclick="window.checkPin()" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 py-3.5 rounded-2xl font-black uppercase text-xs shadow-lg active:scale-95 transition-all text-white border border-blue-400/50 mb-2">SBLOCCA UNITÀ</button>
+            <button onclick="window.checkPin()" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 py-3.5 rounded-2xl font-black uppercase text-xs shadow-lg active:scale-95 transition-all text-white border border-blue-400/50 mb-2">SBLOCCA UNITÀ</button>
             <button onclick="window.cambiaUnita()" class="mt-2 text-[9px] font-black text-slate-400 hover:text-white uppercase tracking-[0.2em] transition-colors bg-slate-900/50 px-4 py-2 rounded-full border border-slate-700">🔄 CAMBIA UNITÀ</button>
             
             <div class="mt-4 text-center px-1">
@@ -131,11 +194,6 @@
                     ⚠️ Accedendo autorizzi il tracciamento GPS per esclusive finalità di Protezione Civile (GDPR 679/2016).
                 </p>
             </div>
-            </div>
-
-        <div class="mt-8 flex items-center justify-center gap-1 opacity-80 screen-enter" style="animation-delay: 0.3s;">
-            <img src="jokart.png" onerror="this.style.display='none'" class="h-8 object-contain drop-shadow-lg">
-            <div class="text-2xl font-black italic tracking-widest drop-shadow-md"><span class="text-white">JOK</span><span class="text-red-500">ART</span></div>
         </div>
     </div>
 
@@ -295,6 +353,7 @@
         window.ultimoContattoLocale = Date.now(); 
         window.targetCompletato = null; 
         let liveTrackingTimer = null;
+        let scannerFotocamera = null;
         
         window.gpsAutoEnabled = localStorage.getItem('app_gps_auto') !== 'false'; 
         window.liveTrackingEnabled = localStorage.getItem('app_live_track') === 'true'; 
@@ -315,13 +374,41 @@
         });
 
         // ==========================================
-        // 2. GESTIONE ACCESSO E SQUADRE
+        // 2. MOTORE DI NAVIGAZIONE E SCELTA ACCESSO
         // ==========================================
+        function nascondiTuttiSchermi() {
+            document.getElementById('home-screen').style.display = 'none';
+            document.getElementById('scanner-screen').style.display = 'none';
+            document.getElementById('gestionale-screen').style.display = 'none';
+            document.getElementById('team-select-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('off-screen').style.display = 'none';
+            document.getElementById('main-header').classList.add('hidden');
+            document.getElementById('main-content').classList.add('hidden');
+            document.getElementById('footerApp').classList.add('hidden');
+        }
+
         const urlParams = new URLSearchParams(window.location.search);
         const sqIdRaw = urlParams.get('id') || urlParams.get('sq');
         const savedSqId = localStorage.getItem('pc_app_saved_team');
+        const memVolontario = localStorage.getItem('sot_volontario_memoria');
 
-        if (sqIdRaw && sqIdRaw.trim() !== "") { 
+        // ROUTING INIZIALE TATTICO
+        if (memVolontario) {
+            // È un volontario con QR
+            const dati = JSON.parse(memVolontario);
+            document.getElementById('nome-volontario-display').innerText = dati.nome || "MAT: " + dati.m;
+            
+            if (savedSqId && localStorage.getItem('pc_app_auth') === 'true') {
+                // Era già in emergenza con una squadra, lo ributtiamo dentro
+                sqId = savedSqId;
+                verificaSquadraELogin();
+            } else {
+                // Non è in emergenza, va al gestionale
+                nascondiTuttiSchermi();
+                document.getElementById('gestionale-screen').style.display = 'flex';
+            }
+        } else if (sqIdRaw && sqIdRaw.trim() !== "") { 
             sqId = sqIdRaw.trim().toUpperCase(); 
             localStorage.setItem('pc_app_saved_team', sqId); 
             window.history.replaceState({}, document.title, window.location.pathname); 
@@ -330,9 +417,102 @@
             sqId = savedSqId; 
             verificaSquadraELogin(); 
         } else { 
-            document.getElementById('team-select-screen').style.display = 'flex'; 
+            // Nessun dato, mostriamo il bivio
+            nascondiTuttiSchermi();
+            document.getElementById('home-screen').style.display = 'flex'; 
         }
 
+        window.tornaAllaHome = () => {
+            nascondiTuttiSchermi();
+            document.getElementById('home-screen').style.display = 'flex';
+        };
+
+        window.apriAccessoGenerico = () => {
+            nascondiTuttiSchermi();
+            document.getElementById('team-select-screen').style.display = 'flex';
+        };
+
+        // --- GESTIONE SCANNER QR (NUOVO) ---
+        window.apriScannerQR = () => {
+            nascondiTuttiSchermi();
+            document.getElementById('scanner-screen').style.display = 'flex';
+            scannerFotocamera = new Html5Qrcode("qr-reader");
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+            scannerFotocamera.start(
+                { facingMode: "environment" }, 
+                config,
+                (testoDecodificato) => {
+                    window.chiudiScannerQR();
+                    try {
+                        const dati = JSON.parse(testoDecodificato);
+                        if (dati.m && dati.p) {
+                            // Salva accesso personale
+                            localStorage.setItem('sot_volontario_memoria', JSON.stringify(dati));
+                            document.getElementById('nome-volontario-display').innerText = "MAT: " + dati.m;
+                            
+                            Swal.fire({
+                                icon: 'success', title: 'ACCESSO CONSENTITO', text: 'Benvenuto nel Gestionale S.O.T.',
+                                background: '#0f172a', color: '#fff', timer: 1500, showConfirmButton: false
+                            }).then(() => {
+                                nascondiTuttiSchermi();
+                                document.getElementById('gestionale-screen').style.display = 'flex';
+                            });
+                        } else {
+                            Swal.fire('Codice Non Valido', 'Questo QR non è un tesserino S.O.T.', 'error').then(() => tornaAllaHome());
+                        }
+                    } catch (e) {
+                        Swal.fire('Errore Lettura', 'Codice non riconosciuto.', 'error').then(() => tornaAllaHome());
+                    }
+                },
+                (errore) => {} // Ignora log di autofocus
+            ).catch((err) => {
+                window.chiudiScannerQR();
+                Swal.fire('Errore Fotocamera', 'Impossibile accedere alla fotocamera. Usa un browser sicuro (https).', 'error').then(() => tornaAllaHome());
+            });
+        };
+
+        window.chiudiScannerQR = () => {
+            if (scannerFotocamera) {
+                scannerFotocamera.stop().then(() => { scannerFotocamera.clear(); }).catch(e => {});
+            }
+            tornaAllaHome();
+        };
+
+        window.logoutPersonale = () => {
+            localStorage.removeItem('sot_volontario_memoria');
+            tornaAllaHome();
+        };
+
+        window.entraInEmergenzaDalGestionale = async () => {
+            const { value: teamName } = await Swal.fire({
+                title: 'IDENTIFICATIVO UNITÀ',
+                html: '<p class="text-[10px] text-slate-400 mb-2">In quale squadra/veicolo opererai oggi?</p>',
+                input: 'text',
+                inputPlaceholder: 'Es. ALFA 1',
+                background: '#0f172a', color: '#fff',
+                confirmButtonText: 'ENTRA IN SALA 🚨',
+                confirmButtonColor: '#dc2626',
+                showCancelButton: true,
+                cancelButtonText: 'Annulla',
+                inputValidator: (value) => { if (!value) return 'Devi inserire una sigla!' }
+            });
+
+            if (teamName) {
+                sqId = teamName.trim().toUpperCase();
+                localStorage.setItem('pc_app_saved_team', sqId);
+                // TRUCCO: Essendo già autenticati col QR, bypassiamo il PIN!
+                localStorage.setItem('pc_app_auth', 'true');
+                
+                nascondiTuttiSchermi();
+                verificaSquadraELogin();
+            }
+        };
+
+
+        // ==========================================
+        // 3. LOGICA VECCHIA (TEAM E PIN)
+        // ==========================================
         window.saveNewTeam = () => {
             const val = document.getElementById('team-input').value.trim().toUpperCase();
             if (val === '') { Swal.fire({ icon: 'warning', title: 'ERRORE', text: 'Inserisci una sigla', background: '#0f172a', color: '#fff' }); return; }
@@ -349,31 +529,31 @@
 
         function verificaSquadraELogin() {
             if (!db) return; 
+            nascondiTuttiSchermi();
+            
             document.getElementById('display-sq').innerText = sqId; 
             document.getElementById('login-sq-name').innerText = sqId; 
-            document.getElementById('team-select-screen').style.display = 'none';
             
             get(ref(db, 'anagrafica_squadre/' + sqId)).then((snap) => {
                 if (!snap.exists()) { 
                     Swal.fire({ icon: 'error', title: 'UNITÀ SCONOSCIUTA', text: `La sigla ${sqId} non è in Sala.`, background: '#0f172a', color: '#fff' }).then(() => { window.cambiaUnita(); }); 
                     return; 
                 }
+                
+                // Se ha il PIN salvato (o se viene dal Gestionale QR che forza questo flag)
                 if(localStorage.getItem('pc_app_auth') === 'true') { 
                     const lucchettoRef = ref(db, `anagrafica_squadre/${sqId}/in_uso`); 
                     update(ref(db, `anagrafica_squadre/${sqId}`), { in_uso: true }); 
                     onDisconnect(lucchettoRef).set(false);
                     avviaMotoreApp(); 
-                } else { document.getElementById('login-screen').style.display = 'flex'; }
+                } else { 
+                    document.getElementById('login-screen').style.display = 'flex'; 
+                }
             });
         }
 
-        // ==========================================
-        // 3. AUTENTICAZIONE PIN & LOGOUT
-        // ==========================================
         window.pinSegretoAttuale = "7678"; 
-        if (db) { 
-            onValue(ref(db, 'configurazione/pin_volontari'), (snap) => { if(snap.exists() && snap.val() !== null) { window.pinSegretoAttuale = String(snap.val()); } }); 
-        }
+        if (db) { onValue(ref(db, 'configurazione/pin_volontari'), (snap) => { if(snap.exists() && snap.val() !== null) { window.pinSegretoAttuale = String(snap.val()); } }); }
 
         window.checkPin = async () => {
             const pinInput = document.getElementById('pin-input'); 
@@ -396,12 +576,7 @@
                     await update(ref(db, `anagrafica_squadre/${sqId}`), { in_uso: true, ultimo_contatto: Date.now() }); 
                     onDisconnect(lucchettoRef).set(false);
                     
-                    if (btn) { 
-                        btn.classList.remove("animate-pulse"); 
-                        btn.innerHTML = "ACCESSO CONSENTITO"; 
-                        btn.classList.remove("from-blue-600", "to-blue-500", "hover:from-blue-500", "hover:to-blue-400"); 
-                        btn.classList.add("from-emerald-600", "to-emerald-500", "hover:from-emerald-500", "hover:to-emerald-400"); 
-                    }
+                    if (btn) { btn.classList.remove("animate-pulse"); btn.innerHTML = "ACCESSO CONSENTITO"; btn.classList.remove("from-blue-600", "to-blue-500", "hover:from-blue-500", "hover:to-blue-400"); btn.classList.add("from-emerald-600", "to-emerald-500", "hover:from-emerald-500", "hover:to-emerald-400"); }
                     
                     Swal.fire({
                         title: 'AUTENTICAZIONE VALIDA',
@@ -442,12 +617,23 @@
                             update(ref(db, `anagrafica_squadre/${sqId}`), { in_uso: false, attiva: false });
                             onDisconnect(lucchettoRef).cancel(); 
                         }
-                        localStorage.removeItem('pc_app_auth'); localStorage.removeItem('app_ultima_via'); localStorage.removeItem('app_ultima_pos');
+                        
+                        // Eliminiamo le memorie operative, MA NON quella del Volontario
+                        localStorage.removeItem('pc_app_auth'); 
+                        localStorage.removeItem('app_ultima_via'); 
+                        localStorage.removeItem('app_ultima_pos');
+                        localStorage.removeItem('pc_app_saved_team');
+                        
                         if(window.AndroidBridge && window.AndroidBridge.impostaSquadra) { window.AndroidBridge.impostaSquadra(""); }
-                        document.getElementById('main-header').classList.add('hidden');
-                        document.getElementById('main-content').classList.add('hidden');
-                        document.getElementById('footerApp').classList.add('hidden');
-                        document.getElementById('login-screen').style.display = 'flex';
+                        
+                        nascondiTuttiSchermi();
+                        
+                        // Se è un volontario col QR, torna al suo Gestionale, sennò va alla Home
+                        if (localStorage.getItem('sot_volontario_memoria')) {
+                            document.getElementById('gestionale-screen').style.display = 'flex';
+                        } else {
+                            document.getElementById('home-screen').style.display = 'flex';
+                        }
                     });
                 }
             });
@@ -455,8 +641,9 @@
 
         window.cambiaUnita = () => { localStorage.removeItem('pc_app_saved_team'); window.history.replaceState({}, document.title, window.location.pathname); window.location.reload(); };
 
+
         // ==========================================
-        // 4. MOTORE PRINCIPALE (AVVIO APP)
+        // 4. MOTORE PRINCIPALE EMERGENZA (INTATTO)
         // ==========================================
         let ultMsgInId = null;
         
@@ -541,7 +728,7 @@
         }
 
         // ==========================================
-        // 5. GESTIONE GPS E TRACKING
+        // 5 E OLTRE: GPS, FOTO E UTILITY (INTATTI)
         // ==========================================
         window.showGpsPing = () => { 
             const txBadge = document.getElementById('gps-tx-indicator'); const liveBadge = document.getElementById('live-badge'); 
@@ -566,7 +753,6 @@
             push(ref(db, 'brogliaccio'), { ora, data: new Date().toLocaleDateString('it-IT'), squadra: sqId, m1: testo.toUpperCase(), dir: 'SQ', stato: 'ATTESA', ...pos, ...extra })
             .then(() => { 
                 Swal.fire({ icon: 'success', title: 'INVIATO', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false, background: '#0f172a', color: '#10b981' }); 
-                // Scrolla giù leggermente l'area messaggi
                 const area = document.getElementById('area-messaggi');
                 if(area) area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
             }); 
@@ -584,9 +770,6 @@
         window.cercaViaApp = async () => { const ind = document.getElementById('app-man-ind').value; if(!ind) return; try { const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(ind)}&limit=1`); const data = await res.json(); if(data && data.length > 0) { document.getElementById('app-man-lat').value = parseFloat(data[0].lat).toFixed(6); document.getElementById('app-man-lng').value = parseFloat(data[0].lon).toFixed(6); document.getElementById('app-man-ind').value = data[0].display_name.split(',')[0].toUpperCase(); } } catch(e) {} };
         window.inviaGPSManuale = () => { const lat = document.getElementById('app-man-lat').value; const lng = document.getElementById('app-man-lng').value; const via = document.getElementById('app-man-ind').value || "POSIZIONE MANUALE"; if(!lat || !lng) return; window.inviaNuovo(`📍 RIFERIMENTO: ${via}`, { lat: lat, lng: lng }); Swal.close(); };
         
-        // ==========================================
-        // 6. UTILITY E PULSANTI
-        // ==========================================
         window.askStatus = (s, icon) => { Swal.fire({ title: `CONFERMI STATO?`, html: `<span class="text-4xl block mb-2">${icon}</span><b class="text-lg">${s.toUpperCase()}</b>`, showCancelButton: true, confirmButtonText: 'SÌ, AGGIORNA', confirmButtonColor: '#2563eb', background: '#0f172a', color: '#fff' }).then((r) => { if(r.isConfirmed) { update(ref(db, `anagrafica_squadre/${sqId}`), { stato: s, ultimo_contatto: Date.now() }).then(() => { Swal.fire({ icon: 'success', title: 'STATO AGGIORNATO', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false, background: '#0f172a', color: '#10b981' }); }); } }); };
         window.askFreeMsg = () => { const t = document.getElementById('msg-input').value.trim(); if(!t) return; window.inviaNuovo(t).then(() => { document.getElementById('msg-input').value = ""; }); };
         
@@ -619,9 +802,6 @@
         window.disegnaBannerUltimaDest = () => { const banner = document.getElementById('target-banner'); if (viaAttiva && ultimaPos.lat) { banner.className = "shrink-0 w-full bg-slate-800/80 backdrop-blur-md rounded-xl p-2 border border-slate-600 shadow-[0_2px_10px_rgba(0,0,0,0.5)] flex items-center justify-between"; banner.innerHTML = `<div class="flex flex-col flex-1 overflow-hidden"><span class="text-[7px] text-slate-400 font-bold uppercase tracking-widest text-left leading-none">ULTIMA DESTINAZIONE</span><span class="text-[10px] text-white font-bold truncate leading-tight">${viaAttiva}</span></div><button onclick="window.navig(${ultimaPos.lat}, ${ultimaPos.lng})" class="bg-slate-700 hover:bg-slate-600 text-emerald-400 px-3 py-1.5 rounded-lg font-bold text-[8px] border border-slate-500 shadow-md shrink-0">📍 NAVIGA</button>`; } else { banner.className = "shrink-0 w-full bg-slate-800/50 backdrop-blur-md rounded-xl p-2 border border-slate-700/50 shadow-inner flex flex-col justify-center min-h-[46px]"; banner.innerHTML = `<div class="text-center text-slate-500 text-[9px] font-bold uppercase tracking-widest">Nessun Target attivo</div>`; } };
         window.navig = (lat, lng) => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank'); };
         
-        // ==========================================
-        // 7. RICEZIONE GPS NATIVO DA ANDROID
-        // ==========================================
         window.updateFromNative = (lat, lng) => {
             if (window.liveTrackingEnabled && sqId && db) {
                 update(ref(db, `anagrafica_squadre/${sqId}`), { lat: parseFloat(lat).toFixed(6), lng: parseFloat(lng).toFixed(6), ultimo_contatto: Date.now() });
