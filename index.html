@@ -432,12 +432,18 @@
             document.getElementById('team-select-screen').style.display = 'flex';
         };
 
-        // --- GESTIONE SCANNER QR (NUOVO) ---
+// --- GESTIONE SCANNER QR (NUOVO) ---
         window.apriScannerQR = () => {
             nascondiTuttiSchermi();
             document.getElementById('scanner-screen').style.display = 'flex';
             scannerFotocamera = new Html5Qrcode("qr-reader");
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+            
+            // 🚀 ECCO LA MODIFICA: Configurazione potenziata del mirino
+            const config = { 
+                fps: 15, 
+                disableFlip: false,
+                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] 
+            };
 
             scannerFotocamera.start(
                 { facingMode: "environment" }, 
