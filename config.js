@@ -6,13 +6,14 @@ window.APP_CONFIG = {
     
     // 2. Incolla qui ESATTAMENTE il blocco di Firebase
     firebaseSettings: {
-  apiKey: "AIzaSyDMcnP_3TD1h9fYobsN6PN5aNGDGHe1y0c",
-  authDomain: "so-pcthiene.firebaseapp.com",
-  databaseURL: "https://so-pcthiene-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "so-pcthiene",
-  storageBucket: "so-pcthiene.firebasestorage.app",
-  messagingSenderId: "383344731618",
-  appId: "1:383344731618:web:5bb0f9b30d100381bc85bb"
+  apiKey: "AIzaSyAWHRpXkth-UrnaDVo7GyeFNXpu10_fd54",
+  authDomain: "realtime-database-6962f.firebaseapp.com",
+  databaseURL: "https://realtime-database-6962f-default-rtdb.firebaseio.com",
+  projectId: "realtime-database-6962f",
+  storageBucket: "realtime-database-6962f.firebasestorage.app",
+  messagingSenderId: "61041045277",
+  appId: "1:61041045277:web:b6d0c456d47973db72fbf4",
+  measurementId: "G-S9R5G5BNN1"
 }
 };
 
