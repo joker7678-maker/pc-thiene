@@ -197,7 +197,17 @@
             <textarea id="msg-input" class="w-full bg-slate-600 border border-slate-500 rounded-lg p-2.5 text-sm placeholder-slate-300 resize-none h-14 text-white leading-tight focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all" placeholder="Scrivi alla sala..."></textarea>
             <button onclick="window.askFreeMsg()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold uppercase text-[11px] shadow-lg active:scale-95 transition-all tracking-widest text-white">Invia alla Sala</button>
         </div>
-
+<div class="shrink-0 bg-slate-800/80 border border-slate-700 rounded-xl p-3 shadow-lg mt-1">
+            <div class="text-[10px] text-slate-400 uppercase font-bold mb-2 tracking-widest flex items-center gap-2">
+                <span>🎒</span> DOTAZIONI ASSEGNATE
+            </div>
+            <div id="lista-dotazioni" class="flex flex-col gap-2 max-h-32 overflow-y-auto pr-1">
+                <div class="text-center p-2 border border-dashed border-slate-700 rounded-lg">
+                    <div class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-emerald-500 mx-auto mb-1"></div>
+                    <p class="text-slate-500 text-[8px] font-bold uppercase">Caricamento...</p>
+                </div>
+            </div>
+        </div>
         <div class="shrink-0 mt-2">
             <button onclick="window.logoutApp(false)" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg text-slate-400 font-bold uppercase text-[10px] tracking-widest transition-all">
                 🚪 Disconnetti Squadra
@@ -398,7 +408,80 @@
                 if(snap.val() === true) { badge.className = "inline-block text-[7px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30 font-bold uppercase"; badge.innerText = "ONLINE"; } 
                 else { badge.className = "inline-block text-[7px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded border border-red-500/30 font-bold uppercase animate-pulse"; badge.innerText = "OFFLINE"; }
             });
-
+            // MOTORE DOTAZIONI / MAGAZZINO
+            onValue(ref(db, 'dotazioni'), (snap) => {
+                const contenitore = document.getElementById('lista-dotazioni');
+                if (!contenitore) return;
+                
+                if (snap.exists()) {
+                    const dotazioniDB = snap.val();
+                    let htmlDotazioni = '';
+                    
+                    for (let id in dotazioniDB) {
+                        const dot = dotazioniDB[id];
+                        // Se vuoi far vedere SOLO le cose assegnate a chi ha fatto il login, togli i due slash dalla riga sotto:
+                        // if(dot.assegnato_a !== window.currentUserName) continue;
+                        
+                        htmlDotazioni += `
+                        <div class="flex justify-between items-center bg-slate-900 border border-slate-700 p-2 rounded-lg">
+                            <div class="flex flex-col">
+                                <span class="text-white font-bold text-[10px] uppercase">${dot.articolo || dot.nome || 'Materiale'}</span>
+                                <span class="text-slate-400 text-[8px] uppercase tracking-widest">${dot.categoria || 'D.P.I.'} ${dot.taglia ? '| Tg: ' + dot.taglia : ''}</span>
+                            </div>
+                            <div class="bg-slate-800 text-emerald-400 border border-emerald-900/50 px-2 py-1 rounded text-[9px] font-black">
+                                Q.tà: ${dot.quantita || dot.qta || 1}
+                            </div>
+                        </div>`;
+                    }
+                    
+                    contenitore.innerHTML = htmlDotazioni !== '' ? htmlDotazioni : '<p class="text-slate-500 text-[9px] font-bold text-center uppercase tracking-widest py-2">Nessuna dotazione.</p>';
+                } else {
+                    contenitore.innerHTML = '<p class="text-slate-500 text-[9px] font-bold text-center uppercase tracking-widest py-2">Magazzino Vuoto.</p>';
+                }
+            });
+// ========================================================
+            // MOTORE DOTAZIONI / MAGAZZINO
+            // ========================================================
+            onValue(ref(db, 'dotazioni'), (snap) => {
+                const contenitore = document.getElementById('lista-dotazioni');
+                if (!contenitore) return;
+                
+                if (snap.exists()) {
+                    const dotazioniDB = snap.val();
+                    let htmlDotazioni = '';
+                    
+                    // Cicla tutto il materiale trovato nel database
+                    for (let id in dotazioniDB) {
+                        const dot = dotazioniDB[id];
+                        
+                        // NOTA: Se vuoi mostrare SOLO la roba assegnata a questo utente, 
+                        // togli i due slash "//" dalla riga qui sotto:
+                        // if(dot.assegnato_a !== window.currentUserName) continue;
+                        
+                        htmlDotazioni += `
+                        <div class="flex justify-between items-center bg-slate-900 border border-slate-700 p-3 rounded-xl shadow-inner">
+                            <div class="flex flex-col">
+                                <span class="text-white font-bold text-[11px] uppercase">${dot.articolo || dot.nome || 'Materiale'}</span>
+                                <span class="text-slate-400 text-[9px] uppercase tracking-widest">${dot.categoria || 'D.P.I.'} ${dot.taglia ? ' | Tg: ' + dot.taglia : ''}</span>
+                            </div>
+                            <div class="bg-purple-900/40 text-purple-300 border border-purple-700/50 px-2 py-1 rounded text-[10px] font-black shadow">
+                                Q.tà: ${dot.quantita || dot.qta || 1}
+                            </div>
+                        </div>`;
+                    }
+                    
+                    if(htmlDotazioni === '') {
+                        contenitore.innerHTML = '<p class="text-slate-500 text-[10px] font-bold text-center uppercase tracking-widest">Nessuna dotazione assegnata.</p>';
+                    } else {
+                        contenitore.innerHTML = htmlDotazioni;
+                    }
+                } else {
+                    contenitore.innerHTML = `
+                    <div class="text-center p-4 border border-dashed border-slate-700 rounded-xl">
+                        <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Magazzino Vuoto</p>
+                    </div>`;
+                }
+            });
             // ========================================================
             // NUOVO MOTORE CALENDARIO EVENTI DINAMICO (Aggiunto Qui!)
             // ========================================================
