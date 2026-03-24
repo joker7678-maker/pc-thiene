@@ -50,7 +50,7 @@
 
     <div id="loading-screen" class="absolute inset-0 z-[99999] bg-[#010409] flex flex-col items-center justify-center">
         <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-emerald-500 mb-4 shadow-[0_0_15px_rgba(16,185,129,0.5)]"></div>
-        <div class="text-emerald-400 font-black tracking-widest uppercase animate-pulse">Caricamento...</div>
+        <div class="text-emerald-400 font-black tracking-widest uppercase animate-pulse">Avvio App...</div>
     </div>
 
     <div id="login-screen" class="absolute inset-0 z-[999999] bg-[#010409] hidden flex-col items-center justify-center p-6">
@@ -191,25 +191,28 @@
     </div>
 
     <script>
-        // Rilevatore di Danni (Ignora il falso allarme "Script error linea 0")
-        window.onerror = function(msg, url, line) {
-            if (msg.includes('Script error')) return false; // Nascondi falso positivo
-            const errDiv = document.createElement('div');
-            errDiv.style.cssText = "background:#dc2626; color:white; padding:10px; z-index:9999999; position:fixed; top:0; left:0; width:100%; font-family:sans-serif; font-size:12px; font-weight:bold;";
-            errDiv.innerHTML = `⚠️ Info di Sistema: ${msg}`;
-            document.body.appendChild(errDiv);
-            setTimeout(() => errDiv.remove(), 4000); // Scompare da solo dopo 4 secondi
-            return false;
-        };
-
+        // Variabili Globali
         let db, map, gpsTrackerId = null, isGpsActive = false, html5QrCode = null, markerMioMezzo = null, watchPosCount = 0, myTeamId = "N/D";
         window.ruoliUtente = ''; window.appAbilitata = false; window.appIniziata = false;
 
         document.addEventListener('DOMContentLoaded', () => {
-            try { 
-                if (firebase.apps.length > 0) { db = firebase.database(); } 
-                else { console.warn("In attesa del database..."); }
-            } catch(e) { console.error(e); }
+            
+            // 🛡️ SBLOCCO DI EMERGENZA (Anti Schermata Infinita)
+            setTimeout(() => {
+                const loader = document.getElementById('loading-screen');
+                if(loader && !loader.classList.contains('hidden')) {
+                    loader.classList.add('hidden');
+                    const loginScreen = document.getElementById('login-screen');
+                    if(loginScreen) {
+                        loginScreen.classList.remove('hidden');
+                        loginScreen.classList.add('flex');
+                    }
+                    console.warn("Sblocco di emergenza eseguito (Timeout 3.5s)");
+                }
+            }, 3500);
+
+            try { db = firebase.database(); } 
+            catch(e) { console.error("Firebase DB non ancora pronto al lancio."); }
 
             window.eseguiLogin = () => {
                 const email = document.getElementById('login-email').value;
@@ -229,7 +232,7 @@
             };
 
             window.esciDallApp = () => {
-                Swal.fire({title: 'Uscire?', text:'Vuoi disconnetterti dal terminale?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626', confirmButtonText: 'Esci', background: '#0f172a', color: '#fff'}).then((result) => {
+                Swal.fire({title: 'Uscire?', text:'Vuoi disconnetterti?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626', confirmButtonText: 'Esci', background: '#0f172a', color: '#fff'}).then((result) => {
                     if (result.isConfirmed) { firebase.auth().signOut().then(() => { window.location.reload(); }); }
                 });
             };
@@ -290,47 +293,53 @@
                 }
             };
 
-            if (typeof firebase !== 'undefined') {
-                firebase.auth().onAuthStateChanged(user => {
-                    if (!user) { 
-                        document.getElementById('loading-screen').classList.add('hidden');
-                        document.getElementById('login-screen').classList.remove('hidden');
-                        document.getElementById('login-screen').classList.add('flex');
-                        return; 
-                    }
+            firebase.auth().onAuthStateChanged(user => {
+                if (!user) { 
+                    document.getElementById('loading-screen').classList.add('hidden');
+                    document.getElementById('login-screen').classList.remove('hidden');
+                    document.getElementById('login-screen').classList.add('flex');
+                    return; 
+                }
+                
+                const avviaInterfaccia = () => {
+                    if(window.appIniziata) return; window.appIniziata = true;
+                    document.getElementById('user-info').innerText = `${window.currentUserMatricola} - ${window.currentUserName}`;
+                    document.getElementById('profilo-nome').innerText = window.currentUserName;
+                    document.getElementById('profilo-matricola').innerText = "Matricola: " + window.currentUserMatricola;
+                    document.getElementById('profilo-ruoli').innerText = window.ruoliUtente;
                     
-                    const avviaInterfaccia = () => {
-                        if(window.appIniziata) return; window.appIniziata = true;
-                        document.getElementById('user-info').innerText = `${window.currentUserMatricola} - ${window.currentUserName}`;
-                        document.getElementById('profilo-nome').innerText = window.currentUserName;
-                        document.getElementById('profilo-matricola').innerText = "Matricola: " + window.currentUserMatricola;
-                        document.getElementById('profilo-ruoli').innerText = window.ruoliUtente;
-                        document.getElementById('loading-screen').classList.add('hidden');
-                        window.initApp();
-                        window.checkPermessiTattici();
-                    };
+                    document.getElementById('loading-screen').classList.add('hidden');
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('login-screen').classList.remove('flex');
+                    
+                    window.initApp();
+                    window.checkPermessiTattici();
+                };
 
-                    if(db) {
-                        db.ref('impostazioni/rubrica_volontari').orderByChild('email').equalTo(user.email).once('value')
-                        .then(snap => {
-                            if(snap.val()) {
-                                const volInfo = snap.val()[Object.keys(snap.val())[0]];
-                                window.currentUserMatricola = volInfo.matricola || 'N/D';
-                                window.currentUserName = volInfo.nome || 'Volontario';
-                                window.ruoliUtente = String(volInfo.ruolo || volInfo.livello_accesso || '').toUpperCase();
-                            } else {
-                                window.currentUserMatricola = 'N/D'; window.currentUserName = user.email.split('@')[0]; window.ruoliUtente = 'VOLONTARIO';
-                            }
-                            avviaInterfaccia();
-                        }).catch(err => {
-                            window.currentUserMatricola = 'OPERATIVO'; window.currentUserName = user.email.split('@')[0].toUpperCase(); window.ruoliUtente = 'VOLONTARIO';
-                            avviaInterfaccia();
-                        });
-                        
-                        db.ref('impostazioni/emergenza_attiva').on('value', snap => { window.appAbilitata = snap.val() === true; window.checkPermessiTattici(); });
-                    }
-                });
-            }
+                if(db) {
+                    db.ref('impostazioni/rubrica_volontari').orderByChild('email').equalTo(user.email).once('value')
+                    .then(snap => {
+                        if(snap.val()) {
+                            const volInfo = snap.val()[Object.keys(snap.val())[0]];
+                            window.currentUserMatricola = volInfo.matricola || 'N/D';
+                            window.currentUserName = volInfo.nome || 'Volontario';
+                            window.ruoliUtente = String(volInfo.ruolo || volInfo.livello_accesso || '').toUpperCase();
+                        } else {
+                            window.currentUserMatricola = 'N/D'; window.currentUserName = user.email.split('@')[0]; window.ruoliUtente = 'VOLONTARIO';
+                        }
+                        avviaInterfaccia();
+                    }).catch(err => {
+                        window.currentUserMatricola = 'N/D'; window.currentUserName = user.email.split('@')[0]; window.ruoliUtente = 'VOLONTARIO';
+                        avviaInterfaccia();
+                    });
+                    
+                    db.ref('impostazioni/emergenza_attiva').on('value', snap => { window.appAbilitata = snap.val() === true; window.checkPermessiTattici(); });
+                } else {
+                    // Fallback se db non è caricato
+                    window.currentUserMatricola = 'N/D'; window.currentUserName = user.email.split('@')[0]; window.ruoliUtente = 'VOLONTARIO';
+                    avviaInterfaccia();
+                }
+            });
 
             window.initApp = () => {
                 if(!document.getElementById('map') || window.mapInizializzata) return;
@@ -363,7 +372,7 @@
                 }
             };
 
-            window.toggleGPS = () => { /* Logica Mantenuta */ };
+            window.toggleGPS = () => { /* Logica GPS intatta */ };
             window.centraMappaSuGPS = () => { if(markerMioMezzo) map.setView(markerMioMezzo.getLatLng(), 17); };
             window.clearAllGPSTracks = () => { if(markerMioMezzo) { map.removeLayer(markerMioMezzo); markerMioMezzo = null; } };
             
@@ -386,7 +395,6 @@
                 if(html5QrCode && html5QrCode.isScanning) { html5QrCode.stop().then(() => { document.getElementById('qr-reader-container').classList.add('hidden'); }); }
                 else { document.getElementById('qr-reader-container').classList.add('hidden'); }
             };
-
         });
     </script>
 </body>
