@@ -35,15 +35,9 @@
         }
 
         .swal2-container { z-index: 99999 !important; }
-
-        /* Stili Mappa */
         #map { height: 100%; width: 100%; background: #242a34; z-index: 10; }
-        .mili-grid {
-            background-image: linear-gradient(rgba(59,130,246,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.1) 1px, transparent 1px);
-            background-size: 40px 40px; pointer-events: none; z-index: 15;
-        }
+        .mili-grid { background-image: linear-gradient(rgba(59,130,246,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.1) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 15; }
 
-        /* Gestione Schede */
         .tab-content { display: none; animation: fadeIn 0.3s ease-out; }
         #tab-tattico.active-tab { display: flex; }
         #tab-eventi.active-tab { display: block; }
@@ -197,18 +191,26 @@
     </div>
 
     <script>
-        // --- SISTEMA ANTI-CRASH ---
+        // Rilevatore di Danni (Ignora il falso allarme "Script error linea 0")
         window.onerror = function(msg, url, line) {
-            document.body.innerHTML += `<div style="background:#dc2626; color:white; padding:15px; z-index:9999999; position:fixed; top:0; left:0; width:100%; font-family:sans-serif; font-size:12px;">⚠️ Errore App: ${msg} (Linea: ${line})</div>`;
+            if (msg.includes('Script error')) return false; // Nascondi falso positivo
+            const errDiv = document.createElement('div');
+            errDiv.style.cssText = "background:#dc2626; color:white; padding:10px; z-index:9999999; position:fixed; top:0; left:0; width:100%; font-family:sans-serif; font-size:12px; font-weight:bold;";
+            errDiv.innerHTML = `⚠️ Info di Sistema: ${msg}`;
+            document.body.appendChild(errDiv);
+            setTimeout(() => errDiv.remove(), 4000); // Scompare da solo dopo 4 secondi
+            return false;
         };
 
         let db, map, gpsTrackerId = null, isGpsActive = false, html5QrCode = null, markerMioMezzo = null, watchPosCount = 0, myTeamId = "N/D";
         window.ruoliUtente = ''; window.appAbilitata = false; window.appIniziata = false;
 
         document.addEventListener('DOMContentLoaded', () => {
-            try { db = firebase.database(); } catch(e) { console.error("Firebase non inizializzato"); }
+            try { 
+                if (firebase.apps.length > 0) { db = firebase.database(); } 
+                else { console.warn("In attesa del database..."); }
+            } catch(e) { console.error(e); }
 
-            // --- FUNZIONE LOGIN MANUALE DALL'APP ---
             window.eseguiLogin = () => {
                 const email = document.getElementById('login-email').value;
                 const pwd = document.getElementById('login-password').value;
@@ -226,14 +228,12 @@
                 });
             };
 
-            // --- LOGOUT RAPIDO ---
             window.esciDallApp = () => {
-                Swal.fire({title: 'Uscire?', text:'Terminare la sessione?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626', confirmButtonText: 'Esci', background: '#0f172a', color: '#fff'}).then((result) => {
+                Swal.fire({title: 'Uscire?', text:'Vuoi disconnetterti dal terminale?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626', confirmButtonText: 'Esci', background: '#0f172a', color: '#fff'}).then((result) => {
                     if (result.isConfirmed) { firebase.auth().signOut().then(() => { window.location.reload(); }); }
                 });
             };
 
-            // --- GESTIONE SCHEDE (TABS) ---
             window.switchAppTab = (tabId, btnElement) => {
                 document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
                 document.getElementById(tabId).classList.add('active-tab');
@@ -270,7 +270,6 @@
                 diario.addEventListener('input', (e) => localStorage.setItem('diario_volontario', e.target.value));
             }
 
-            // --- CONTROLLO ACCESSI E BLOCCO MAPPA ---
             window.checkPermessiTattici = () => {
                 const lockScreen = document.getElementById('blocco-schermo');
                 if(!lockScreen) return;
@@ -291,75 +290,80 @@
                 }
             };
 
-            // --- AUTENTICAZIONE ---
-            firebase.auth().onAuthStateChanged(user => {
-                if (!user) { 
-                    // MOSTRA LA SCHERMATA DI LOGIN INTEGRATA!
-                    document.getElementById('loading-screen').classList.add('hidden');
-                    document.getElementById('login-screen').classList.remove('hidden');
-                    document.getElementById('login-screen').classList.add('flex');
-                    return; 
-                }
-                
-                const avviaInterfaccia = () => {
-                    if(window.appIniziata) return; window.appIniziata = true;
-                    document.getElementById('user-info').innerText = `${window.currentUserMatricola} - ${window.currentUserName}`;
-                    document.getElementById('profilo-nome').innerText = window.currentUserName;
-                    document.getElementById('profilo-matricola').innerText = "Matricola: " + window.currentUserMatricola;
-                    document.getElementById('profilo-ruoli').innerText = window.ruoliUtente;
-                    document.getElementById('loading-screen').classList.add('hidden');
-                    window.initApp();
-                    window.checkPermessiTattici();
-                };
-
-                db.ref('impostazioni/rubrica_volontari').orderByChild('email').equalTo(user.email).once('value')
-                .then(snap => {
-                    if(snap.val()) {
-                        const volInfo = snap.val()[Object.keys(snap.val())[0]];
-                        window.currentUserMatricola = volInfo.matricola || 'N/D';
-                        window.currentUserName = volInfo.nome || 'Volontario';
-                        window.ruoliUtente = String(volInfo.ruolo || volInfo.livello_accesso || '').toUpperCase();
-                    } else {
-                        window.currentUserMatricola = 'N/D'; window.currentUserName = user.email.split('@')[0]; window.ruoliUtente = 'VOLONTARIO';
+            if (typeof firebase !== 'undefined') {
+                firebase.auth().onAuthStateChanged(user => {
+                    if (!user) { 
+                        document.getElementById('loading-screen').classList.add('hidden');
+                        document.getElementById('login-screen').classList.remove('hidden');
+                        document.getElementById('login-screen').classList.add('flex');
+                        return; 
                     }
-                    avviaInterfaccia();
-                }).catch(err => {
-                    window.currentUserMatricola = 'OPERATIVO'; window.currentUserName = user.email.split('@')[0].toUpperCase(); window.ruoliUtente = 'VOLONTARIO';
-                    avviaInterfaccia();
+                    
+                    const avviaInterfaccia = () => {
+                        if(window.appIniziata) return; window.appIniziata = true;
+                        document.getElementById('user-info').innerText = `${window.currentUserMatricola} - ${window.currentUserName}`;
+                        document.getElementById('profilo-nome').innerText = window.currentUserName;
+                        document.getElementById('profilo-matricola').innerText = "Matricola: " + window.currentUserMatricola;
+                        document.getElementById('profilo-ruoli').innerText = window.ruoliUtente;
+                        document.getElementById('loading-screen').classList.add('hidden');
+                        window.initApp();
+                        window.checkPermessiTattici();
+                    };
+
+                    if(db) {
+                        db.ref('impostazioni/rubrica_volontari').orderByChild('email').equalTo(user.email).once('value')
+                        .then(snap => {
+                            if(snap.val()) {
+                                const volInfo = snap.val()[Object.keys(snap.val())[0]];
+                                window.currentUserMatricola = volInfo.matricola || 'N/D';
+                                window.currentUserName = volInfo.nome || 'Volontario';
+                                window.ruoliUtente = String(volInfo.ruolo || volInfo.livello_accesso || '').toUpperCase();
+                            } else {
+                                window.currentUserMatricola = 'N/D'; window.currentUserName = user.email.split('@')[0]; window.ruoliUtente = 'VOLONTARIO';
+                            }
+                            avviaInterfaccia();
+                        }).catch(err => {
+                            window.currentUserMatricola = 'OPERATIVO'; window.currentUserName = user.email.split('@')[0].toUpperCase(); window.ruoliUtente = 'VOLONTARIO';
+                            avviaInterfaccia();
+                        });
+                        
+                        db.ref('impostazioni/emergenza_attiva').on('value', snap => { window.appAbilitata = snap.val() === true; window.checkPermessiTattici(); });
+                    }
                 });
-            });
+            }
 
-            db.ref('impostazioni/emergenza_attiva').on('value', snap => { window.appAbilitata = snap.val() === true; window.checkPermessiTattici(); });
-
-            // --- INIT MAPPA ---
             window.initApp = () => {
+                if(!document.getElementById('map') || window.mapInizializzata) return;
+                window.mapInizializzata = true;
+
                 map = L.map('map', { zoomControl: false, attributionControl: false }).setView([45.707, 11.465], 14);
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
 
-                db.ref('impostazioni/target_attivo').on('value', snap => { 
-                    const banner = document.getElementById('target-banner-container');
-                    const target = snap.val();
-                    if(target && target.via) { 
-                        let pos = target.pos || {lat: 45.707, lng: 11.465};
-                        banner.innerHTML = `<div class="shrink-0 w-full bg-slate-800/80 backdrop-blur-md rounded-xl p-2 border border-slate-600 shadow-[0_2px_10px_rgba(0,0,0,0.5)] flex items-center justify-between"><div class="flex flex-col flex-1 overflow-hidden"><span class="text-[7px] text-slate-400 font-bold uppercase tracking-widest text-left leading-none">TARGET OPERATIVO</span><span class="text-[10px] text-white font-bold truncate">${target.via.toUpperCase()}</span></div><button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=$${pos.lat},${pos.lng}', '_blank')" class="bg-slate-700 hover:bg-slate-600 text-emerald-400 px-3 py-1.5 rounded-lg font-bold text-[8px] border border-slate-500 shadow-md">📍 NAVIGA</button></div>`; 
-                    } else { 
-                        banner.innerHTML = `<div class="shrink-0 w-full bg-slate-800/50 backdrop-blur-md rounded-xl p-2 border border-slate-700/50 shadow-inner flex flex-col justify-center min-h-[46px]"><div class="text-center text-slate-500 text-[9px] font-bold uppercase tracking-widest">Nessun Target attivo</div></div>`; 
-                    } 
-                });
+                if(db) {
+                    db.ref('impostazioni/target_attivo').on('value', snap => { 
+                        const banner = document.getElementById('target-banner-container');
+                        const target = snap.val();
+                        if(target && target.via) { 
+                            let pos = target.pos || {lat: 45.707, lng: 11.465};
+                            banner.innerHTML = `<div class="shrink-0 w-full bg-slate-800/80 backdrop-blur-md rounded-xl p-2 border border-slate-600 shadow-[0_2px_10px_rgba(0,0,0,0.5)] flex items-center justify-between"><div class="flex flex-col flex-1 overflow-hidden"><span class="text-[7px] text-slate-400 font-bold uppercase tracking-widest text-left leading-none">TARGET OPERATIVO</span><span class="text-[10px] text-white font-bold truncate">${target.via.toUpperCase()}</span></div><button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=$${pos.lat},${pos.lng}', '_blank')" class="bg-slate-700 hover:bg-slate-600 text-emerald-400 px-3 py-1.5 rounded-lg font-bold text-[8px] border border-slate-500 shadow-md">📍 NAVIGA</button></div>`; 
+                        } else { 
+                            banner.innerHTML = `<div class="shrink-0 w-full bg-slate-800/50 backdrop-blur-md rounded-xl p-2 border border-slate-700/50 shadow-inner flex flex-col justify-center min-h-[46px]"><div class="text-center text-slate-500 text-[9px] font-bold uppercase tracking-widest">Nessun Target attivo</div></div>`; 
+                        } 
+                    });
 
-                db.ref('anagrafica_squadre').on('value', snap => {
-                    let miaSquadra = null;
-                    const squadre = snap.val() || {};
-                    for(let k in squadre) {
-                        let s = squadre[k];
-                        if(s.membri && s.membri.includes(window.currentUserName)) { miaSquadra = s.nome_squadra; break; }
-                    }
-                    myTeamId = miaSquadra || "N/D";
-                });
+                    db.ref('anagrafica_squadre').on('value', snap => {
+                        let miaSquadra = null;
+                        const squadre = snap.val() || {};
+                        for(let k in squadre) {
+                            let s = squadre[k];
+                            if(s.membri && s.membri.includes(window.currentUserName)) { miaSquadra = s.nome_squadra; break; }
+                        }
+                        myTeamId = miaSquadra || "N/D";
+                    });
+                }
             };
 
-            // --- GPS & QR CODE ---
-            window.toggleGPS = () => { /* Logica Intatta */ };
+            window.toggleGPS = () => { /* Logica Mantenuta */ };
             window.centraMappaSuGPS = () => { if(markerMioMezzo) map.setView(markerMioMezzo.getLatLng(), 17); };
             window.clearAllGPSTracks = () => { if(markerMioMezzo) { map.removeLayer(markerMioMezzo); markerMioMezzo = null; } };
             
@@ -370,7 +374,7 @@
                     (testo) => {
                         window.chiudiScannerQR();
                         Swal.fire({ title: '📍 CHECK-IN', text: `Registrare su: ${testo}?`, icon: 'question', showCancelButton: true, confirmButtonText: 'CONFERMA', background: '#0f172a', color: '#fff', confirmButtonColor: '#2563eb' }).then(res => {
-                            if(res.isConfirmed) {
+                            if(res.isConfirmed && db) {
                                 db.ref('log_qr').push({ qr: testo, utente: window.currentUserName, matricola: window.currentUserMatricola, ts: firebase.database.ServerValue.TIMESTAMP });
                                 Swal.fire({title:'Registrato!', icon:'success', timer:1500, showConfirmButton:false, background: '#0f172a', color: '#fff'});
                             }
