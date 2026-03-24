@@ -399,6 +399,43 @@
                 else { badge.className = "inline-block text-[7px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded border border-red-500/30 font-bold uppercase animate-pulse"; badge.innerText = "OFFLINE"; }
             });
 
+            // ========================================================
+            // NUOVO MOTORE CALENDARIO EVENTI DINAMICO (Aggiunto Qui!)
+            // ========================================================
+            onValue(ref(db, 'eventi'), (snap) => {
+                const contenitore = document.getElementById('lista-eventi-app');
+                if (!contenitore) return;
+                
+                if (snap.exists()) {
+                    const eventiDB = snap.val();
+                    let htmlEventi = '';
+                    
+                    // Cicla tutti gli eventi trovati nel database
+                    for (let idEvento in eventiDB) {
+                        const ev = eventiDB[idEvento];
+                        
+                        htmlEventi += `
+                        <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 shadow-lg relative overflow-hidden group mb-2">
+                            <h3 class="text-sm font-bold text-white uppercase mb-1 mt-2">${ev.titolo || 'Evento Programmato'}</h3>
+                            <div class="text-[10px] text-slate-400 font-mono mb-3">
+                                📍 ${ev.luogo || 'Sede PC'} | 🕒 ${ev.data || 'Data non definita'}
+                            </div>
+                            <div class="flex gap-2 mt-4">
+                                <button onclick="window.rispondiEvento('${idEvento}', 'PRESENTE')" class="flex-1 bg-slate-900 hover:bg-emerald-900/50 border border-emerald-500/30 text-emerald-400 font-bold py-2 rounded-xl text-[10px] uppercase transition-all focus:ring-2 focus:ring-emerald-500 shadow">✅ Ci Sono</button>
+                                <button onclick="window.rispondiEvento('${idEvento}', 'ASSENTE')" class="flex-1 bg-slate-900 hover:bg-red-900/50 border border-red-500/30 text-red-400 font-bold py-2 rounded-xl text-[10px] uppercase transition-all focus:ring-2 focus:ring-red-500 shadow">❌ Assente</button>
+                            </div>
+                        </div>`;
+                    }
+                    contenitore.innerHTML = htmlEventi;
+                } else {
+                    contenitore.innerHTML = `
+                    <div class="text-center p-6 border border-dashed border-slate-700 rounded-xl mt-2">
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Nessun evento in programma.</p>
+                    </div>`;
+                }
+            });
+            // ========================================================
+
             onValue(query(ref(db, 'brogliaccio'), limitToLast(100)), (snap) => {
                 const data = snap.val(); if (!data) return;
                 const logs = Object.entries(data).map(([id, val]) => ({ id, ...val })).reverse();
@@ -449,6 +486,24 @@
                 }
             });
         }
+        // --- FUNZIONE PER INVIARE LA RISPOSTA AL SONDAGGIO EVENTO ---
+        window.rispondiEvento = (idEv, risposta) => {
+            Swal.fire({
+                title: 'CONFERMA RISPOSTA',
+                text: `Vuoi segnarti come ${risposta}?`,
+                showCancelButton: true,
+                confirmButtonText: 'SÌ, CONFERMA',
+                confirmButtonColor: risposta === 'PRESENTE' ? '#10b981' : '#ef4444',
+                background: '#0f172a', color: '#fff'
+            }).then((res) => {
+                if(res.isConfirmed) {
+                    const percorso = `eventi/${idEv}/risposte/${window.currentUserName}`;
+                    update(ref(db), { [percorso]: risposta })
+                    .then(() => Swal.fire({title: 'Salvato!', icon: 'success', timer: 1500, showConfirmButton: false, background: '#0f172a', color: '#fff'}))
+                    .catch(() => Swal.fire({title: 'Errore Rete', icon: 'error', background: '#0f172a', color: '#fff'}));
+                }
+            });
+        };
 
         // 5. FUNZIONI GPS E MULTIMEDIA
         function updateGpsBadge() {
