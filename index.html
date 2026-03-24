@@ -4,325 +4,191 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>PC THIENE - AREA PERSONALE</title>
-    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="logosala.png">
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth-compat.js"></script>
-
     <script src="config.js"></script>
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        
         body { font-family: 'Inter', sans-serif; background-color: #010409 !important; color: #e2e8f0 !important; overflow: hidden; }
-        .swal2-container { z-index: 9999999 !important; }
-        
-        #map { height: 100%; width: 100%; background: #242a34; z-index: 10; }
-        .mili-grid { background-image: linear-gradient(rgba(59,130,246,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.1) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 15; }
-
-        /* TABS */
         #app-container { display: none; height: 100%; width: 100%; flex-direction: column; }
         .tab-content { display: none; animation: fadeIn 0.3s ease-out; }
         #tab-tattico.active-tab { display: flex; }
         #tab-eventi.active-tab { display: block; }
         #tab-personale.active-tab { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #map { height: 100%; width: 100%; background: #242a34; }
     </style>
 </head>
-<body class="h-screen w-screen relative selection:bg-blue-500/30">
+<body class="h-screen w-screen relative">
 
-    <div id="loading-screen" class="absolute inset-0 z-[999999] bg-[#010409] flex flex-col items-center justify-center transition-opacity duration-300">
-        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4 shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
-        <div id="loading-text" class="text-blue-400 font-black tracking-widest uppercase animate-pulse">Avvio App...</div>
+    <div id="loading-screen" class="absolute inset-0 z-[999999] bg-[#010409] flex flex-col items-center justify-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+        <div class="text-blue-400 font-bold uppercase tracking-widest text-xs animate-pulse">Sincronizzazione...</div>
     </div>
 
-    <div id="login-screen" class="absolute inset-0 z-[99999] bg-[#010409] hidden flex-col items-center justify-center p-6 transition-opacity duration-300">
-        <img src="logosala.png" alt="Logo" class="h-28 w-auto mb-6 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-        <h1 class="text-2xl font-black text-white uppercase tracking-widest mb-8 text-center leading-tight">Area<br><span class="text-blue-500">Personale</span></h1>
-        
+    <div id="login-screen" class="absolute inset-0 z-[99999] bg-[#010409] hidden flex-col items-center justify-center p-6">
+        <img src="logosala.png" class="h-24 w-auto mb-6 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+        <h1 class="text-xl font-black text-white uppercase tracking-widest mb-8">Area Personale</h1>
         <div class="w-full max-w-sm flex flex-col gap-4">
-            <div><label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Email Volontario</label><input type="email" id="login-email" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-3 text-white focus:border-blue-500 focus:outline-none" placeholder="nome@ceitimpianti.com"></div>
-            <div><label class="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Password</label><input type="password" id="login-password" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-3 text-white focus:border-blue-500 focus:outline-none" placeholder="••••••"></div>
-            <button id="btn-esegui-login" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest py-3 rounded-xl mt-4 shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-all active:scale-95">🔐 ACCEDI</button>
+            <input type="email" id="login-email" class="bg-slate-800 border border-slate-600 rounded-xl p-3 text-white focus:border-blue-500 outline-none" placeholder="Email">
+            <input type="password" id="login-password" class="bg-slate-800 border border-slate-600 rounded-xl p-3 text-white focus:border-blue-500 outline-none" placeholder="Password">
+            <button id="btn-login" class="bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-xl shadow-lg transition-all active:scale-95 uppercase text-sm">Accedi</button>
         </div>
-        <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-8 text-center">Solo per operatori autorizzati<br>PC Thiene</p>
     </div>
 
     <div id="app-container">
-        
         <div id="tab-tattico" class="tab-content active-tab h-full w-full relative flex-col pb-20">
-            <div class="h-14 sm:h-16 bg-slate-900/90 backdrop-blur-md flex items-center justify-between px-3 border-b border-slate-700/50 shadow-md shrink-0 z-[100]">
-                <div class="flex items-center gap-3">
-                    <img src="logosala.png" alt="Logo" class="h-10 w-auto object-contain">
-                    <div class="flex flex-col"><h1 class="text-[12px] sm:text-sm font-black tracking-widest text-white uppercase leading-tight">Mappa Tattica</h1><span id="user-info" class="text-[9px] text-blue-400 font-bold uppercase tracking-widest font-mono">...</span></div>
-                </div>
-            </div>
-
-            <div class="absolute top-16 left-2 right-2 z-[1000] pointer-events-auto"><div id="target-banner-container"></div></div>
-            <div class="flex-1 w-full relative z-0"><div id="map" class="absolute inset-0"></div><div class="absolute inset-0 mili-grid"></div></div>
-
-            <div class="absolute bottom-4 left-2 right-2 z-[1000] flex flex-col gap-2 pointer-events-none">
-                <div class="flex justify-between items-end pointer-events-none">
-                    <div class="flex flex-col gap-2 pointer-events-auto">
-                        <button onclick="window.centraMappaSuGPS()" class="bg-slate-800/90 backdrop-blur-md text-white h-12 w-12 rounded-xl border border-slate-600 shadow-lg flex items-center justify-center active:scale-95"><span class="text-2xl">📍</span></button>
-                        <button onclick="window.toggleGPS()" id="btn-toggle-gps" class="bg-slate-800/90 backdrop-blur-md text-slate-400 h-12 w-12 rounded-xl border border-slate-600 shadow-lg flex items-center justify-center active:scale-95 relative"><span class="text-xl">📡</span><span id="gps-status-indicator" class="absolute top-1 right-1 w-2.5 h-2.5 bg-slate-500 rounded-full"></span></button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="blocco-schermo" class="hidden absolute inset-0 z-[9999] bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
-                <div class="text-7xl mb-4 drop-shadow-[0_0_20px_rgba(239,68,68,0.8)] animate-pulse">🛡️</div>
-                <h2 class="text-3xl font-black text-white uppercase tracking-widest mb-2">Mappa Disattiva</h2>
-                <p class="text-slate-400 text-sm uppercase font-bold tracking-wider">Nessuna emergenza in corso.</p>
+            <div id="map" class="flex-1 w-full"></div>
+            <div id="blocco-emergenza" class="hidden absolute inset-0 z-[999] bg-slate-900/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
+                <div class="text-6xl mb-4">🛡️</div>
+                <h2 class="text-xl font-black text-white uppercase mb-2">Mappa Disattiva</h2>
+                <p class="text-slate-400 text-xs uppercase">Area disponibile solo durante emergenze attive.</p>
             </div>
         </div>
 
         <div id="tab-eventi" class="tab-content hidden h-full w-full bg-[#010409] overflow-y-auto pb-28 p-4">
-            <div class="flex items-center gap-3 mb-6 mt-2">
-                <span class="text-3xl drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">📅</span>
-                <div><h2 class="text-xl font-black text-white uppercase tracking-widest leading-tight">Calendario</h2><p class="text-[10px] text-blue-400 font-bold uppercase tracking-wider">Iscrizioni e Turni</p></div>
-            </div>
-            
-            <div id="lista-eventi-app" class="flex flex-col gap-3">
-                </div>
+            <h2 class="text-lg font-black text-white uppercase mb-4 flex items-center gap-2"><span>📅</span> Calendario</h2>
+            <div id="lista-eventi" class="flex flex-col gap-3"></div>
         </div>
 
         <div id="tab-personale" class="tab-content hidden h-full w-full bg-[#010409] overflow-y-auto pb-28 p-4">
-            <div class="flex items-center justify-between mb-6 mt-2">
-                <div class="flex items-center gap-3">
-                    <span class="text-3xl drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]">🪪</span>
-                    <div><h2 class="text-xl font-black text-white uppercase tracking-widest leading-tight">Il Mio Profilo</h2></div>
-                </div>
-                <button onclick="window.esciDallApp()" class="bg-red-900/50 hover:bg-red-800 text-red-400 text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg border border-red-800">Esci</button>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-black text-white uppercase">Il Mio Profilo</h2>
+                <button onclick="logout()" class="text-[10px] bg-red-900/30 text-red-400 px-3 py-1 rounded border border-red-800 uppercase font-bold">Esci</button>
             </div>
             
-            <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 mb-4 shadow-lg">
-                <div id="profilo-nome" class="text-xl text-white font-black uppercase">Caricamento...</div>
-                <div id="profilo-matricola" class="text-sm text-blue-400 font-mono mt-1 font-bold">N/D</div>
-                <div class="mt-4 pt-4 border-t border-slate-700">
-                    <div class="text-[10px] text-slate-400 uppercase font-bold mb-2">I Miei Ruoli:</div>
-                    <div id="profilo-ruoli" class="text-xs text-purple-300 font-mono uppercase font-bold">...</div>
-                </div>
+            <div class="bg-slate-800 p-4 rounded-2xl shadow-lg mb-4 border border-slate-700">
+                <div id="prof-nome" class="text-lg font-black uppercase text-white">---</div>
+                <div id="prof-matr" class="text-blue-400 text-xs font-mono font-bold mt-1">MATRICOLA: ---</div>
+                <div id="prof-ruolo" class="text-slate-400 text-[10px] mt-2 border-t border-slate-700 pt-2 uppercase">RUOLO: ---</div>
             </div>
 
-            <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 mb-4 shadow-lg">
-                <div class="text-[10px] text-slate-400 uppercase font-bold mb-3 tracking-widest flex items-center gap-2"><span>🎒</span> LE MIE DOTAZIONI</div>
-                <div id="lista-dotazioni" class="flex flex-col gap-2"></div>
-            </div>
-
-            <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 shadow-lg">
-                <div class="text-[10px] text-slate-400 uppercase font-bold mb-2 tracking-widest flex items-center gap-2"><span>📝</span> APPUNTI PERSONALI</div>
-                <textarea id="diario-personale" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-300 focus:outline-none min-h-[100px]" placeholder="Note private salvate sul telefono..."></textarea>
-            </div>
+            <h2 class="text-[10px] font-black text-slate-500 uppercase mb-2 tracking-widest">🎒 Dotazioni e Risorse</h2>
+            <div id="lista-dotazioni" class="flex flex-col gap-2"></div>
         </div>
 
-        <div class="fixed bottom-0 left-0 w-full bg-slate-900/95 backdrop-blur-xl border-t border-slate-700/50 flex justify-around items-end pb-6 pt-3 px-2 z-[99999] shadow-[0_-10px_30px_rgba(0,0,0,0.8)]">
-            <button onclick="window.switchAppTab('tab-tattico', this)" class="nav-btn active flex flex-col items-center gap-1 w-1/3 text-emerald-400 transition-all duration-300 transform scale-110">
-                <span class="text-2xl drop-shadow-[0_0_8px_rgba(16,185,129,0.6)] icon-nav transition-all">🚨</span><span class="text-[10px] font-black uppercase tracking-widest">Tattico</span>
+        <div class="fixed bottom-0 left-0 w-full bg-slate-900 border-t border-slate-700 flex justify-around items-end pb-6 pt-2 px-2 z-[99999]">
+            <button onclick="switchTab('tab-tattico', this)" class="nav-btn text-emerald-400 flex flex-col items-center gap-1 w-1/3 transition-all scale-110">
+                <span class="text-xl">🚨</span><span class="text-[9px] font-black uppercase">Tattico</span>
             </button>
-            <button onclick="window.switchAppTab('tab-eventi', this)" class="nav-btn flex flex-col items-center gap-1 w-1/3 text-slate-500 hover:text-blue-400 transition-all duration-300">
-                <span class="text-2xl opacity-70 icon-nav transition-all">📅</span><span class="text-[10px] font-bold uppercase tracking-widest">Eventi</span>
+            <button onclick="switchTab('tab-eventi', this)" class="nav-btn text-slate-500 flex flex-col items-center gap-1 w-1/3 transition-all">
+                <span class="text-xl">📅</span><span class="text-[9px] font-black uppercase">Eventi</span>
             </button>
-            <button onclick="window.switchAppTab('tab-personale', this)" class="nav-btn flex flex-col items-center gap-1 w-1/3 text-slate-500 hover:text-purple-400 transition-all duration-300">
-                <span class="text-2xl opacity-70 icon-nav transition-all">🪪</span><span class="text-[10px] font-bold uppercase tracking-widest">Profilo</span>
+            <button onclick="switchTab('tab-personale', this)" class="nav-btn text-slate-500 flex flex-col items-center gap-1 w-1/3 transition-all">
+                <span class="text-xl">🪪</span><span class="text-[9px] font-black uppercase">Profilo</span>
             </button>
         </div>
-
     </div>
 
     <script>
-        let db, map, gpsTrackerId = null, isGpsActive = false, markerMioMezzo = null, myTeamId = "N/D";
-        window.ruoliUtente = ''; window.appAbilitata = false; window.appIniziata = false;
+        let db, map, markerMe;
+        const loader = document.getElementById('loading-screen');
 
-        // Attesa Motore Firebase
-        const controllaFirebase = setInterval(() => {
-            if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-                clearInterval(controllaFirebase); db = firebase.database(); inizializzaMotoreApp();
+        firebase.auth().onAuthStateChanged(user => {
+            if (!user) {
+                loader.classList.add('hidden');
+                document.getElementById('login-screen').classList.replace('hidden', 'flex');
+                document.getElementById('app-container').style.display = 'none';
+            } else {
+                db = firebase.database();
+                caricaDati(user);
             }
-        }, 100);
+        });
 
-        function inizializzaMotoreApp() {
-            // CONTROLLO ACCESSO
-            firebase.auth().onAuthStateChanged(user => {
-                const loader = document.getElementById('loading-screen');
-                const loginUI = document.getElementById('login-screen');
-                const appUI = document.getElementById('app-container');
+        document.getElementById('btn-login').onclick = () => {
+            const e = document.getElementById('login-email').value;
+            const p = document.getElementById('login-password').value;
+            firebase.auth().signInWithEmailAndPassword(e, p).catch(err => Swal.fire('Errore', 'Credenziali errate', 'error'));
+        };
 
-                if (!user) {
-                    loader.classList.add('hidden'); appUI.style.display = 'none';
-                    loginUI.classList.remove('hidden'); loginUI.classList.add('flex'); return;
+        function caricaDati(user) {
+            db.ref('impostazioni/rubrica_volontari').once('value').then(snap => {
+                let v = null;
+                snap.forEach(child => { if(child.val().email?.toLowerCase() === user.email.toLowerCase()) v = child.val(); });
+                
+                if (v && v.ruolo?.includes('ESTERNO')) {
+                    firebase.auth().signOut();
+                    Swal.fire('Accesso Negato', 'Usa il Terminale Squadre.', 'warning');
+                    return;
                 }
 
-                loginUI.classList.add('hidden'); loginUI.classList.remove('flex');
-                loader.classList.remove('hidden'); document.getElementById('loading-text').innerText = "Sincronizzazione...";
-
-                // RICERCA ANAGRAFICA
-                db.ref('impostazioni/rubrica_volontari').once('value').then(snap => {
-                    let utenteTrovato = false;
-                    if(snap.exists()) {
-                        const dati = snap.val();
-                        for (let key in dati) {
-                            if (dati[key].email && dati[key].email.toLowerCase().trim() === user.email.toLowerCase().trim()) {
-                                window.currentUserMatricola = dati[key].matricola || 'N/D';
-                                window.currentUserName = dati[key].nome || 'Volontario';
-                                window.ruoliUtente = String(dati[key].ruolo || dati[key].livello_accesso || 'VOLONTARIO').toUpperCase();
-                                utenteTrovato = true; break;
-                            }
-                        }
-                    }
-                    if(!utenteTrovato) {
-                        window.currentUserMatricola = 'N/D'; window.currentUserName = user.email.split('@')[0].toUpperCase(); window.ruoliUtente = 'VOLONTARIO';
-                    }
-
-                    // FILTRO ESTERNI: Li sbatte fuori
-                    if(window.ruoliUtente.includes('ESTERNO')) {
-                        firebase.auth().signOut().then(() => {
-                            Swal.fire({icon: 'error', title: 'ACCESSO NEGATO', text: 'Questa app è riservata ai volontari di PC Thiene. Utilizza il Terminale di Squadra.', background: '#0f172a', color: '#fff'});
-                        });
-                        return;
-                    }
-
-                    costruisciInterfaccia();
-                });
+                document.getElementById('prof-nome').innerText = v ? v.nome : user.email.split('@')[0];
+                document.getElementById('prof-matr').innerText = "MATRICOLA: " + (v ? v.matricola : 'N/D');
+                document.getElementById('prof-ruolo').innerText = "RUOLO: " + (v ? v.ruolo : 'VOLONTARIO');
                 
-                // ASCOLTO EMERGENZA
-                db.ref('impostazioni/emergenza_attiva').on('value', snap => { window.appAbilitata = snap.val() === true; controllaPermessiTattici(); });
-            });
-
-            // LOGIN
-            document.getElementById('btn-esegui-login').addEventListener('click', () => {
-                const email = document.getElementById('login-email').value; const pwd = document.getElementById('login-password').value;
-                if (!email || !pwd) { Swal.fire({icon: 'warning', title: 'Dati Mancanti', background: '#0f172a', color: '#fff'}); return; }
-                document.getElementById('loading-screen').classList.remove('hidden'); document.getElementById('loading-text').innerText = "Autenticazione...";
-                firebase.auth().signInWithEmailAndPassword(email, pwd).catch(err => {
-                    document.getElementById('loading-screen').classList.add('hidden');
-                    Swal.fire({icon: 'error', title: 'Accesso Negato', text: 'Email o password errati.', background: '#0f172a', color: '#fff'});
-                });
+                window.currentUser = v ? v.nome : user.email;
+                avviaApp();
             });
         }
 
-        function costruisciInterfaccia() {
-            if(window.appIniziata) return; window.appIniziata = true;
-
-            document.getElementById('user-info').innerText = window.currentUserName;
-            document.getElementById('profilo-nome').innerText = window.currentUserName;
-            document.getElementById('profilo-matricola').innerText = "Matricola: " + window.currentUserMatricola;
-            document.getElementById('profilo-ruoli').innerText = window.ruoliUtente;
-
-            // Inizializza Mappa
-            if (!document.getElementById('map').innerHTML) {
-                map = L.map('map', { zoomControl: false, attributionControl: false }).setView([45.707, 11.465], 14);
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
-
-                // Target
-                db.ref('impostazioni/target_attivo').on('value', snap => { 
-                    const banner = document.getElementById('target-banner-container'); const target = snap.val();
-                    if(target && target.via) { 
-                        let pos = target.pos || {lat: 45.707, lng: 11.465};
-                        banner.innerHTML = `<div class="shrink-0 w-full bg-slate-800/80 backdrop-blur-md rounded-xl p-2 border border-slate-600 flex items-center justify-between"><div class="flex flex-col"><span class="text-[7px] text-slate-400 font-bold uppercase">TARGET OPERATIVO</span><span class="text-[10px] text-white font-bold">${target.via.toUpperCase()}</span></div><button onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=$${pos.lat},${pos.lng}')" class="bg-slate-700 text-blue-400 px-3 py-1.5 rounded-lg font-bold text-[8px]">📍 NAVIGA</button></div>`; 
-                    } else { banner.innerHTML = ''; } 
-                });
-            }
-
-            // CARICA EVENTI
-            db.ref('eventi').on('value', (snap) => {
-                const contenitore = document.getElementById('lista-eventi-app');
-                if (snap.exists()) {
-                    let htmlEventi = '';
-                    for (let id in snap.val()) {
-                        const ev = snap.val()[id];
-                        htmlEventi += `
-                        <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 shadow-lg mb-3">
-                            <h3 class="text-sm font-bold text-white uppercase mb-1">${ev.titolo || 'Evento'}</h3>
-                            <div class="text-[10px] text-slate-400 font-mono mb-3">📍 ${ev.luogo || 'N/D'} | 🕒 ${ev.data || 'N/D'}</div>
-                            <div class="flex gap-2">
-                                <button onclick="window.rispondiEvento('${id}', 'PRESENTE')" class="flex-1 bg-slate-900 border border-emerald-500/30 text-emerald-400 py-2 rounded-xl text-[10px] font-bold uppercase focus:bg-emerald-900/50">✅ PRESENTE</button>
-                                <button onclick="window.rispondiEvento('${id}', 'ASSENTE')" class="flex-1 bg-slate-900 border border-red-500/30 text-red-400 py-2 rounded-xl text-[10px] font-bold uppercase focus:bg-red-900/50">❌ ASSENTE</button>
-                            </div>
-                        </div>`;
-                    }
-                    contenitore.innerHTML = htmlEventi;
-                } else { contenitore.innerHTML = `<div class="text-center p-6 border border-dashed border-slate-700 rounded-xl"><p class="text-slate-500 text-xs font-bold uppercase">Nessun evento.</p></div>`; }
-            });
-
-            // CARICA DOTAZIONI (Filtra solo le tue o mostra tutte se non assegnate)
-            db.ref('dotazioni').on('value', (snap) => {
-                const contenitore = document.getElementById('lista-dotazioni');
-                if (snap.exists()) {
-                    let htmlDot = '';
-                    for (let id in snap.val()) {
-                        const dot = snap.val()[id];
-                        // Mostra se è assegnato a questo utente, oppure se non ha un'assegnazione specifica
-                        if(dot.assegnato_a && dot.assegnato_a.toUpperCase() !== window.currentUserName.toUpperCase()) continue;
-                        
-                        htmlDot += `
-                        <div class="flex justify-between items-center bg-slate-900 border border-slate-700 p-3 rounded-xl">
-                            <div class="flex flex-col"><span class="text-white font-bold text-[11px] uppercase">${dot.articolo || dot.nome}</span><span class="text-slate-400 text-[9px] uppercase tracking-widest">${dot.categoria || 'Varie'} ${dot.taglia ? '| Tg: '+dot.taglia : ''}</span></div>
-                            <div class="bg-blue-900/40 text-blue-300 border border-blue-700/50 px-2 py-1 rounded text-[10px] font-black">Q.tà: ${dot.quantita || dot.qta || 1}</div>
-                        </div>`;
-                    }
-                    contenitore.innerHTML = htmlDot !== '' ? htmlDot : '<p class="text-slate-500 text-[10px] text-center font-bold py-2">Nessuna dotazione.</p>';
-                } else { contenitore.innerHTML = '<p class="text-slate-500 text-[10px] text-center font-bold py-2">Magazzino Vuoto.</p>'; }
-            });
-
-            // Diario
-            const diario = document.getElementById('diario-personale');
-            if(diario) { diario.value = localStorage.getItem('diario_vol') || ''; diario.addEventListener('input', (e) => localStorage.setItem('diario_vol', e.target.value)); }
-
-            controllaPermessiTattici();
-            document.getElementById('loading-screen').classList.add('hidden');
+        function avviaApp() {
+            loader.classList.add('hidden');
+            document.getElementById('login-screen').classList.replace('flex', 'hidden');
             document.getElementById('app-container').style.display = 'flex';
-        }
 
-        // TABS e UTILITA'
-        window.switchAppTab = (tabId, btn) => {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
-            document.getElementById(tabId).classList.add('active-tab');
-            document.querySelectorAll('.nav-btn').forEach(b => { b.classList.remove('text-emerald-400', 'text-blue-400', 'text-purple-400', 'scale-110'); b.classList.add('text-slate-500'); b.querySelector('.icon-nav').classList.replace('opacity-100', 'opacity-70'); });
-            btn.classList.remove('text-slate-500'); btn.classList.add('scale-110'); btn.querySelector('.icon-nav').classList.replace('opacity-70', 'opacity-100');
-            if(tabId === 'tab-tattico') { btn.classList.add('text-emerald-400'); if(window.map) setTimeout(() => window.map.invalidateSize(), 300); } 
-            else if(tabId === 'tab-eventi') btn.classList.add('text-blue-400'); 
-            else if(tabId === 'tab-personale') btn.classList.add('text-purple-400');
-        };
+            // Mappa
+            map = L.map('map', { zoomControl:false, attributionControl:false }).setView([45.707, 11.465], 13);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-        window.esciDallApp = () => { Swal.fire({title: 'Disconnetti?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626', confirmButtonText: 'Esci', background: '#0f172a', color: '#fff'}).then((r) => { if (r.isConfirmed) firebase.auth().signOut().then(() => location.reload()); }); };
-
-        function controllaPermessiTattici() {
-            const lockScreen = document.getElementById('blocco-schermo');
-            if(!window.appAbilitata) { lockScreen.classList.remove('hidden'); if(document.getElementById('tab-tattico').classList.contains('active-tab')) window.switchAppTab('tab-personale', document.querySelectorAll('.nav-btn')[2]); } 
-            else { lockScreen.classList.add('hidden'); }
-        }
-
-        window.rispondiEvento = (idEv, risp) => {
-            Swal.fire({ title: 'CONFERMA', text: `Segnarti come ${risp}?`, showCancelButton: true, confirmButtonText: 'SÌ', confirmButtonColor: risp==='PRESENTE'?'#10b981':'#ef4444', background: '#0f172a', color: '#fff' }).then((res) => {
-                if(res.isConfirmed) { db.ref(`eventi/${idEv}/risposte/${window.currentUserName}`).set(risp).then(() => Swal.fire({title: 'Salvato!', icon: 'success', timer: 1500, showConfirmButton: false, background: '#0f172a', color: '#fff'})); }
+            // Controllo Emergenza
+            db.ref('impostazioni/emergenza_attiva').on('value', snap => {
+                document.getElementById('blocco-emergenza').style.display = snap.val() === true ? 'none' : 'flex';
             });
-        };
 
-        window.toggleGPS = () => {
-            const btn = document.getElementById('btn-toggle-gps'); const ind = document.getElementById('gps-status-indicator');
-            if (isGpsActive) { if(gpsTrackerId) { navigator.geolocation.clearWatch(gpsTrackerId); gpsTrackerId = null; } isGpsActive = false; btn.classList.remove('border-emerald-500'); ind.className = 'absolute top-1 right-1 w-2.5 h-2.5 bg-slate-500 rounded-full'; } 
-            else { 
-                if (!navigator.geolocation) return; isGpsActive = true; btn.classList.add('border-emerald-500'); ind.className = 'absolute top-1 right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse';
-                gpsTrackerId = navigator.geolocation.watchPosition((pos) => {
-                    const { latitude, longitude } = pos.coords;
-                    if (!markerMioMezzo) { markerMioMezzo = L.marker([latitude, longitude], { icon: L.divIcon({ className: 'bg-transparent', html: '<div class="w-6 h-6 bg-blue-500 border-2 border-white rounded-full flex items-center justify-center text-[10px] font-black text-white">ME</div>', iconSize: [24,24] }) }).addTo(map); map.setView([latitude, longitude], 16); } 
-                    else { markerMioMezzo.setLatLng([latitude, longitude]); }
-                }, (err) => {}, { enableHighAccuracy: true });
-            }
-        };
-        window.centraMappaSuGPS = () => { if(markerMioMezzo) map.setView(markerMioMezzo.getLatLng(), 17); };
+            // Carica Eventi
+            db.ref('eventi').on('value', snap => {
+                const cont = document.getElementById('lista-eventi');
+                let html = '';
+                snap.forEach(child => {
+                    const e = child.val();
+                    html += `<div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-lg">
+                        <div class="text-sm font-bold text-white uppercase">${e.titolo}</div>
+                        <div class="text-[10px] text-slate-400 mt-1">📍 ${e.luogo} | 🕒 ${e.data}</div>
+                        <div class="flex gap-2 mt-4">
+                            <button onclick="rispondi('${child.key}','PRESENTE')" class="flex-1 bg-emerald-600 text-white py-2 rounded-lg text-[10px] font-bold uppercase">Presente</button>
+                            <button onclick="rispondi('${child.key}','ASSENTE')" class="flex-1 bg-red-600 text-white py-2 rounded-lg text-[10px] font-bold uppercase">Assente</button>
+                        </div>
+                    </div>`;
+                });
+                cont.innerHTML = html || '<div class="text-center text-slate-500 text-xs py-10">Nessun evento</div>';
+            });
+
+            // Carica Magazzino (da risorse_mezzi come in anagrafica.html)
+            db.ref('impostazioni/risorse_mezzi').on('value', snap => {
+                const cont = document.getElementById('lista-dotazioni');
+                let html = '';
+                snap.forEach(child => {
+                    const m = child.val();
+                    html += `<div class="flex justify-between items-center bg-slate-800 p-3 rounded-xl border border-slate-700">
+                        <div><div class="text-white font-bold text-xs uppercase">${m.nome}</div><div class="text-[9px] text-slate-500 uppercase">${m.gruppo}</div></div>
+                        <div class="text-[9px] bg-blue-900/30 text-blue-400 px-2 py-1 rounded border border-blue-800 font-bold">DISPONIBILE</div>
+                    </div>`;
+                });
+                cont.innerHTML = html || '<div class="text-center text-slate-500 text-xs py-4">Magazzino vuoto</div>';
+            });
+        }
+
+        function rispondi(id, r) {
+            db.ref(`eventi/${id}/risposte/${window.currentUser}`).set(r).then(() => Swal.fire({title:'Inviato!', icon:'success', timer:1000, showConfirmButton:false}));
+        }
+
+        function switchTab(id, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
+            document.getElementById(id).classList.add('active-tab');
+            document.querySelectorAll('.nav-btn').forEach(b => { b.classList.remove('text-emerald-400', 'text-blue-400', 'scale-110'); b.classList.add('text-slate-500'); });
+            btn.classList.add(id === 'tab-tattico' ? 'text-emerald-400' : (id === 'tab-eventi' ? 'text-blue-400' : 'text-blue-400'), 'scale-110');
+            if(id==='tab-tattico') setTimeout(()=>map.invalidateSize(), 200);
+        }
+
+        function logout() { firebase.auth().signOut().then(()=>location.reload()); }
     </script>
 </body>
 </html>
