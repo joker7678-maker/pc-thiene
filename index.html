@@ -1150,16 +1150,32 @@
             if(ultimaPos.lat) window.open(`https://www.google.com/maps/dir/?api=1&destination=${ultimaPos.lat},${ultimaPos.lng}`, '_blank'); 
         };
 
-        // ==========================================
+// ==========================================
         // 7. FUNZIONI EXTRA (Segnalazione DPI)
         // ==========================================
         window.segnalaDPISingolo = (nomeArticolo) => {
             Swal.fire({
-                title: `SEGNALA: ${nomeArticolo}`, input: 'textarea', inputPlaceholder: 'Es: Taglia errata, usurato...',
-                background: '#0f172a', color: '#fff', showCancelButton: true, confirmButtonText: 'INVIA ALLA LOGISTICA', confirmButtonColor: '#e11d48',
+                title: `SEGNALA: ${nomeArticolo}`, 
+                input: 'textarea', 
+                inputPlaceholder: 'Es: Taglia errata, usurato...',
+                background: '#0f172a', color: '#fff', 
+                showCancelButton: true, confirmButtonText: 'INVIA ALLA LOGISTICA', confirmButtonColor: '#e11d48',
                 inputValidator: (value) => { if (!value) return 'Devi descrivere il problema!' }
             }).then((res) => {
-                if(res.isConfirmed) window.inviaNuovo(`📦 SEGNALAZIONE D.P.I. [${nomeArticolo}]: ${res.value.toUpperCase()}`);
+                if(res.isConfirmed) {
+                    // Crea il pacchetto dati forzando l'invio diretto al Brogliaccio
+                    db.ref('brogliaccio').push({
+                        ora: new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}), 
+                        data: new Date().toLocaleDateString('it-IT'),
+                        squadra: window.myTeamId || window.currentUserNome, // Se non è su un mezzo, usa il suo nome
+                        utente: window.currentUserNome,
+                        m1: `📦 SEGNALAZIONE D.P.I. [${nomeArticolo}]: ${res.value.toUpperCase()}`, 
+                        dir: 'SQ', 
+                        stato: 'ATTESA'
+                    }).then(() => {
+                        Swal.fire({icon:'success', title:'SEGNALAZIONE INVIATA ALLA DASHBOARD', toast:true, position:'top', timer:2500, showConfirmButton:false, background:'#0f172a', color:'#fff'});
+                    });
+                }
             });
         };
 
