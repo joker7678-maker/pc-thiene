@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PC THIENE - AREA PERSONALE</title>
+    <title>PC THIENE - APP PERSONALE</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
@@ -36,11 +36,11 @@
         #tab-personale.active-tab { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .btn-status { display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; border-bottom-width: 4px; height: 45px; font-weight: 700; text-transform: uppercase; font-size: 9px; cursor: pointer; }
+        .btn-status { display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; border-bottom-width: 4px; height: 45px; font-weight: 700; text-transform: uppercase; font-size: 9px; cursor: pointer; transition: 0.2s;}
         .btn-status span { font-size: 16px; margin-bottom: 2px; }
         .btn-status:active { transform: scale(0.95); }
-        .btn-media { display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; background: #1e293b; border: 1px solid #334155; height: 45px; cursor: pointer; }
-        .btn-media:active { transform: scale(0.95); }
+        .btn-media { display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; background: #1e293b; border: 1px solid #334155; height: 45px; cursor: pointer; transition: 0.2s;}
+        .btn-media:active { transform: scale(0.95); background: #334155;}
 
         .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -54,15 +54,15 @@
 
     <div id="loading-screen" class="absolute inset-0 z-[999999] bg-[#010409] flex flex-col items-center justify-center transition-opacity">
         <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"></div>
-        <div class="text-blue-400 font-black tracking-widest uppercase animate-pulse">Sincronizzazione...</div>
+        <div class="text-blue-400 font-black tracking-widest uppercase animate-pulse">Avvio Sistemi...</div>
     </div>
 
     <div id="login-screen" class="absolute inset-0 z-[99999] bg-[#010409] hidden flex-col items-center justify-center p-6">
         <img src="logosala.png" alt="Logo" class="h-28 w-auto mb-6 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
         <h1 class="text-2xl font-black text-white uppercase tracking-widest mb-8 text-center leading-tight">Area<br><span class="text-blue-500">Personale</span></h1>
         <div class="w-full max-w-sm flex flex-col gap-4">
-            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1">Email</label><input type="email" id="login-email" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-3 text-white focus:border-blue-500 focus:outline-none" placeholder="nome@ceitimpianti.com"></div>
-            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1">Password</label><input type="password" id="login-password" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-3 text-white focus:border-blue-500 focus:outline-none" placeholder="••••••"></div>
+            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1">Email (Es. mario.rossi@...)</label><input type="email" id="login-email" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-3 text-white focus:border-blue-500 outline-none" placeholder="mario.rossi@ceitimpianti.com"></div>
+            <div><label class="text-[10px] text-slate-400 font-bold uppercase ml-1">Password</label><input type="password" id="login-password" class="w-full bg-slate-800 border border-slate-600 rounded-xl p-3 text-white focus:border-blue-500 outline-none" placeholder="••••••"></div>
             <button onclick="eseguiLogin()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black uppercase py-3 rounded-xl mt-4 shadow-lg transition-all active:scale-95">🔐 ACCEDI</button>
             <button onclick="recuperaPassword()" class="text-slate-500 text-xs underline mt-2">Password dimenticata?</button>
         </div>
@@ -74,7 +74,7 @@
             <header class="px-3 py-2 bg-slate-900 border-b border-slate-700 flex justify-between items-center z-[100] shadow-lg">
                 <div class="flex items-center gap-3">
                     <img src="logosala.png" class="h-10 w-auto">
-                    <div class="flex flex-col"><h1 class="text-sm font-black text-white uppercase leading-none">Operatore</h1><span id="tattico-nome" class="text-[10px] text-emerald-400 font-bold uppercase">...</span></div>
+                    <div class="flex flex-col"><h1 class="text-sm font-black text-white uppercase leading-none">Terminale Operativo</h1><span id="tattico-nome" class="text-[10px] text-blue-400 font-bold uppercase">...</span></div>
                 </div>
                 <div class="flex flex-col items-end">
                     <div id="current-status" class="text-[9px] font-black text-white uppercase tracking-widest bg-emerald-600 px-2 py-0.5 rounded shadow mb-1">ATTESA</div>
@@ -85,7 +85,7 @@
                 </div>
             </header>
 
-            <div class="flex-1 w-full relative z-0" id="map-wrapper">
+            <div class="flex-1 w-full relative z-0">
                 <div id="map" class="absolute inset-0"></div>
                 <div class="absolute inset-0 mili-grid"></div>
                 
@@ -130,9 +130,7 @@
                 <span class="text-3xl">📅</span>
                 <div><h2 class="text-xl font-black text-white uppercase">Eventi / Turni</h2><p class="text-[10px] text-blue-400 font-bold uppercase">Inserisci la tua disponibilità</p></div>
             </div>
-            <div id="lista-eventi-app" class="flex flex-col gap-3">
-                <div class="text-center p-6 border border-dashed border-slate-700 rounded-xl mt-2"><div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto mb-2"></div><p class="text-slate-500 text-xs font-bold uppercase">Caricamento eventi...</p></div>
-            </div>
+            <div id="lista-eventi-app" class="flex flex-col gap-3"></div>
         </div>
 
         <div id="tab-personale" class="tab-content hidden h-full w-full bg-[#010409] overflow-y-auto pb-28 p-4">
@@ -149,14 +147,8 @@
                 <div id="profilo-matricola" class="text-xs text-blue-400 font-mono font-bold">MATRICOLA: N/D</div>
                 
                 <div class="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-slate-700">
-                    <div>
-                        <div class="text-[9px] text-slate-500 uppercase font-bold">Gruppo</div>
-                        <div id="profilo-gruppo" class="text-xs text-white font-bold uppercase">...</div>
-                    </div>
-                    <div>
-                        <div class="text-[9px] text-slate-500 uppercase font-bold">Telefono</div>
-                        <div id="profilo-tel" class="text-xs text-white font-mono">...</div>
-                    </div>
+                    <div><div class="text-[9px] text-slate-500 uppercase font-bold">Gruppo</div><div id="profilo-gruppo" class="text-xs text-white font-bold uppercase">...</div></div>
+                    <div><div class="text-[9px] text-slate-500 uppercase font-bold">Telefono</div><div id="profilo-tel" class="text-xs text-white font-mono">...</div></div>
                 </div>
                 
                 <div class="mt-3 pt-3 border-t border-slate-700">
@@ -164,23 +156,22 @@
                     <div id="profilo-spec" class="flex flex-wrap gap-1">...</div>
                 </div>
                 
-                <button onclick="cambiaPasswordAuth()" class="w-full mt-4 bg-slate-700 hover:bg-slate-600 border border-slate-500 text-white text-[10px] font-bold uppercase py-2 rounded-lg transition-colors shadow active:scale-95">
+                <button onclick="cambiaPasswordAuth()" class="w-full mt-4 bg-slate-700 hover:bg-slate-600 border border-slate-500 text-white text-[10px] font-bold uppercase py-2 rounded-lg shadow active:scale-95">
                     🔑 CAMBIA PASSWORD
                 </button>
             </div>
 
             <div class="bg-slate-800/80 border border-slate-700 rounded-2xl p-4 mb-4 shadow-lg">
-                <div class="text-[10px] text-slate-400 uppercase font-bold mb-3 flex items-center gap-2"><span>🎒</span> LE MIE DOTAZIONI (D.P.I.) ASSEGNATE</div>
+                <div class="text-[10px] text-slate-400 uppercase font-bold mb-3 flex items-center gap-2"><span>🎒</span> I MIEI D.P.I. CONSEGNATI</div>
                 <div id="lista-dotazioni" class="flex flex-col gap-2"></div>
             </div>
 
             <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 shadow-lg">
                 <div class="text-[10px] text-slate-400 uppercase font-bold mb-2 flex items-center justify-between">
                     <div class="flex items-center gap-2"><span>📝</span> MEMORIA / APPUNTI</div>
-                    <span id="memoria-status" class="text-[8px] text-emerald-500">Salvataggio Automatico</span>
+                    <span id="memoria-status" class="text-[8px] text-emerald-500">Salvataggio Auto</span>
                 </div>
-                <textarea id="diario-personale" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-300 focus:outline-none min-h-[100px] mb-2" placeholder="Note salvate localmente sul telefono..."></textarea>
-                
+                <textarea id="diario-personale" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-300 focus:outline-none min-h-[100px] mb-2" placeholder="Note salvate localmente..."></textarea>
                 <div class="flex gap-2">
                     <button onclick="salvaAppunti()" class="flex-1 bg-emerald-900/40 border border-emerald-700/50 text-emerald-400 text-[9px] font-bold uppercase py-2 rounded-lg active:scale-95">💾 SALVA</button>
                     <button onclick="svuotaAppunti()" class="flex-1 bg-red-900/40 border border-red-700/50 text-red-400 text-[9px] font-bold uppercase py-2 rounded-lg active:scale-95">🗑️ SVUOTA</button>
@@ -192,10 +183,10 @@
             <button onclick="window.switchAppTab('tab-tattico', this)" class="nav-btn active flex flex-col items-center gap-1 w-1/3 text-emerald-400 transition-all duration-300 transform scale-110">
                 <span class="text-2xl icon-nav transition-all">🚨</span><span class="text-[10px] font-black uppercase">Tattico</span>
             </button>
-            <button onclick="window.switchAppTab('tab-eventi', this)" class="nav-btn flex flex-col items-center gap-1 w-1/3 text-slate-500 hover:text-blue-400 transition-all duration-300">
+            <button onclick="window.switchAppTab('tab-eventi', this)" class="nav-btn flex flex-col items-center gap-1 w-1/3 text-slate-500 transition-all duration-300">
                 <span class="text-2xl opacity-70 icon-nav transition-all">📅</span><span class="text-[10px] font-bold uppercase">Eventi</span>
             </button>
-            <button onclick="window.switchAppTab('tab-personale', this)" class="nav-btn flex flex-col items-center gap-1 w-1/3 text-slate-500 hover:text-purple-400 transition-all duration-300">
+            <button onclick="window.switchAppTab('tab-personale', this)" class="nav-btn flex flex-col items-center gap-1 w-1/3 text-slate-500 transition-all duration-300">
                 <span class="text-2xl opacity-70 icon-nav transition-all">🪪</span><span class="text-[10px] font-bold uppercase">Profilo</span>
             </button>
         </div>
@@ -203,17 +194,14 @@
 
     <script>
         let db, map = null, markerMe, isGpsActive = false, gpsTrackerId = null;
-        window.currentUser = '';
-        window.userEmailObj = '';
+        window.currentUser = ''; window.myTeamId = ''; window.userEmailObj = '';
         window.gpsAutoEnabled = localStorage.getItem('app_gps_auto') !== 'false';
         window.liveTrackingEnabled = localStorage.getItem('app_live_track') === 'true';
         let idSalaAttivo = null; let viaAttiva = ""; let ultimaPos = { lat: null, lng: null };
 
-        // INIZIALIZZAZIONE FIREBASE E ACCESSO
-        const controllaFirebase = setInterval(() => {
+        const initFirebase = setInterval(() => {
             if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-                clearInterval(controllaFirebase); 
-                db = firebase.database(); 
+                clearInterval(initFirebase); db = firebase.database(); 
                 
                 firebase.auth().onAuthStateChanged(user => {
                     const loader = document.getElementById('loading-screen');
@@ -227,32 +215,35 @@
                         loginUI.classList.add('hidden'); loginUI.classList.remove('flex');
                         window.userEmailObj = user.email;
                         
+                        // DECODIFICA EMAIL -> NOME
+                        const expectedName = user.email.split('@')[0].replace('.', ' ').toUpperCase();
+                        
                         db.ref('impostazioni/rubrica_volontari').once('value').then(snap => {
                             let trovato = null;
                             if(snap.exists()) {
                                 snap.forEach(child => {
-                                    if (child.val().email && child.val().email.toLowerCase().trim() === user.email.toLowerCase().trim()) {
+                                    if (child.val().nome && child.val().nome.toUpperCase() === expectedName) {
                                         trovato = child.val();
                                     }
                                 });
                             }
                             
+                            window.currentUser = trovato ? trovato.nome.toUpperCase() : expectedName;
+                            window.myTeamId = window.currentUser; // Di default sei un operatore singolo
+                            
                             // Espulsione Esterni
                             if (trovato && trovato.ruolo && String(trovato.ruolo).toUpperCase().includes('ESTERNO')) {
                                 firebase.auth().signOut();
-                                Swal.fire('ACCESSO NEGATO', 'App riservata ai volontari interni. Usa il Terminale Squadra.', 'error');
+                                Swal.fire('ACCESSO NEGATO', 'App riservata ai volontari interni.', 'error');
                                 return;
                             }
 
-                            // Compilazione Profilo
-                            window.currentUser = trovato ? trovato.nome.toUpperCase() : user.email.split('@')[0].toUpperCase();
-                            window.gruppoAppartenenza = trovato ? (trovato.gruppo || 'PC THIENE') : 'PC THIENE';
-                            
+                            // Compila Grafica Profilo
                             document.getElementById('profilo-nome').innerText = window.currentUser;
-                            document.getElementById('tattico-nome').innerText = window.currentUser;
+                            document.getElementById('tattico-nome').innerText = "OP. SINGOLO";
                             document.getElementById('profilo-matricola').innerText = "MATRICOLA: " + (trovato ? (trovato.matricola || 'N/D') : 'N/D');
                             document.getElementById('profilo-sangue').innerText = trovato ? (trovato.sangue || 'NON NOTO') : 'NON NOTO';
-                            document.getElementById('profilo-gruppo').innerText = window.gruppoAppartenenza;
+                            document.getElementById('profilo-gruppo').innerText = trovato ? (trovato.gruppo || 'PC THIENE') : 'PC THIENE';
                             document.getElementById('profilo-tel').innerText = trovato ? (trovato.tel || 'N/D') : 'N/D';
                             
                             let specHtml = '';
@@ -287,40 +278,48 @@
         }
 
         function cambiaPasswordAuth() {
-            Swal.fire({
-                title: 'Reset Password', text: `Invieremo un'email a ${window.userEmailObj}. Confermi?`, icon: 'question', 
-                showCancelButton: true, confirmButtonText: 'INVIA MAIL', background: '#0f172a', color: '#fff'
-            }).then((res) => {
-                if(res.isConfirmed) {
-                    firebase.auth().sendPasswordResetEmail(window.userEmailObj).then(() => Swal.fire('Inviata!', 'Controlla la posta.', 'success')).catch(() => Swal.fire('Errore', 'Operazione fallita.', 'error'));
-                }
+            Swal.fire({ title: 'Reset Password', text: `Invieremo un'email a ${window.userEmailObj}. Confermi?`, icon: 'question', showCancelButton: true, confirmButtonText: 'INVIA MAIL', background: '#0f172a', color: '#fff' }).then((res) => {
+                if(res.isConfirmed) firebase.auth().sendPasswordResetEmail(window.userEmailObj).then(() => Swal.fire('Inviata!', 'Controlla la posta.', 'success'));
             });
         }
 
-        // ==========================================
-        // MOTORE PRINCIPALE (MAPPA E DATI)
-        // ==========================================
         function avviaInterfaccia() {
             document.getElementById('loading-screen').classList.add('hidden');
             document.getElementById('app-container').style.display = 'flex';
 
-            // 1. INIZIALIZZA MAPPA (FIX BUG NERO)
+            // 1. MAPPA
             if (!map) {
                 map = L.map('map', { zoomControl: false, attributionControl: false }).setView([45.707, 11.465], 13);
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-                
-                // Osservatore dimensionale per prevenire glitch visivi di Leaflet nei div display:none
-                const resizeObserver = new ResizeObserver(() => { if(map) map.invalidateSize(); });
-                resizeObserver.observe(document.getElementById('map-wrapper'));
             }
+            setTimeout(() => { map.invalidateSize(); }, 500);
             updateGpsBadge();
 
-            // 2. ASCOLTO SALA RADIO (Chat e Target)
+            // 2. ASCOLTO ASSEGNAZIONE SQUADRA
+            db.ref('anagrafica_squadre').on('value', snap => {
+                let trovataSq = window.currentUser;
+                if(snap.exists()) {
+                    snap.forEach(child => {
+                        const sq = child.val();
+                        if (sq.attiva) {
+                            const capo = (sq.capo || '').toUpperCase();
+                            const nomi = (sq.nomi || '').toUpperCase().split(',').map(n=>n.trim());
+                            if (capo === window.currentUser || nomi.includes(window.currentUser)) {
+                                trovataSq = child.key;
+                            }
+                        }
+                    });
+                }
+                window.myTeamId = trovataSq;
+                document.getElementById('tattico-nome').innerText = window.myTeamId === window.currentUser ? "OP. SINGOLO" : "UNITÀ: " + window.myTeamId;
+            });
+
+            // 3. ASCOLTO BROGLIACCIO (Chat e Target legati a myTeamId)
             db.ref('brogliaccio').limitToLast(100).on('value', snap => {
                 if(!snap.exists()) return;
                 const logs = Object.entries(snap.val()).map(([id, val]) => ({ id, ...val })).reverse();
                 
-                const target = logs.find(l => l.dir === 'SA' && l.squadra === window.currentUser && l.m1 && l.m1.includes('📍') && l.id !== window.targetCompletato);
+                const target = logs.find(l => l.dir === 'SA' && (l.squadra === window.myTeamId || l.squadra === window.currentUser) && l.m1 && l.m1.includes('📍') && l.id !== window.targetCompletato);
                 const banner = document.getElementById('target-banner');
 
                 if (target) {
@@ -334,7 +333,7 @@
                     }
                 } else { banner.innerHTML = ''; idSalaAttivo = null; }
 
-                const myLogs = logs.filter(l => l.squadra === window.currentUser || l.squadra === 'COMUNICAZIONE GENERALE');
+                const myLogs = logs.filter(l => l.squadra === window.myTeamId || l.squadra === window.currentUser || l.squadra === 'COMUNICAZIONE GENERALE');
                 let lastMsg = null;
                 for (let l of myLogs) {
                     if (l.m1 && l.m1.includes('📍')) continue; 
@@ -348,14 +347,7 @@
                 } else { msgBanner.style.display = 'none'; }
             });
 
-            // STATO OPERATORE
-            db.ref(`anagrafica_squadre/${window.currentUser}`).on('value', snap => {
-                if(snap.exists() && snap.val().stato) {
-                    document.getElementById('current-status').innerText = snap.val().stato.toUpperCase();
-                }
-            });
-
-            // 3. ASCOLTO EVENTI (Con Conferma)
+            // 4. EVENTI CON CONFERMA
             db.ref('eventi').on('value', snap => {
                 const contenitore = document.getElementById('lista-eventi-app');
                 if (snap.exists()) {
@@ -373,75 +365,50 @@
                         </div>`;
                     });
                     contenitore.innerHTML = html;
-                } else { contenitore.innerHTML = '<p class="text-center text-slate-500 text-xs py-10 uppercase font-bold tracking-widest">Nessun Evento In Programma</p>'; }
+                } else { contenitore.innerHTML = '<p class="text-center text-slate-500 text-xs py-10 uppercase font-bold tracking-widest">Nessun Evento</p>'; }
             });
 
-            // 4. ASCOLTO DOTAZIONI PERSONALI (D.P.I.)
+            // 5. DOTAZIONI (DPI ESATTI)
             db.ref('dotazioni').on('value', snap => {
                 const contenitore = document.getElementById('lista-dotazioni');
                 if (snap.exists()) {
                     let html = ''; let trovatoQualcosa = false;
-                    
                     snap.forEach(child => {
                         const dot = child.val();
-                        // Filtra solo quelle assegnate all'operatore corrente
-                        if (dot.assegnato_a && dot.assegnato_a.toUpperCase() === window.currentUser.toUpperCase()) {
+                        if (dot.assegnato_a && dot.assegnato_a.toUpperCase() === window.currentUser) {
                             trovatoQualcosa = true;
-                            html += `
-                            <div class="flex justify-between items-center bg-slate-900 border border-slate-700 p-3 rounded-xl mb-1">
-                                <div class="flex flex-col"><span class="text-white font-bold text-[11px] uppercase">${dot.articolo || dot.nome || 'Materiale'}</span><span class="text-slate-400 text-[9px] uppercase">${dot.categoria || 'DPI'} ${dot.taglia ? '| Tg: '+dot.taglia : ''}</span></div>
-                                <div class="bg-blue-900/40 text-blue-300 border border-blue-700/50 px-2 py-1 rounded text-[10px] font-black">Q.tà: ${dot.quantita || dot.qta || 1}</div>
-                            </div>`;
+                            html += `<div class="flex justify-between items-center bg-slate-900 border border-slate-700 p-3 rounded-xl mb-1"><div class="flex flex-col"><span class="text-white font-bold text-[11px] uppercase">${dot.articolo || dot.nome || 'Materiale'}</span><span class="text-slate-400 text-[9px] uppercase">${dot.categoria || 'DPI'} ${dot.taglia ? '| Tg: '+dot.taglia : ''}</span></div><div class="bg-blue-900/40 text-blue-300 border border-blue-700/50 px-2 py-1 rounded text-[10px] font-black">Q.tà: ${dot.quantita || dot.qta || 1}</div></div>`;
                         }
                     });
-                    contenitore.innerHTML = trovatoQualcosa ? html : '<p class="text-slate-500 text-[10px] text-center py-4 uppercase font-bold tracking-widest">Nessuna Dotazione Personale Trovata.</p>';
-                } else { 
-                    contenitore.innerHTML = '<p class="text-slate-500 text-[10px] text-center py-4 uppercase font-bold tracking-widest">Magazzino Vuoto.</p>'; 
-                }
+                    contenitore.innerHTML = trovatoQualcosa ? html : '<p class="text-slate-500 text-xs text-center py-4 uppercase font-bold tracking-widest">Nessun D.P.I. Consegnato</p>';
+                } else { contenitore.innerHTML = '<p class="text-slate-500 text-xs text-center py-4 uppercase font-bold tracking-widest">Magazzino Vuoto.</p>'; }
             });
 
-            // Diario locale
+            // Memoria Locale
             const diario = document.getElementById('diario-personale');
             diario.value = localStorage.getItem('diario_vol') || '';
             diario.addEventListener('input', () => { 
-                localStorage.setItem('diario_vol', diario.value); 
-                document.getElementById('memoria-status').innerText = 'Salvato.';
+                localStorage.setItem('diario_vol', diario.value); document.getElementById('memoria-status').innerText = 'Salvato.';
                 setTimeout(()=> document.getElementById('memoria-status').innerText = 'Salvataggio Automatico', 2000);
             });
-            
-            // Forza renderizzazione mappa
-            setTimeout(() => { if (map) map.invalidateSize(); }, 500);
         }
-
-        // ==========================================
-        // FUNZIONI MEMORIA E TABS
-        // ==========================================
-        window.salvaAppunti = () => {
-            localStorage.setItem('diario_vol', document.getElementById('diario-personale').value);
-            Swal.fire({icon: 'success', title: 'MEMORIA SALVATA', toast: true, position: 'bottom', timer: 2000, showConfirmButton: false, background: '#0f172a', color: '#fff'});
-        };
-
-        window.svuotaAppunti = () => {
-            Swal.fire({ title: 'SVUOTA MEMORIA?', icon: 'warning', showCancelButton: true, confirmButtonText: 'SÌ, CANCELLA', confirmButtonColor: '#dc2626', background: '#0f172a', color: '#fff' }).then(r => {
-                if(r.isConfirmed) { localStorage.removeItem('diario_vol'); document.getElementById('diario-personale').value = ''; Swal.fire({icon: 'success', title: 'Cancellato', toast: true, position: 'bottom', timer: 1500, showConfirmButton: false, background: '#0f172a', color: '#fff'}); }
-            });
-        };
 
         window.switchAppTab = (tabId, btn) => {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
             document.getElementById(tabId).classList.add('active-tab');
             document.querySelectorAll('.nav-btn').forEach(b => { b.classList.remove('text-emerald-400', 'text-blue-400', 'text-purple-400', 'scale-110'); b.classList.add('text-slate-500'); });
             btn.classList.add('scale-110');
-            if(tabId === 'tab-tattico') { btn.classList.add('text-emerald-400'); if(map) setTimeout(() => map.invalidateSize(), 200); } 
+            if(tabId === 'tab-tattico') { btn.classList.add('text-emerald-400'); if(map) setTimeout(() => map.invalidateSize(), 300); } 
             else if(tabId === 'tab-eventi') btn.classList.add('text-blue-400'); 
             else if(tabId === 'tab-personale') btn.classList.add('text-purple-400');
         };
 
-        // ==========================================
-        // TATTICA E CONFERME (Bottoni Operativi)
-        // ==========================================
+        window.salvaAppunti = () => { localStorage.setItem('diario_vol', document.getElementById('diario-personale').value); Swal.fire({icon: 'success', title: 'SALVATO', toast: true, position: 'bottom', timer: 2000, showConfirmButton: false, background: '#0f172a', color: '#fff'}); };
+        window.svuotaAppunti = () => { Swal.fire({ title: 'SVUOTA MEMORIA?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626', background: '#0f172a', color: '#fff' }).then(r => { if(r.isConfirmed) { localStorage.removeItem('diario_vol'); document.getElementById('diario-personale').value = ''; Swal.fire({icon: 'success', title: 'Cancellato', toast: true, position: 'bottom', timer: 1500, showConfirmButton: false, background: '#0f172a', color: '#fff'}); } }); };
+
+        // CONFERME OPERATIVE
         window.rispondiEvento = (id, risposta) => {
-            Swal.fire({ title: 'Confermi?', text: `Vuoi segnarti come ${risposta}?`, icon: 'question', showCancelButton: true, confirmButtonText: 'SÌ, CONFERMA', confirmButtonColor: risposta === 'PRESENTE' ? '#10b981' : '#ef4444', background: '#0f172a', color: '#fff' }).then((res) => {
+            Swal.fire({ title: 'Confermi?', text: `Segnarti come ${risposta}?`, icon: 'question', showCancelButton: true, confirmButtonText: 'SÌ', confirmButtonColor: risposta === 'PRESENTE' ? '#10b981' : '#ef4444', background: '#0f172a', color: '#fff' }).then((res) => {
                 if(res.isConfirmed) { db.ref(`eventi/${id}/risposte/${window.currentUser}`).set(risposta).then(() => Swal.fire({title:'Salvato!', icon:'success', timer:1500, showConfirmButton:false, background: '#0f172a', color: '#fff'})); }
             });
         };
@@ -449,62 +416,40 @@
         window.askStatus = (stato, icon) => {
             Swal.fire({ title: `CONFERMI STATO?`, html: `<span class="text-4xl block mb-2">${icon}</span><b>${stato.toUpperCase()}</b>`, showCancelButton: true, confirmButtonText: 'INVIA', confirmButtonColor: '#2563eb', background: '#0f172a', color: '#fff' }).then((r) => {
                 if(r.isConfirmed) {
-                    db.ref(`anagrafica_squadre/${window.currentUser}`).update({ stato: stato, capo: window.currentUser, ultimo_contatto: Date.now(), attiva: true });
+                    document.getElementById('current-status').innerText = stato.toUpperCase();
+                    if(window.myTeamId !== window.currentUser) db.ref(`anagrafica_squadre/${window.myTeamId}`).update({ stato: stato, ultimo_contatto: Date.now() });
+                    else db.ref(`anagrafica_squadre/${window.currentUser}`).update({ stato: stato, capo: window.currentUser, ultimo_contatto: Date.now(), attiva: true });
                     inviaMessaggioBrogliaccio(`CAMBIO STATO: ${stato}`, { dir: 'SQ', stato: 'OK' });
                 }
             });
         };
 
         window.askFreeMsg = () => {
-            const txt = document.getElementById('msg-input').value.trim();
-            if(!txt) return;
+            const txt = document.getElementById('msg-input').value.trim(); if(!txt) return;
             Swal.fire({ title: 'INVIARE MESSAGGIO?', text: `"${txt}"`, showCancelButton: true, confirmButtonText: 'INVIA', confirmButtonColor: '#2563eb', background: '#0f172a', color: '#fff' }).then(r => {
                 if(r.isConfirmed) { inviaMessaggioBrogliaccio(txt, { dir: 'SQ', stato: 'OK' }); document.getElementById('msg-input').value = ''; }
             });
         };
 
         window.inviaFoto = (file) => {
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                Swal.fire({ title: 'INVIARE FOTO?', html: `<img src="${e.target.result}" class="w-full rounded mt-2">`, showCancelButton: true, confirmButtonText: 'INVIA', confirmButtonColor: '#2563eb', background: '#0f172a', color: '#fff' }).then((r) => {
-                    if(r.isConfirmed) inviaMessaggioBrogliaccio("📷 FOTO INVIATA", { mediaUrl: e.target.result, mediaType: 'IMG', dir: 'SQ', stato: 'OK' });
-                });
-            };
+            if(!file) return; const reader = new FileReader();
+            reader.onload = (e) => { Swal.fire({ title: 'INVIARE FOTO?', html: `<img src="${e.target.result}" class="w-full rounded mt-2">`, showCancelButton: true, confirmButtonText: 'INVIA', confirmButtonColor: '#2563eb', background: '#0f172a', color: '#fff' }).then((r) => { if(r.isConfirmed) inviaMessaggioBrogliaccio("📷 FOTO INVIATA", { mediaUrl: e.target.result, mediaType: 'IMG', dir: 'SQ', stato: 'OK' }); }); };
             reader.readAsDataURL(file);
         };
 
         function inviaMessaggioBrogliaccio(testo, extraObj) {
             const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
             let p = { lat: '', lng: '' }; if(ultimaPos.lat) p = ultimaPos;
-            db.ref('brogliaccio').push({ ora: ora, data: new Date().toLocaleDateString('it-IT'), squadra: window.currentUser, utente: window.currentUser, m1: testo.toUpperCase(), ...p, ...extraObj }).then(() => Swal.fire({ title: 'Inviato in Sala!', icon: 'success', timer: 1000, showConfirmButton: false, background: '#0f172a', color: '#fff' }));
+            db.ref('brogliaccio').push({ ora: ora, data: new Date().toLocaleDateString('it-IT'), squadra: window.myTeamId, utente: window.currentUser, m1: testo.toUpperCase(), ...p, ...extraObj }).then(() => Swal.fire({ title: 'Inviato in Sala!', icon: 'success', timer: 1000, showConfirmButton: false, background: '#0f172a', color: '#fff' }));
         }
 
-        window.cRic = () => { if(idSalaAttivo) { db.ref(`brogliaccio/${idSalaAttivo}`).update({ stato: 'OK', m2: '✅ RICEVUTO', ora_risposta: new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) }); db.ref(`anagrafica_squadre/${window.currentUser}`).update({ stato: 'Trasferimento', ultimo_contatto: Date.now() }); } };
-        window.cArr = () => { if(!idSalaAttivo) return; Swal.fire({ title: 'SUL POSTO?', showCancelButton: true, confirmButtonText: 'SÌ', confirmButtonColor: '#dc2626', background: '#0f172a', color: '#fff' }).then((r) => { if (r.isConfirmed) { window.targetCompletato = idSalaAttivo; db.ref(`anagrafica_squadre/${window.currentUser}`).update({ stato: 'Intervento', ultimo_contatto: Date.now() }); inviaMessaggioBrogliaccio(`🏁 ARRIVATI: ${viaAttiva}`, { stato: 'ATTESA', dir: 'SQ' }); idSalaAttivo = null; } }); };
+        window.cRic = () => { if(idSalaAttivo) { db.ref(`brogliaccio/${idSalaAttivo}`).update({ stato: 'OK', m2: '✅ RICEVUTO', ora_risposta: new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) }); db.ref(`anagrafica_squadre/${window.myTeamId}`).update({ stato: 'Trasferimento', ultimo_contatto: Date.now() }); } };
+        window.cArr = () => { if(!idSalaAttivo) return; Swal.fire({ title: 'SUL POSTO?', showCancelButton: true, confirmButtonText: 'SÌ', confirmButtonColor: '#dc2626', background: '#0f172a', color: '#fff' }).then((r) => { if (r.isConfirmed) { window.targetCompletato = idSalaAttivo; db.ref(`anagrafica_squadre/${window.myTeamId}`).update({ stato: 'Intervento', ultimo_contatto: Date.now() }); inviaMessaggioBrogliaccio(`🏁 ARRIVATI: ${viaAttiva}`, { stato: 'ATTESA', dir: 'SQ' }); idSalaAttivo = null; } }); };
         window.navig = () => { if(ultimaPos.lat) window.open(`https://www.google.com/maps/dir/?api=1&destination=$${ultimaPos.lat},${ultimaPos.lng}`, '_blank'); };
 
-        // ==========================================
-        // GESTIONE GPS
-        // ==========================================
         window.openGPSPanel = () => {
-            Swal.fire({
-                title: 'MAPPA E GPS',
-                html: `
-                <div style="text-align: left; display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
-                    <div style="background: #1e293b; padding: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 11px; font-weight: bold; color: white;">GPS nei Messaggi</span>
-                        <label class="switch"><input type="checkbox" id="gps-toggle" ${window.gpsAutoEnabled ? 'checked' : ''} onchange="window.toggleGpsApp(this.checked)"><span class="slider"></span></label>
-                    </div>
-                    <div style="background: #1e293b; padding: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 11px; font-weight: bold; color: #ef4444;">LIVE Tracking 🔴</span>
-                        <label class="switch"><input type="checkbox" id="live-toggle" ${window.liveTrackingEnabled ? 'checked' : ''} onchange="window.toggleLiveTrack(this.checked)"><span class="slider"></span></label>
-                    </div>
-                </div>`,
-                showConfirmButton: true, confirmButtonText: 'CHIUDI', confirmButtonColor: '#475569', background: '#0f172a', color: '#fff'
-            });
+            Swal.fire({ title: 'MAPPA E GPS', html: `<div style="text-align: left; display: flex; flex-direction: column; gap: 10px; margin-top: 10px;"><div style="background: #1e293b; padding: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 11px; font-weight: bold; color: white;">GPS nei Messaggi</span><label class="switch"><input type="checkbox" id="gps-toggle" ${window.gpsAutoEnabled ? 'checked' : ''} onchange="window.toggleGpsApp(this.checked)"><span class="slider"></span></label></div><div style="background: #1e293b; padding: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 11px; font-weight: bold; color: #ef4444;">LIVE Tracking 🔴</span><label class="switch"><input type="checkbox" id="live-toggle" ${window.liveTrackingEnabled ? 'checked' : ''} onchange="window.toggleLiveTrack(this.checked)"><span class="slider"></span></label></div></div>`, showConfirmButton: true, confirmButtonText: 'CHIUDI', confirmButtonColor: '#475569', background: '#0f172a', color: '#fff' });
         };
-
         window.toggleGpsApp = (val) => { window.gpsAutoEnabled = val; localStorage.setItem('app_gps_auto', val); updateGpsBadge(); };
         window.toggleLiveTrack = (val) => { window.liveTrackingEnabled = val; localStorage.setItem('app_live_track', val); updateGpsBadge(); };
 
@@ -524,11 +469,10 @@
                 if (!navigator.geolocation) return; isGpsActive = true; 
                 btn.classList.add('border-emerald-500'); ind.className = 'absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse';
                 gpsTrackerId = navigator.geolocation.watchPosition((pos) => {
-                    const { latitude, longitude } = pos.coords;
-                    ultimaPos = { lat: latitude, lng: longitude };
+                    const { latitude, longitude } = pos.coords; ultimaPos = { lat: latitude, lng: longitude };
                     if (!markerMe) { markerMe = L.marker([latitude, longitude], { icon: L.divIcon({ className: 'bg-transparent', html: '<div class="w-6 h-6 bg-blue-500 border-2 border-white rounded-full flex items-center justify-center text-[10px] font-black text-white">ME</div>', iconSize: [24,24] }) }).addTo(map); map.setView([latitude, longitude], 16); } 
                     else { markerMe.setLatLng([latitude, longitude]); }
-                    if(window.liveTrackingEnabled) db.ref(`anagrafica_squadre/${window.currentUser}`).update({ lat: latitude.toFixed(6), lng: longitude.toFixed(6), ultimo_contatto: Date.now() });
+                    if(window.liveTrackingEnabled) db.ref(`anagrafica_squadre/${window.myTeamId}`).update({ lat: latitude.toFixed(6), lng: longitude.toFixed(6), ultimo_contatto: Date.now() });
                 }, null, { enableHighAccuracy: true });
             }
         };
