@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PC THIENE - APP PERSONALE E TATTICA</title>
+    <title>PC THIENE - APP PERSONALE</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
@@ -31,49 +31,142 @@
         
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #020617; 
+            background-color: #050b14; 
             background-image: 
                 radial-gradient(circle at 50% -20%, #1e293b 0%, #020617 80%),
                 linear-gradient(rgba(15, 23, 42, 0.4) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(15, 23, 42, 0.4) 1px, transparent 1px);
             background-size: 100% 100%, 30px 30px, 30px 30px;
-            color: #e2e8f0; height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; margin: 0; 
+            color: #e2e8f0; 
+            height: 100vh; 
+            height: 100dvh; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            margin: 0; 
         }
 
         /* SCHERMATE DI INGRESSO E LOADING */
-        #login-personal-screen, #landing-screen, #login-screen-pin, #team-select-screen, #loading-screen { 
-            position: fixed; inset: 0; z-index: 50000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; 
-            background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(20px); overflow: hidden; 
+        #login-personal-screen, 
+        #landing-screen,
+        #login-screen-pin,
+        #team-select-screen,
+        #loading-screen { 
+            position: fixed; 
+            inset: 0; 
+            z-index: 50000; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 16px; 
+            background: rgba(2, 6, 23, 0.95); 
+            backdrop-filter: blur(20px); 
+            overflow: hidden; 
         }
-        #loading-screen { z-index: 99999; }
-
-        .screen-enter { animation: fadeInScale 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes fadeInScale { 0% { opacity: 0; transform: scale(0.95) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
         
-        .logo-container { animation: soft-pulse 3s ease-in-out infinite; }
-        @keyframes soft-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+        #loading-screen { 
+            z-index: 99999; 
+        }
 
-        .chasing-border-blue { position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, transparent 70%, #3b82f6 100%); animation: spin-chase 2s linear infinite; }
-        @keyframes spin-chase { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .screen-enter { 
+            animation: fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+        }
+        
+        @keyframes fadeInScale { 
+            0% { opacity: 0; transform: scale(0.95) translateY(10px); } 
+            100% { opacity: 1; transform: scale(1) translateY(0); } 
+        }
+        
+        .logo-container { 
+            animation: soft-pulse 3s ease-in-out infinite; 
+        }
+        
+        @keyframes soft-pulse { 
+            0%, 100% { transform: scale(1); } 
+            50% { transform: scale(1.03); } 
+        }
 
-        .inner-circle { position: absolute; inset: 4px; background-color: #0f172a; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10; box-shadow: inset 0px 0px 20px rgba(0,0,0,0.9); overflow: hidden; }
+        .chasing-border-blue { 
+            position: absolute; 
+            inset: 0; 
+            border-radius: 50%; 
+            background: conic-gradient(from 0deg, transparent 70%, #3b82f6 100%); 
+            animation: spin-chase 2s linear infinite; 
+        }
+        
+        @keyframes spin-chase { 
+            from { transform: rotate(0deg); } 
+            to { transform: rotate(360deg); } 
+        }
+
+        .inner-circle { 
+            position: absolute; 
+            inset: 4px; 
+            background-color: #0f172a; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 10; 
+            box-shadow: inset 0px 0px 20px rgba(0,0,0,0.9); 
+            overflow: hidden; 
+        }
 
         /* GRAFICA TATTICA PANNELLI E BOTTONI */
         .glass-panel { 
-            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); 
-            border: 1px solid rgba(51, 65, 85, 0.5); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.05); border-radius: 16px; 
+            background: rgba(15, 23, 42, 0.85); 
+            backdrop-filter: blur(16px); 
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(51, 65, 85, 0.5); 
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.05); 
+            border-radius: 16px; 
         }
 
         .btn-status { 
             background: linear-gradient(180deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 1) 100%); 
-            border: 1px solid rgba(71, 85, 105, 0.4); border-radius: 12px; height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            transition: 0.15s; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.4); 
+            border: 1px solid rgba(71, 85, 105, 0.4); 
+            border-radius: 12px; 
+            height: 52px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            transition: 0.15s; 
+            position: relative; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4); 
         }
-        .btn-status:active { transform: scale(0.93); filter: brightness(1.2); }
-        .btn-status::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; border-radius: 0 0 12px 12px; }
         
-        .btn-status .icon-box { display: flex; align-items: center; justify-content: center; margin-bottom: 2px; font-size: 16px; drop-shadow: 0 2px 2px rgba(0,0,0,0.5); }
-        .btn-status span.txt { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-status:active { 
+            transform: scale(0.93); 
+            filter: brightness(1.2); 
+        }
+        
+        .btn-status::after { 
+            content: ''; 
+            position: absolute; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            height: 3px; 
+            border-radius: 0 0 12px 12px; 
+        }
+        
+        .btn-status .icon-box { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin-bottom: 2px; 
+            font-size: 16px; 
+            drop-shadow: 0 2px 2px rgba(0,0,0,0.5); 
+        }
+        
+        .btn-status span.txt { 
+            font-size: 9px; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+        }
 
         .btn-sede::after { background-color: #10b981; } .btn-sede { color: #6ee7b7; }
         .btn-uscita::after { background-color: #f59e0b; } .btn-uscita { color: #fcd34d; }
@@ -82,20 +175,76 @@
         .btn-rientro::after { background-color: #0ea5e9; } .btn-rientro { color: #7dd3fc; }
 
         /* TABS E MAPPA */
-        .tab-content { display: none; }
-        .active-tab { display: flex !important; animation: fadeInScale 0.2s ease-out; }
-        #map { height: 100%; width: 100%; background: #e5e7eb; z-index: 1; border-radius: 12px; }
+        .tab-content { 
+            display: none; 
+        }
+        
+        .active-tab { 
+            display: flex !important; 
+            animation: fadeInScale 0.2s ease-out; 
+        }
+        
+        #map { 
+            height: 100%; 
+            width: 100%; 
+            background: #e5e7eb; 
+            z-index: 1; 
+            border-radius: 12px; 
+        }
 
         /* SWITCH TOGGLES (GPS) */
-        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; inset: 0; background-color: #334155; transition: .3s; border-radius: 34px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); border: 1px solid #1e293b;}
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 2px; background-color: #94a3b8; transition: .3s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
-        input:checked + .slider { background-color: #10b981; border-color: #047857; }
-        input:checked + .slider:before { transform: translateX(20px); background-color: #fff; }
+        .switch { 
+            position: relative; 
+            display: inline-block; 
+            width: 44px; 
+            height: 24px; 
+        }
+        
+        .switch input { 
+            opacity: 0; 
+            width: 0; 
+            height: 0; 
+        }
+        
+        .slider { 
+            position: absolute; 
+            cursor: pointer; 
+            inset: 0; 
+            background-color: #334155; 
+            transition: .3s; 
+            border-radius: 34px; 
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); 
+            border: 1px solid #1e293b;
+        }
+        
+        .slider:before { 
+            position: absolute; 
+            content: ""; 
+            height: 18px; 
+            width: 18px; 
+            left: 3px; 
+            bottom: 2px; 
+            background-color: #94a3b8; 
+            transition: .3s; 
+            border-radius: 50%; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5); 
+        }
+        
+        input:checked + .slider { 
+            background-color: #10b981; 
+            border-color: #047857; 
+        }
+        
+        input:checked + .slider:before { 
+            transform: translateX(20px); 
+            background-color: #fff; 
+        }
 
         /* SCROLLBAR INVISIBILE E FLUIDA */
-        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        ::-webkit-scrollbar { 
+            width: 0px; 
+            background: transparent; 
+        }
     </style>
 </head>
 <body>
@@ -118,7 +267,7 @@
         <h2 class="font-bold text-[10px] mb-8 text-slate-400 tracking-[0.3em] uppercase">Seleziona Accesso</h2>
         
         <div class="w-full max-w-[320px] flex flex-col gap-4 screen-enter">
-            <button onclick="selezionaModo('PERSONAL')" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 py-4 rounded-xl font-black uppercase text-xs shadow-[0_0_15px_rgba(59,130,246,0.4)] active:scale-95 text-white flex items-center justify-center gap-3 border border-blue-400/50 transition-transform">
+            <button onclick="selezionaModo('PERSONAL')" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 py-4 rounded-xl font-black uppercase text-xs shadow-[0_0_20px_rgba(59,130,246,0.4)] active:scale-95 text-white flex items-center justify-center gap-3 border border-blue-400/50 transition-transform">
                 <span class="text-2xl drop-shadow">🪪</span> PROFILO VOLONTARIO
             </button>
             <button onclick="selezionaModo('TERMINAL')" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-600 py-4 rounded-xl font-black uppercase text-xs shadow-lg active:scale-95 text-emerald-400 flex items-center justify-center gap-3 transition-colors">
@@ -137,7 +286,9 @@
             <input type="email" id="login-email" class="bg-slate-900 border border-slate-600 focus:border-blue-500 rounded-xl text-center text-sm text-white py-3.5 w-full mb-3 outline-none shadow-inner transition-colors" placeholder="Email (mario.rossi@...)">
             <input type="password" id="login-password" class="bg-slate-900 border border-slate-600 focus:border-blue-500 rounded-xl text-center text-xl text-white py-3.5 w-full mb-5 tracking-[0.3em] outline-none shadow-inner transition-colors" placeholder="••••••">            
             
-            <button onclick="eseguiLoginPersonale()" class="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-xl font-black uppercase text-xs shadow-lg active:scale-95 text-white transition-all border border-blue-400/50">ACCEDI AL PROFILO</button>
+            <button onclick="eseguiLoginPersonale()" class="w-full bg-blue-600 hover:bg-blue-500 py-3.5 rounded-xl font-black uppercase text-xs shadow-lg active:scale-95 text-white transition-all border border-blue-400/50">
+                ACCEDI AL PROFILO
+            </button>
             <button onclick="annullaLogin()" class="mt-4 text-[9px] font-black text-slate-500 uppercase tracking-widest hover:text-white transition-colors">🔙 TORNA ALLA HOME</button>
         </div>
     </div>
@@ -161,7 +312,9 @@
             
             <input type="text" id="team-input" class="bg-slate-900 border border-slate-600 focus:border-emerald-500 rounded-xl text-center text-2xl text-white py-3.5 w-full tracking-widest outline-none uppercase mb-4 shadow-inner transition-colors" placeholder="SQ1">            
             
-            <button onclick="saveNewTeam()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3.5 rounded-xl font-black uppercase text-xs shadow-lg active:scale-95 text-white transition-all border border-emerald-400/50">CONFERMA UNITÀ</button>
+            <button onclick="saveNewTeam()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3.5 rounded-xl font-black uppercase text-xs shadow-lg active:scale-95 text-white transition-all border border-emerald-400/50">
+                CONFERMA UNITÀ
+            </button>
             <button onclick="annullaLogin()" class="mt-4 text-[9px] font-black text-slate-500 uppercase tracking-widest hover:text-white transition-colors">🔙 TORNA ALLA HOME</button>
         </div>
     </div>
@@ -174,9 +327,15 @@
         
         <div class="glass-panel p-6 w-full max-w-[320px] shadow-2xl flex flex-col screen-enter items-center border border-emerald-500/30">
             <p class="text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-2">Unità Operativa: <b id="login-sq-name" class="text-white text-sm ml-1">...</b></p>
+            
             <input type="password" id="pin-input" class="bg-slate-900 border border-slate-600 focus:border-emerald-500 rounded-xl text-center text-4xl text-white py-3.5 w-full mb-5 tracking-[0.4em] outline-none transition-colors shadow-inner" placeholder="****" inputmode="numeric" maxlength="4">            
-            <button onclick="checkPin()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3.5 rounded-xl font-black uppercase text-xs shadow-lg active:scale-95 text-white mb-2 transition-all border border-emerald-400/50">SBLOCCA TERMINALE</button>
-            <button onclick="annullaLogin()" class="mt-3 text-[9px] font-black text-slate-500 uppercase tracking-widest hover:text-white transition-colors">🔄 CAMBIA UNITÀ</button>
+            
+            <button onclick="checkPin()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3.5 rounded-xl font-black uppercase text-xs shadow-lg active:scale-95 text-white mb-2 transition-all border border-emerald-400/50">
+                SBLOCCA TERMINALE
+            </button>
+            <button onclick="annullaLogin()" class="mt-3 text-[9px] font-black text-slate-500 uppercase tracking-widest hover:text-white transition-colors">
+                🔄 CAMBIA UNITÀ
+            </button>
         </div>
     </div>
 
@@ -196,12 +355,19 @@
                         <span class="text-blue-500 font-black">•</span> 
                         <span id="header-mode">APP OPERATIVA</span>
                     </div>
-                    <h1 id="display-sq" class="font-black text-lg sm:text-xl text-white leading-tight drop-shadow-md w-full truncate">NOME COGNOME</h1>
+                    
+                    <h1 id="display-sq" class="font-black text-lg sm:text-xl text-white leading-tight drop-shadow-md w-full truncate">
+                        NOME COGNOME
+                    </h1>
                 </div>
 
-                <div class="flex flex-col items-center gap-1 shrink-0 pl-2 border-l border-slate-700/50">
-                    <button onclick="openGPSPanel()" class="text-2xl text-slate-300 hover:text-white active:scale-95 active:rotate-90 transition-all drop-shadow-md">⚙️</button>
-                    <div id="gps-badge" class="px-1.5 py-0.5 rounded text-[7px] font-black bg-slate-800 text-slate-400 border border-slate-600 uppercase shadow-md w-full text-center tracking-widest">GPS OFF</div>
+                <div class="flex flex-col items-center gap-1 shrink-0 pl-2 border-l border-slate-700/50 min-w-[60px]">
+                    <button onclick="openGPSPanel()" class="text-2xl text-slate-300 hover:text-white active:scale-95 active:rotate-90 transition-all drop-shadow-md">
+                        ⚙️
+                    </button>
+                    <div id="gps-badge" class="px-2 py-0.5 rounded text-[8px] font-black bg-slate-800 text-slate-400 border border-slate-600 shadow-md text-center w-full tracking-widest flex items-center justify-center transition-all">
+                        <span class="w-1.5 h-1.5 bg-slate-500 rounded-full inline-block mr-1"></span>GPS OFF
+                    </div>
                 </div>
 
             </div>
@@ -209,14 +375,16 @@
 
         <main id="main-content" class="flex-1 flex flex-col w-full relative z-10 overflow-hidden">
             
-            <div id="tab-profilo" class="tab-content flex-1 flex-col w-full px-3 py-4 overflow-y-auto pb-28">
+            <div id="tab-profilo" class="tab-content flex-1 flex-col w-full px-3 py-4 overflow-y-auto pb-28 relative">
                 
                 <div class="flex items-center justify-between mb-4 px-1">
                     <div class="flex items-center gap-2">
                         <span class="text-3xl drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]">🪪</span>
-                        <h2 class="text-xl font-black text-white uppercase tracking-tight drop-shadow">Il Tuo Profilo</h2>
+                        <h2 class="text-xl font-black text-white uppercase tracking-tight drop-shadow">Area Personale</h2>
                     </div>
-                    <button onclick="logoutPersonale()" class="bg-red-900/40 hover:bg-red-600 text-red-400 hover:text-white text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-lg border border-red-500/50 shadow active:scale-95 transition-all">ESCI</button>
+                    <button onclick="logoutPersonale()" class="bg-red-900/40 hover:bg-red-600 text-red-400 hover:text-white text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-lg border border-red-500/50 shadow active:scale-95 transition-all">
+                        ESCI
+                    </button>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-3 mb-4">
@@ -225,7 +393,7 @@
                         <div id="stat-eventi" class="text-2xl text-emerald-400 font-black drop-shadow-md">0</div>
                     </div>
                     <div class="glass-panel p-3 text-center border-t-2 border-blue-500/50">
-                        <div class="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-1">Ore Servizio Stimate</div>
+                        <div class="text-[8px] text-slate-400 font-black uppercase tracking-widest mb-1">Ore Stimate (5h/ev)</div>
                         <div id="stat-ore" class="text-2xl text-blue-400 font-black drop-shadow-md">0h</div>
                     </div>
                 </div>
@@ -238,7 +406,7 @@
                             <div id="profilo-matricola" class="text-[10px] text-emerald-400 font-mono font-bold mt-2 tracking-widest">MATRICOLA: N/D</div>
                         </div>
                         <div id="profilo-sangue" class="relative z-10 bg-red-600 text-white border border-red-400 px-3 py-1.5 rounded-lg text-[14px] font-black uppercase shadow-lg text-center leading-none shrink-0">
-                            N/D<br><span class="text-[6px] font-normal tracking-widest">SANGUE</span>
+                            N/D<br><span class="text-[6px] font-normal tracking-widest block mt-0.5">SANGUE</span>
                         </div>
                     </div>
                     
@@ -257,26 +425,34 @@
                                 <div id="profilo-email" class="text-[11px] text-blue-300 font-mono">N/D</div>
                             </div>
                         </div>
-                        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50">
+                        
+                        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50 mt-1">
                             <div class="text-[8px] text-slate-500 uppercase font-black tracking-widest mb-2">Abilitazioni e Patenti</div>
-                            <div id="profilo-spec" class="flex flex-wrap gap-1.5"></div>
+                            <div id="profilo-spec" class="flex flex-col gap-1.5">
+                                </div>
                         </div>
                     </div>
                     
                     <div class="p-3 border-t border-slate-700 bg-slate-900/80">
-                        <button onclick="richiediCambioPass()" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-500 text-white text-[10px] font-bold uppercase py-2.5 rounded-lg active:scale-95 transition-colors shadow">🔑 INVIA LINK CAMBIO PASSWORD</button>
+                        <button onclick="richiediCambioPass()" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-500 text-white text-[10px] font-bold uppercase py-2.5 rounded-lg active:scale-95 transition-colors shadow">
+                            🔑 INVIA LINK CAMBIO PASSWORD
+                        </button>
                     </div>
                 </div>
+
             </div>
 
-            <div id="tab-tattico" class="tab-content flex-1 flex-col w-full px-3 py-3 gap-2 pb-24 relative">
+            <div id="tab-tattico" class="tab-content flex-1 flex-col w-full px-3 py-3 gap-2 overflow-y-auto pb-28 relative">
                 
                 <div class="shrink-0 flex justify-between items-center bg-slate-800/80 border border-slate-600 p-2.5 rounded-xl mb-1 shadow-lg">
                     <div class="flex flex-col pl-1">
-                        <span class="text-[8px] text-slate-400 font-bold uppercase tracking-widest">Stato Collegamento</span>
-                        <span id="tattico-team-name" class="text-[11px] text-slate-500 font-black uppercase drop-shadow">DISCONNESSO</span>
+                        <span class="text-[8px] text-slate-400 font-bold uppercase tracking-widest">Unità Assegnata</span>
+                        <span id="tattico-team-name" class="text-[11px] text-slate-500 font-black uppercase drop-shadow">NON ASSEGNATA</span>
                     </div>
-                    <div id="current-status" class="px-2 py-1 rounded text-[9px] font-black bg-slate-700 text-slate-400 border border-slate-600 uppercase shadow-md flex items-center">ATTESA</div>
+                    
+                    <button id="btn-top-squadra" style="display: none;" onclick="uniscitiSquadra()" class="bg-slate-700 hover:bg-slate-600 text-white text-[9px] font-black uppercase px-3 py-2 rounded-lg shadow-md active:scale-95 transition-all border border-slate-500 flex items-center gap-1.5">
+                        <span class="text-sm">🔄</span> CAMBIA UNITÀ
+                    </button>
                 </div>
 
                 <div id="blocco-comandi-tattici" class="relative flex flex-col flex-1 gap-2 mt-1">
@@ -284,7 +460,8 @@
                     <div id="overlay-blocco" class="absolute inset-0 bg-slate-900/80 backdrop-blur-md z-40 rounded-xl border border-slate-700 flex flex-col items-center justify-center p-4 shadow-2xl">
                         <span class="text-5xl mb-2 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">🔒</span>
                         <h3 class="text-white font-black uppercase text-sm mb-1 tracking-widest">Terminale Bloccato</h3>
-                        <p class="text-slate-400 text-[10px] text-center mb-5 uppercase tracking-widest font-bold">Per sicurezza, unisciti a un'unità<br>per attivare i comandi di Sala Radio.</p>
+                        <p class="text-slate-400 text-[10px] text-center mb-5 uppercase tracking-widest font-bold">Per sicurezza, unisciti a un'unità operativa<br>per attivare i comandi e la messaggistica.</p>
+                        
                         <button onclick="uniscitiSquadra()" class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3.5 rounded-xl text-white font-black text-[11px] uppercase tracking-widest shadow-[0_0_20px_rgba(59,130,246,0.5)] active:scale-95 border border-blue-400/50 flex items-center gap-2 transition-transform">
                             <span class="text-lg">🤝</span> UNISCITI A UNITÀ
                         </button>
@@ -317,14 +494,17 @@
                             <div class="text-xl mb-0.5 drop-shadow-md">📷</div>
                             <span class="text-[8px] font-black uppercase tracking-widest">FOTO</span>
                         </button>
+                        
                         <button id="btn-voc" class="h-14 rounded-xl bg-rose-900/40 hover:bg-rose-800/60 border border-rose-500/50 shadow-md flex flex-col items-center justify-center transition-all active:scale-95 text-rose-300 relative overflow-hidden">
                             <div id="voc-icon" class="text-xl mb-0.5 drop-shadow-md">🎤</div>
                             <span id="voc-txt" class="text-[8px] font-black uppercase tracking-widest">AUDIO</span>
                         </button>
+                        
                         <button onclick="inviaPosManuale()" class="h-14 rounded-xl bg-emerald-900/40 hover:bg-emerald-800/60 border border-emerald-500/50 shadow-md flex flex-col items-center justify-center transition-all active:scale-95 text-emerald-400">
                             <div class="text-xl mb-0.5 drop-shadow-md">📍</div>
                             <span class="text-[8px] font-black uppercase tracking-widest text-center leading-none">INVIA VIA</span>
                         </button>
+
                         <input type="file" id="file-foto" accept="image/*" capture="camera" class="hidden" onchange="upFoto(this.files[0])">
                     </div>
 
@@ -341,8 +521,9 @@
                         <span id="last-msg-text" class="text-[12px] text-white font-medium italic leading-snug"></span>
                     </div>
 
-                    <div class="flex-1 min-h-[220px] w-full relative mt-1 rounded-xl overflow-hidden border border-slate-600 shadow-inner z-0 flex flex-col" id="map-wrapper">
+                    <div class="flex-1 min-h-[200px] w-full relative mt-1.5 rounded-xl overflow-hidden border border-slate-600 shadow-inner z-0 flex flex-col" id="map-wrapper">
                         <div id="map" class="absolute inset-0"></div>
+                        
                         <div class="absolute bottom-3 right-3 z-[1000] flex flex-col gap-2">
                             <button id="btn-centra-target" onclick="centraMappaSuTarget()" class="hidden bg-red-600/90 text-white h-10 w-10 rounded-xl border border-red-500 shadow-lg text-xl active:scale-95 flex items-center justify-center">🎯</button>
                             <button onclick="centraMappaSuGPS()" class="bg-slate-800/90 text-white h-10 w-10 rounded-xl border border-slate-500 shadow-lg text-xl active:scale-95 flex items-center justify-center">📍</button>
@@ -359,7 +540,9 @@
                         <p class="text-[10px] text-blue-400 uppercase tracking-[0.2em] font-bold">Eventi e Turni</p>
                     </div>
                 </div>
-                <div id="lista-eventi-app" class="flex flex-col gap-4"></div>
+                
+                <div id="lista-eventi-app" class="flex flex-col gap-4">
+                    </div>
             </div>
 
             <div id="tab-dpi" class="tab-content flex-1 flex-col w-full px-4 py-5 overflow-y-auto relative pb-28">
@@ -371,9 +554,13 @@
                     </div>
                 </div>
                 
-                <div class="glass-panel p-4 flex flex-col flex-1 min-h-[300px]">
-                    <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-3 border-b border-slate-700/50 pb-2 shrink-0">MATERIALE IN CARICO</div>
-                    <div id="lista-dotazioni-magazzino" class="flex-1 overflow-y-auto flex flex-col gap-2.5 custom-scrollbar"></div>
+                <div class="glass-panel p-4 flex flex-col flex-1 min-h-0">
+                    <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-3 border-b border-slate-700/50 pb-2 shrink-0">
+                        MATERIALE IN CARICO
+                    </div>
+                    
+                    <div id="lista-dotazioni-magazzino" class="flex-1 overflow-y-auto flex flex-col gap-2.5 custom-scrollbar">
+                        </div>
                 </div>
             </div>
 
@@ -443,9 +630,6 @@
         // 1. GESTIONE AUTENTICAZIONE E AVVIO
         // ==========================================
         window.onload = () => {
-            // Forza la richiesta GPS
-            if (navigator.geolocation) { navigator.geolocation.getCurrentPosition(() => {}, () => {}); }
-
             document.getElementById('loading-screen').style.display = 'none';
             if (!window.authMode) { document.getElementById('landing-screen').style.display = 'flex'; } 
             else if (window.authMode === 'TERMINAL') { checkTerminaleStatus(); } 
@@ -453,7 +637,8 @@
         };
 
         window.selezionaModo = (mode) => {
-            localStorage.setItem('auth_mode', mode); window.authMode = mode;
+            localStorage.setItem('auth_mode', mode); 
+            window.authMode = mode;
             document.getElementById('landing-screen').style.display = 'none';
             if(mode === 'TERMINAL') checkTerminaleStatus(); else checkPersonaleStatus();
         };
@@ -532,12 +717,12 @@
                         }
                         
                         if (trovato && String(trovato.ruolo).toUpperCase().includes('ESTERNO')) {
-                            auth.signOut().then(()=> Swal.fire('ACCESSO NEGATO', 'App per il personale interno.', 'error')); return;
+                            auth.signOut().then(()=> Swal.fire('ACCESSO NEGATO', 'Questa app è per il personale interno.', 'error')); return;
                         }
 
                         window.currentUserNome = trovato ? trovato.nome.toUpperCase() : user.email.split('@')[0].toUpperCase();
 
-                        // Grafica Profilo
+                        // Grafica Profilo Completo
                         document.getElementById('profilo-nome').innerText = window.currentUserNome;
                         document.getElementById('display-sq').innerText = window.currentUserNome;
                         document.getElementById('profilo-matricola').innerText = "MATRICOLA: " + (trovato ? (trovato.matricola || 'N/D') : 'N/D');
@@ -548,9 +733,15 @@
                         let gruppoSangue = trovato ? (trovato.sangue || 'N/D') : 'N/D';
                         document.getElementById('profilo-sangue').innerHTML = `${gruppoSangue}<br><span class="text-[6px] font-normal tracking-widest block mt-0.5">SANGUE</span>`;
                         
+                        // CORSI E PATENTI CORRETTI E IN COLONNA
                         let specHtml = '';
-                        if(trovato && trovato.patenti) trovato.patenti.forEach(p => specHtml += `<span class="bg-amber-900/30 text-amber-400 border border-amber-700/50 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm">🚙 ${p}</span>`);
-                        if(trovato && trovato.spec) trovato.spec.forEach(s => specHtml += `<span class="bg-blue-900/30 text-blue-400 border border-blue-700/50 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm">${s}</span>`);
+                        if(trovato && trovato.patenti) {
+                            trovato.patenti.forEach(p => specHtml += `<span class="bg-amber-900/40 text-amber-400 border border-amber-500/50 px-2 py-1 rounded text-[9px] font-black shadow-sm flex items-center gap-1 w-full"><span class="text-sm">🚙</span> ${p.toUpperCase()}</span>`);
+                        }
+                        let tutteLeSpecs = trovato.specializzazioni || trovato.spec || trovato.corsi || [];
+                        if(tutteLeSpecs && tutteLeSpecs.length > 0) {
+                            tutteLeSpecs.forEach(s => specHtml += `<span class="bg-blue-900/40 text-blue-400 border border-blue-500/50 px-2 py-1 rounded text-[9px] font-black shadow-sm flex items-center gap-1 w-full"><span class="text-sm">🎖️</span> ${s.toUpperCase()}</span>`);
+                        }
                         document.getElementById('profilo-spec').innerHTML = specHtml || '<span class="text-[10px] text-slate-500 italic">Nessuna registrazione</span>';
 
                         avviaAppTattica();
@@ -595,19 +786,19 @@
                 document.getElementById('bottom-nav').classList.remove('hidden');
                 document.getElementById('bottom-nav').classList.add('flex');
                 document.getElementById('header-logo').src = 'logoPCthiene.png';
-                switchTab('tab-profilo', document.getElementById('btn-nav-profilo')); 
+                switchTab('tab-profilo', document.getElementById('btn-nav-profilo')); // Avvio su Profilo
             }
 
             aggiornaStatoBloccoTattico(); 
 
+            // Mappa
             if (!map) {
                 map = L.map('map', { zoomControl: false, attributionControl: false }).setView([45.707, 11.465], 13);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-                
-                // SENSORE RESIZE MAPPA (Fix Mappa Grigia)
                 new ResizeObserver(() => { map.invalidateSize(); }).observe(document.getElementById('map-wrapper'));
             }
             
+            setTimeout(() => { window.dispatchEvent(new Event('resize')); if(map) map.invalidateSize(); }, 500);
             updateGpsBadge();
         }
 
@@ -620,7 +811,7 @@
                 if(snap.exists()) {
                     let html = ''; let eventiArray = [];
                     snap.forEach(c => { eventiArray.push({...c.val(), key: c.key}); });
-                    eventiArray.sort((a,b) => new Date(b.data||0) - new Date(a.data||0));
+                    eventiArray.sort((a,b) => new Date(b.data||0) - new Date(a.data||0)); // Più recenti prima
 
                     let countEventiPassati = 0; let oggiStr = new Date().toISOString().split('T')[0];
 
@@ -662,12 +853,10 @@
                 } else { cont.innerHTML = '<div class="text-center p-6 border border-dashed border-slate-700 rounded-2xl"><p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Nessun evento in programma</p></div>'; }
             });
 
-            // DPI: Mostra in entrambe le schede
+            // DPI: Entrambe le schede
             if(window.myVolId) {
                 db.ref(`impostazioni/rubrica_volontari/${window.myVolId}/dpi`).on('value', snap => {
                     const contMag = document.getElementById('lista-dotazioni-magazzino');
-                    const contProf = document.getElementById('lista-dotazioni'); // Scheda profilo
-                    
                     if(snap.exists() && snap.val().length > 0) {
                         let html = '';
                         snap.val().forEach(dot => {
@@ -690,18 +879,16 @@
                             </div>`;
                         });
                         if(contMag) contMag.innerHTML = html;
-                        if(contProf) contProf.innerHTML = html;
                     } else {
                         let emptyHtml = '<div class="text-center p-4 border border-dashed border-slate-700 rounded-xl"><p class="text-slate-500 text-[9px] uppercase tracking-widest font-bold">Nessuna dotazione in carico</p></div>';
                         if(contMag) contMag.innerHTML = emptyHtml;
-                        if(contProf) contProf.innerHTML = emptyHtml;
                     }
                 });
             }
         }
 
         // ==========================================
-        // 4. FUNZIONI TATTICHE (Lucchetto)
+        // 4. FUNZIONI TATTICHE E LUCCHETTO
         // ==========================================
         window.uniscitiSquadra = () => {
             Swal.fire({
@@ -726,16 +913,11 @@
 
                     if(res.value.pass === pinCorretto) {
                         window.myTeamId = res.value.id;
-                        
-                        let teamNameEl = document.getElementById('tattico-team-name');
-                        if(teamNameEl) {
-                            teamNameEl.innerText = "UNITÀ: " + window.myTeamId;
-                            teamNameEl.className = "text-[11px] text-blue-400 font-black uppercase drop-shadow";
-                        }
+                        document.getElementById('tattico-team-name').innerText = "UNITÀ: " + window.myTeamId;
+                        document.getElementById('tattico-team-name').className = "text-[11px] text-blue-400 font-black uppercase drop-shadow";
                         if(document.getElementById('btn-top-squadra')) document.getElementById('btn-top-squadra').style.display = 'flex'; 
                         
                         window.inviaNuovo(`🙋‍♂️ OPERATORE A BORDO DEL MEZZO`, { stato: 'ATTESA' });
-                        
                         Swal.fire({icon:'success', title:'Collegato a ' + window.myTeamId, background:'#0f172a', color:'#fff', timer: 2000, showConfirmButton: false});
                         aggiornaStatoBloccoTattico(); 
                     } else { Swal.fire({icon:'error', title:'PIN Errato', text:'Il PIN Operativo non è corretto.', background:'#0f172a', color:'#fff'}); }
@@ -755,22 +937,13 @@
                         const dataSq = snap.val();
                         if(dataSq.stato) {
                             const sts = dataSq.stato.toUpperCase();
-                            let cs = document.getElementById('current-status');
-                            if(cs) {
-                                cs.innerText = sts;
-                                cs.className = `px-2 py-1 rounded text-[9px] font-black uppercase shadow-md border text-center flex items-center ${sts==='SUL POSTO'?'bg-red-900/80 text-red-400 border-red-500/50':'bg-emerald-900/80 text-emerald-400 border-emerald-500/50'}`;
-                            }
+                            document.getElementById('current-status').innerText = sts;
+                            document.getElementById('current-status').className = `px-2 py-0.5 rounded text-[8px] font-black uppercase shadow-md border text-center ${sts==='SUL POSTO'?'bg-red-900/80 text-red-400 border-red-500/50':'bg-emerald-900/80 text-emerald-400 border-emerald-500/50'}`;
                         }
-                        
-                        if(dataSq.attiva === false) {
-                            if(bloccoSala) bloccoSala.style.display = 'flex';
-                        } else {
-                            if(bloccoSala) bloccoSala.style.display = 'none';
-                        }
+                        if(dataSq.attiva === false) { if(bloccoSala) bloccoSala.style.display = 'flex'; } else { if(bloccoSala) bloccoSala.style.display = 'none'; }
                     }
                 });
 
-                // TARGET E CHAT SALA RADIO
                 db.ref('brogliaccio').limitToLast(20).on('value', (snap) => {
                     if(!snap.exists() || !window.myTeamId) return;
                     const logs = Object.entries(snap.val()).map(([id, val]) => ({ id, ...val })).reverse();
@@ -795,7 +968,9 @@
                                         <span class="text-sm text-white font-black truncate">${viaAttiva}</span>
                                     </div>
                                 </div>
-                                <button onclick="window.cRic()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl text-[10px] text-white font-black uppercase tracking-widest shadow-lg active:scale-95 border border-emerald-400/50 relative z-10">✅ RICEVUTO E NAVIGA</button>
+                                <div class="flex gap-2 w-full relative z-10">
+                                    <button onclick="window.cRic()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl text-[10px] text-white font-black uppercase tracking-widest shadow-lg active:scale-95 border border-emerald-400/50 relative z-10">✅ RICEVUTO E NAVIGA</button>
+                                </div>
                             `;
                         } else {
                             banner.className = "glass-panel w-full p-3 shrink-0 flex flex-col items-start gap-2 screen-enter border-t-2 border-t-blue-500 overflow-hidden relative";
@@ -817,20 +992,15 @@
                         if(ultimaPos.lat && ultimaPos.lng) {
                             if(!markerTarget) { markerTarget = L.marker([ultimaPos.lat, ultimaPos.lng], { icon: L.divIcon({ className: 'bg-transparent', html: '<div class="text-4xl drop-shadow-lg animate-pulse">🎯</div>', iconSize: [40,40] }) }).addTo(map); } 
                             else { markerTarget.setLatLng([ultimaPos.lat, ultimaPos.lng]); }
-                            
                             if(markerMe && map) { const group = new L.featureGroup([markerMe, markerTarget]); map.fitBounds(group.getBounds(), {padding: [30,30]}); }
                         }
 
                     } else { 
-                        if(banner) {
-                            banner.className = "glass-panel w-full p-2.5 shrink-0 flex justify-center text-center text-slate-500 text-[10px] uppercase font-bold tracking-widest min-h-[46px] items-center border-t-2 border-t-slate-600";
-                            banner.innerHTML = 'SISTEMA IN STANDBY'; 
-                        }
-                        idSalaAttivo = null; if(btnCentraTarget) btnCentraTarget.classList.add('hidden');
+                        banner.className = "glass-panel w-full p-2.5 shrink-0 flex justify-center text-center text-slate-500 text-[10px] uppercase font-bold tracking-widest min-h-[46px] items-center border-t-2 border-t-slate-600";
+                        banner.innerHTML = 'SISTEMA IN STANDBY'; idSalaAttivo = null; if(btnCentraTarget) btnCentraTarget.classList.add('hidden');
                         if(markerTarget && map) { map.removeLayer(markerTarget); markerTarget = null; }
                     }
 
-                    // CHAT SALA RADIO
                     const myLogs = logs.filter(l => l.squadra === window.myTeamId || l.squadra === window.currentUserNome || l.squadra === 'COMUNICAZIONE GENERALE');
                     let lastMsg = null;
                     for (let l of myLogs) {
@@ -854,8 +1024,8 @@
                 if(overlay) overlay.style.display = 'flex'; 
                 if(bloccoSala) bloccoSala.style.display = 'none';
                 if(document.getElementById('btn-top-squadra')) document.getElementById('btn-top-squadra').style.display = 'none';
-                let cs = document.getElementById('current-status');
-                if(cs) { cs.innerText = "BLOCCATO"; cs.className = `px-2 py-1 rounded text-[9px] font-black uppercase shadow-md border bg-slate-800 text-slate-400 border-slate-600 flex items-center`; }
+                document.getElementById('current-status').innerText = "BLOCCATO";
+                document.getElementById('current-status').className = `px-2 py-0.5 rounded text-[8px] font-black uppercase shadow-md border bg-slate-800 text-slate-400 border-slate-600 text-center`;
             }
         }
 
@@ -878,8 +1048,6 @@
                 btn.classList.add('text-emerald-400'); 
                 btn.querySelector('.icon-nav').classList.add('drop-shadow-[0_0_8px_rgba(16,185,129,0.6)]');
                 document.getElementById('header-logo').src = 'logosala.png'; 
-                
-                // Forza il ricalcolo della mappa
                 setTimeout(()=> { window.dispatchEvent(new Event('resize')); if(map) map.invalidateSize(); }, 300); 
             } 
             else if(tabId === 'tab-eventi') {
@@ -900,7 +1068,7 @@
         };
 
         // ==========================================
-        // 6. INVIO DATI CENTRALE (GPS INCLUSO)
+        // 6. INVIO DATI CENTRALE (GPS INCLUSO) E AZIONI TATTICHE
         // ==========================================
         window.inviaNuovo = async (testo, extra = {}) => {
             if(!window.myTeamId) return;
@@ -1076,30 +1244,30 @@
         };
 
         window.rispondiEvento = (idEv, risposta) => { 
-            if(!window.myVolId) { Swal.fire('Errore', 'Profilo non ancora sincronizzato.', 'error'); return; }
+            if(!window.myVolId) return;
             Swal.fire({ title: 'CONFERMA', text: `Confermi la tua risposta?`, showCancelButton: true, confirmButtonText: 'SÌ, INVIA', confirmButtonColor: risposta === 'CONFERMATO' ? '#10b981' : '#ef4444', background: '#0f172a', color: '#fff' }).then((res) => {
                 if(res.isConfirmed) { db.ref(`impostazioni/calendario_eventi/${idEv}/adesioni/${window.myVolId}`).set(risposta).then(() => Swal.fire({toast: true, position: 'top', title: 'Risposta Inviata!', icon: 'success', timer: 1500, showConfirmButton: false, background: '#0f172a', color: '#fff'})); }
             });
         };
 
         // ==========================================
-        // 8. GESTIONE GPS, TRACKING E MAPPA
+        // 8. GESTIONE E CONTROLLO GPS 
         // ==========================================
         function updateGpsBadge() { 
             const badge = document.getElementById('gps-badge');
             if(badge) {
-                badge.innerText = window.gpsAutoEnabled ? 'GPS ON' : 'GPS OFF'; 
+                badge.innerHTML = window.gpsAutoEnabled ? '<span class="w-1.5 h-1.5 bg-blue-400 rounded-full inline-block mr-1 shadow-[0_0_5px_rgba(96,165,250,0.8)]"></span>GPS ON' : '<span class="w-1.5 h-1.5 bg-slate-500 rounded-full inline-block mr-1"></span>GPS OFF'; 
                 badge.className = window.gpsAutoEnabled 
-                    ? 'px-1.5 py-0.5 rounded text-[7px] font-black bg-blue-900/50 text-blue-400 border border-blue-500/50 shadow-md text-center w-full tracking-widest transition-all' 
-                    : 'px-1.5 py-0.5 rounded text-[7px] font-black bg-slate-800 text-slate-400 border border-slate-600 shadow-md text-center w-full tracking-widest transition-all'; 
+                    ? 'px-2 py-0.5 rounded text-[8px] font-black bg-blue-900/50 text-blue-400 border border-blue-500/50 shadow-md text-center flex items-center justify-center tracking-widest transition-all' 
+                    : 'px-2 py-0.5 rounded text-[8px] font-black bg-slate-800 text-slate-400 border border-slate-600 shadow-md text-center flex items-center justify-center tracking-widest transition-all'; 
             }
         }
 
         window.showGpsPing = () => { 
             const badge = document.getElementById('gps-badge');
             if(badge) {
-                badge.innerHTML = '<span class="animate-pulse mr-1">📡</span> TX GPS';
-                badge.className = 'px-1.5 py-0.5 rounded text-[7px] font-black bg-emerald-900/80 text-emerald-400 border border-emerald-500/50 shadow-md text-center w-full tracking-widest transition-all';
+                badge.innerHTML = '<span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping inline-block mr-1"></span> <span class="text-emerald-400">TX GPS</span>';
+                badge.className = 'px-2 py-0.5 rounded text-[8px] font-black bg-emerald-900/80 border border-emerald-500/50 shadow-md flex items-center justify-center tracking-widest transition-all';
                 setTimeout(() => { updateGpsBadge(); }, 1500);
             }
         };
@@ -1110,7 +1278,7 @@
                 html: `
                 <div style="text-align: left; display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
                     <div style="background: rgba(15,23,42,0.8); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
-                        <div style="display: flex; flex-direction: column;"><span style="font-size: 13px; font-weight: 900; color: white; text-transform: uppercase;">GPS nei Messaggi</span><span style="font-size: 9px; color: #94a3b8; font-weight: bold;">Allega coordinate ai messaggi manuali</span></div>
+                        <div style="display: flex; flex-direction: column;"><span style="font-size: 13px; font-weight: 900; color: white; text-transform: uppercase;">GPS nei Messaggi</span><span style="font-size: 9px; color: #94a3b8; font-weight: bold;">Allega coordinate ai messaggi</span></div>
                         <label class="switch"><input type="checkbox" id="gps-toggle" ${window.gpsAutoEnabled ? 'checked' : ''} onchange="window.toggleGpsApp(this.checked)"><span class="slider"></span></label>
                     </div>
                     <div style="background: rgba(15,23,42,0.8); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
@@ -1163,25 +1331,11 @@
                 else { markerMe.setLatLng([latitude, longitude]); }
                 if(map) map.setView([latitude, longitude], 17); 
                 
-                // Manda ping visivo anche su click manuale se si è in squadra
                 if(window.myTeamId) {
                     db.ref(`anagrafica_squadre/${window.myTeamId}`).update({ lat: latitude.toFixed(6), lng: longitude.toFixed(6), ultimo_contatto: Date.now() }); 
                     window.showGpsPing();
                 }
             }, null, { enableHighAccuracy: true });
-        };
-        
-        // Risveglio Schermo Attivo (WakeLock)
-        let wakeLock = null;
-        window.mantieniSchermoAcceso = async () => { if ('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} } };
-        document.addEventListener('visibilitychange', async () => { if (wakeLock !== null && document.visibilityState === 'visible') { window.mantieniSchermoAcceso(); } });
-
-        // Ricezione GPS Nativo da App Android (Ponte)
-        window.updateFromNative = (lat, lng) => {
-            if (window.liveTrackingEnabled && window.myTeamId && db) {
-                db.ref(`anagrafica_squadre/${window.myTeamId}`).update({ lat: parseFloat(lat).toFixed(6), lng: parseFloat(lng).toFixed(6), ultimo_contatto: Date.now() });
-                window.showGpsPing();
-            }
         };
 
     </script>
