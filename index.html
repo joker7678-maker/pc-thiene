@@ -249,7 +249,7 @@
 
     <div id="loading-screen">
         <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-        <div class="text-blue-400 font-bold uppercase tracking-widest text-xs animate-pulse">Sincronizzazione...</div>
+        <div class="text-blue-400 font-bold uppercase tracking-widest text-xs animate-pulse">Sincronizzazione DB...</div>
     </div>
 
     <div id="landing-screen" style="display: none;">
@@ -508,8 +508,10 @@
         // Variabili Globali
         window.authMode = localStorage.getItem('auth_mode'); // Può essere 'PERSONAL' o 'TERMINAL'
         let sqId = null; 
+        
         window.currentUserNome = "OPERATORE"; 
         window.currentUserEmailObj = "";
+        window.myVolId = null; // IDENTIFICATIVO VERO SUL DATABASE
         
         let map = null;
         let markerMe = null; 
@@ -567,15 +569,12 @@
             if (savedSqId) { 
                 sqId = savedSqId; 
                 if(localStorage.getItem('pc_app_auth') === 'true') { 
-                    // Se ha già messo il PIN in precedenza, avvia subito
                     avviaAppTattica(); 
                 } else { 
-                    // Se non ha ancora messo il PIN, mostra la schermata del PIN
                     document.getElementById('login-sq-name').innerText = sqId; 
                     document.getElementById('login-screen-pin').style.display = 'flex'; 
                 }
             } else { 
-                // Se non ha la squadra salvata, chiede di inserirla o usare QR
                 document.getElementById('team-select-screen').style.display = 'flex'; 
             }
         }
@@ -593,7 +592,6 @@
             const pin = document.getElementById('pin-input').value.trim();
             if(!pin) return;
             
-            // Recupera il PIN di sicurezza da Firebase (o usa 1234 di default)
             try {
                 const snap = await db.ref('configurazione/pin_volontari').once('value');
                 const pinCorretto = snap.exists() ? String(snap.val()) : "1234";
@@ -676,7 +674,7 @@
                     window.currentUserEmailObj = user.email;
                     document.getElementById('login-personal-screen').style.display = 'none';
                     
-                    // Cerca l'utente in anagrafica per nome, matricola e ruolo
+                    // Cerca l'utente in anagrafica per recuperare L'ID VERO, nome, matricola e ruolo
                     db.ref('impostazioni/rubrica_volontari').once('value').then(snap => {
                         let trovato = null;
                         
@@ -684,6 +682,7 @@
                             snap.forEach(child => { 
                                 if(child.val().email && child.val().email.toLowerCase() === user.email.toLowerCase()) {
                                     trovato = child.val(); 
+                                    window.myVolId = child.key; // 🔥 QUESTO È L'ID NECESSARIO PER GLI EVENTI E DPI!
                                 }
                             });
                         }
@@ -694,9 +693,8 @@
                             return;
                         }
 
-                        // Assegna il nome utente e l'ID Squadra virtuale
                         window.currentUserNome = trovato ? trovato.nome.toUpperCase() : user.email.split('@')[0].toUpperCase();
-                        sqId = window.currentUserNome; // Nel personale, l'ID di default è il proprio nome
+                        sqId = window.currentUserNome; // Nel personale, l'ID tattico è il proprio nome
 
                         // Popola graficamente i campi del Profilo
                         document.getElementById('profilo-nome').innerText = window.currentUserNome;
@@ -759,7 +757,7 @@
                 document.getElementById('bottom-nav').classList.add('flex');
             }
 
-            // Inizializza Mappa Leaflet (risolve il problema dello schermo nero)
+            // Inizializza Mappa Leaflet
             if (!map) {
                 map = L.map('map', { zoomControl: false, attributionControl: false }).setView([45.707, 11.465], 13);
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
@@ -814,53 +812,86 @@
         // 5. CARICAMENTO DATI AGGIUNTIVI (Eventi e Dotazioni)
         // ==========================================
         function caricaEventiEDotazioni() {
-            // Legge Eventi / Calendario
-            db.ref('eventi').on('value', snap => {
+            
+            // ===============================================
+            // CORREZIONE EVENTI: Legge da 'impostazioni/calendario_eventi'
+            // ===============================================
+            db.ref('impostazioni/calendario_eventi').on('value', snap => {
                 const cont = document.getElementById('lista-eventi-app');
                 if(snap.exists()) {
                     let html = '';
-                    snap.forEach(c => {
-                        const ev = c.val();
+                    let eventiArray = [];
+                    snap.forEach(c => { eventiArray.push({...c.val(), key: c.key}); });
+                    
+                    // Ordina per data (i più prossimi prima)
+                    eventiArray.sort((a,b) => new Date(a.data||0) - new Date(b.data||0));
+
+                    eventiArray.forEach(ev => {
+                        // Verifica cosa avevi risposto (se presente)
+                        let miaRisposta = (ev.adesioni && window.myVolId && ev.adesioni[window.myVolId]) ? ev.adesioni[window.myVolId] : null;
+                        
+                        // Accende il bottone se hai già risposto
+                        let btnSiClass = miaRisposta === 'CONFERMATO' 
+                            ? 'bg-emerald-600 text-white border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' 
+                            : 'bg-emerald-900/40 text-emerald-400 border-emerald-500/50 hover:bg-emerald-600 hover:text-white';
+                        
+                        let btnNoClass = miaRisposta === 'ASSENTE' 
+                            ? 'bg-red-600 text-white border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' 
+                            : 'bg-red-900/40 text-red-400 border-red-500/50 hover:bg-red-600 hover:text-white';
+
+                        let dataFormattata = ev.data ? ev.data.split('-').reverse().join('/') : 'N/D';
+
                         html += `
-                        <div class="glass-panel p-3 mb-2">
-                            <div class="text-xs font-bold text-white uppercase">${ev.titolo}</div>
-                            <div class="text-[9px] text-blue-300">📍 ${ev.luogo} | 🕒 ${ev.data}</div>
-                            <div class="flex gap-2 mt-2">
-                                <button onclick="window.rispondiEvento('${c.key}', 'PRESENTE')" class="flex-1 bg-emerald-900/50 text-emerald-400 py-1 rounded text-[9px] border border-emerald-500/50">✅ PRESENTE</button>
-                                <button onclick="window.rispondiEvento('${c.key}', 'ASSENTE')" class="flex-1 bg-red-900/50 text-red-400 py-1 rounded text-[9px] border border-red-500/50">❌ ASSENTE</button>
+                        <div class="glass-panel p-3 mb-3 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1.5 h-full" style="background: ${ev.colore || '#3b82f6'};"></div>
+                            <div class="pl-2">
+                                <div class="text-[10px] font-black text-white uppercase tracking-widest mb-1 drop-shadow">${ev.titolo}</div>
+                                <div class="text-[9px] text-blue-300 font-mono font-bold mb-3 flex flex-col gap-0.5">
+                                    <span>📍 ${ev.luogo || 'Sede'}</span>
+                                    <span>🕒 ${dataFormattata} ${ev.ora ? '- ' + ev.ora : ''}</span>
+                                </div>
+                                <div class="flex gap-2 mt-2 border-t border-slate-700/50 pt-3">
+                                    <button onclick="window.rispondiEvento('${ev.key}', 'CONFERMATO')" class="flex-1 ${btnSiClass} font-black py-2 rounded-xl text-[9px] uppercase transition-all active:scale-95">✅ PRESENTE</button>
+                                    <button onclick="window.rispondiEvento('${ev.key}', 'ASSENTE')" class="flex-1 ${btnNoClass} font-black py-2 rounded-xl text-[9px] uppercase transition-all active:scale-95">❌ ASSENTE</button>
+                                </div>
                             </div>
                         </div>`;
                     });
                     cont.innerHTML = html;
                 } else { 
-                    cont.innerHTML = '<p class="text-center text-slate-500 text-[10px]">Nessun evento in programma</p>'; 
+                    cont.innerHTML = '<p class="text-center text-slate-500 text-[10px] py-4">Nessun evento in programma</p>'; 
                 }
             });
 
-            // Legge Dotazioni dal Magazzino
-            db.ref('dotazioni').on('value', snap => {
-                const cont = document.getElementById('lista-dotazioni');
-                if(snap.exists()) {
-                    let html = '';
-                    snap.forEach(c => {
-                        const dot = c.val();
-                        // Filtra solo gli oggetti che ti sono stati assegnati dall'amministratore
-                        if(dot.assegnato_a && dot.assegnato_a.toUpperCase() === window.currentUserNome) {
+            // ===============================================
+            // CORREZIONE DPI: Legge direttamente dal fascicolo operatore
+            // ===============================================
+            if(window.myVolId) {
+                db.ref(`impostazioni/rubrica_volontari/${window.myVolId}/dpi`).on('value', snap => {
+                    const cont = document.getElementById('lista-dotazioni');
+                    if(snap.exists() && snap.val().length > 0) {
+                        let html = '';
+                        snap.val().forEach(dot => {
+                            if(!dot) return; // Salta elementi vuoti dell'array
+                            
+                            let dataScadenza = dot.scadenza ? dot.scadenza.split('-').reverse().join('/') : 'N/D';
+                            let coloreUsura = dot.stato === 'USURATO' ? 'text-amber-500' : 'text-slate-400';
+                            
                             html += `
-                            <div class="bg-slate-900 border border-slate-700 p-2 rounded-lg mb-1 flex justify-between items-center">
+                            <div class="bg-slate-900 border border-slate-700 p-2.5 rounded-lg mb-2 flex justify-between items-center shadow-inner">
                                 <div class="flex flex-col">
-                                    <span class="text-[10px] font-bold text-white">${dot.articolo || dot.nome}</span>
-                                    <span class="text-[8px] text-slate-400">${dot.categoria || 'Generico'}</span>
+                                    <span class="text-[10px] font-bold text-white uppercase">🦺 ${dot.nome}</span>
+                                    <span class="text-[8px] ${coloreUsura} mt-0.5 uppercase tracking-widest font-bold">Stato: ${dot.stato} | Scadenza: ${dataScadenza}</span>
                                 </div>
-                                <span class="text-[9px] bg-blue-900/50 text-blue-400 px-2 py-0.5 rounded">Q.tà: ${dot.quantita || 1}</span>
+                                <span class="text-[10px] bg-blue-900/50 text-blue-400 px-2 py-1 rounded font-black border border-blue-800/50">Q.tà: ${dot.qta || 1}</span>
                             </div>`;
-                        }
-                    });
-                    cont.innerHTML = html || '<p class="text-slate-500 text-[9px] text-center">Nessuna dotazione D.P.I. assegnata</p>';
-                } else {
-                    cont.innerHTML = '<p class="text-slate-500 text-[9px] text-center">Nessuna dotazione trovata nel Database</p>';
-                }
-            });
+                        });
+                        cont.innerHTML = html;
+                    } else {
+                        cont.innerHTML = '<p class="text-slate-500 text-[9px] text-center py-4 uppercase tracking-widest font-bold border border-dashed border-slate-700 rounded-lg">Nessuna dotazione D.P.I. in carico</p>';
+                    }
+                });
+            }
         }
 
         // ==========================================
@@ -881,7 +912,6 @@
             
             if(tabId === 'tab-tattico') { 
                 btn.classList.add('text-emerald-400'); 
-                // Assicura che la mappa si ridimensioni quando torni al tattico
                 setTimeout(()=> { if(map) map.invalidateSize(); }, 300); 
             } 
             else if(tabId === 'tab-eventi') {
@@ -892,13 +922,11 @@
             }
         };
 
-        // Aggiorna stato della squadra
         window.askStatus = (s) => { 
             db.ref(`anagrafica_squadre/${sqId}`).update({ stato: s, ultimo_contatto: Date.now() }); 
             Swal.fire({toast:true, position:'top', title:'Stato Aggiornato a ' + s, icon:'success', timer:1500, showConfirmButton:false}); 
         };
 
-        // Invia Messaggio Libero
         window.askFreeMsg = () => { 
             const t = document.getElementById('msg-input').value.trim(); 
             if(t) { 
@@ -913,13 +941,32 @@
             } 
         };
 
-        // Risposta ad un evento
-        window.rispondiEvento = (id, risp) => { 
-            db.ref(`eventi/${id}/risposte/${window.currentUserNome}`).set(risp)
-            .then(() => Swal.fire({toast:true, position:'top', title:'Risposta Inviata', icon:'success', timer:1500, showConfirmButton:false})); 
+        // ===============================================
+        // CORREZIONE RISPOSTA EVENTI
+        // ===============================================
+        window.rispondiEvento = (idEv, risposta) => { 
+            if(!window.myVolId) {
+                Swal.fire('Errore', 'Profilo non ancora sincronizzato.', 'error');
+                return;
+            }
+
+            Swal.fire({ 
+                title: 'CONFERMA', 
+                text: `Confermi la tua risposta?`, 
+                showCancelButton: true, 
+                confirmButtonText: 'SÌ, INVIA', 
+                confirmButtonColor: risposta === 'CONFERMATO' ? '#10b981' : '#ef4444', 
+                background: '#0f172a', 
+                color: '#fff' 
+            }).then((res) => {
+                if(res.isConfirmed) { 
+                    // Salva la risposta nell'albero Esatto richiesto dall'anagrafica
+                    db.ref(`impostazioni/calendario_eventi/${idEv}/adesioni/${window.myVolId}`).set(risposta)
+                    .then(() => Swal.fire({toast: true, position: 'top', title: 'Risposta Inviata!', icon: 'success', timer: 1500, showConfirmButton: false})); 
+                }
+            });
         };
 
-        // Arrivo sul Target
         window.cArr = () => { 
             if(idSalaAttivo) { 
                 window.targetCompletato = idSalaAttivo; 
