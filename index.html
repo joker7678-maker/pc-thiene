@@ -497,7 +497,7 @@
         let idSalaAttivo = null; 
         let viaAttiva = ""; 
         let ultimaPos = { lat: null, lng: null };
-
+        let mieSegnalazioni = {};
         // ==========================================
         // 1. GESTIONE AUTENTICAZIONE E AVVIO
         // ==========================================
@@ -726,12 +726,37 @@
                     db.ref(`impostazioni/rubrica_volontari/${window.myVolId}/dpi`).on('value', snap => {
                         const contMag = document.getElementById('lista-dotazioni-magazzino');
                         const contProf = document.getElementById('lista-dotazioni');
+                        
                         if(snap.exists() && snap.val().length > 0) {
                             let html = '';
                             snap.val().forEach(dot => {
                                 if(!dot) return; 
                                 let dataScadenza = dot.scadenza ? dot.scadenza.split('-').reverse().join('/') : 'N/D';
                                 let coloreUsura = dot.stato === 'USURATO' ? 'text-amber-500' : 'text-slate-400';
+                                
+                                // --- CONTROLLO STATO TICKET SEGNALAZIONE ---
+                                let ticketStato = (typeof mieSegnalazioni !== 'undefined') ? mieSegnalazioni[dot.nome] : null;
+                                let btnHtml = '';
+                                
+                                if (ticketStato === 'ATTESA') {
+                                    // Segnalazione in corso
+                                    btnHtml = `
+                                    <div class="w-full bg-amber-900/40 border border-amber-500/50 text-amber-400 text-[8px] font-black uppercase tracking-widest py-2 rounded-lg shadow flex items-center justify-center gap-1.5 mt-1 animate-pulse">
+                                        <span class="text-xs">⏳</span> IN ATTESA DI RISCONTRO...
+                                    </div>`;
+                                } else if (ticketStato === 'OK') {
+                                    // Segnalazione risolta
+                                    btnHtml = `
+                                    <button onclick="window.segnalaDPISingolo('${dot.nome}')" class="w-full bg-emerald-900/30 hover:bg-emerald-800 border border-emerald-500/50 text-emerald-400 hover:text-white text-[8px] font-black uppercase tracking-widest py-2 rounded-lg active:scale-95 transition-all shadow flex items-center justify-center gap-1.5 mt-1">
+                                        <span class="text-xs">✅</span> TICKET CHIUSO (SEGNALA ANCORA)
+                                    </button>`;
+                                } else {
+                                    // Nessuna segnalazione
+                                    btnHtml = `
+                                    <button onclick="window.segnalaDPISingolo('${dot.nome}')" class="w-full bg-rose-900/30 hover:bg-rose-800 border border-rose-500/50 text-rose-400 hover:text-white text-[8px] font-black uppercase tracking-widest py-2 rounded-lg active:scale-95 transition-all shadow flex items-center justify-center gap-1.5 mt-1">
+                                        <span class="text-xs">⚠️</span> SEGNALA PROBLEMA PRODOTTO
+                                    </button>`;
+                                }
                                 
                                 html += `
                                 <div class="bg-slate-900 border border-slate-700 p-3 rounded-xl mb-2 flex flex-col gap-2 shadow-inner shrink-0">
@@ -742,11 +767,10 @@
                                         </div>
                                         <span class="text-[10px] bg-blue-900/40 text-blue-400 px-2 py-1 rounded-lg font-black border border-blue-800/50 shadow">Q.tà: ${dot.qta || 1}</span>
                                     </div>
-                                    <button onclick="window.segnalaDPISingolo('${dot.nome}')" class="w-full bg-rose-900/30 hover:bg-rose-800 border border-rose-500/50 text-rose-400 hover:text-white text-[8px] font-black uppercase tracking-widest py-2 rounded-lg active:scale-95 transition-all shadow flex items-center justify-center gap-1.5 mt-1">
-                                        <span class="text-xs">⚠️</span> SEGNALA PROBLEMA PRODOTTO
-                                    </button>
+                                    ${btnHtml}
                                 </div>`;
                             });
+                            
                             if(contMag) contMag.innerHTML = html;
                             if(contProf) contProf.innerHTML = html;
                         } else {
@@ -758,7 +782,6 @@
                 } catch(e) { console.error("Errore DPI:", e); }
             }
         }
-
         // ==========================================
         // 4. FUNZIONI TATTICHE E LUCCHETTO
         // ==========================================
@@ -819,10 +842,32 @@
                     }
                 });
 
-                db.ref('brogliaccio').limitToLast(20).on('value', (snap) => {
-                    if(!snap.exists() || !window.myTeamId) return;
+// Target, Chat Sala Radio e Segnalazioni
+                db.ref('brogliaccio').limitToLast(50).on('value', (snap) => {
+                    if(!snap.exists()) return;
                     const logs = Object.entries(snap.val()).map(([id, val]) => ({ id, ...val })).reverse();
                     
+                    // --- NOVITÀ: MAPPA LE SEGNALAZIONI DEL VOLONTARIO ---
+                    mieSegnalazioni = {};
+                    logs.forEach(l => {
+                        // Se è una mia segnalazione DPI
+                        if (l.utente === window.currentUserNome && l.m1 && l.m1.includes('📦 SEGNALAZIONE D.P.I.')) {
+                            // Estrai il nome del prodotto dalle parentesi quadre
+                            let match = l.m1.match(/\[(.*?)\]/);
+                            if (match && match[1]) {
+                                let nomeProdotto = match[1];
+                                // Se non è già stata censita una più recente, memorizzala
+                                if(!mieSegnalazioni[nomeProdotto]) {
+                                    mieSegnalazioni[nomeProdotto] = l.stato; // 'ATTESA' o 'OK'
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Ridisegna i DPI per aggiornare i bottoni
+                    caricaEventiEDotazioni();
+
+                    if(!window.myTeamId) return; // Da qui in giù serve essere in squadra   
                     const target = logs.find(l => l.dir === 'SA' && l.squadra === window.myTeamId && l.m1 && l.m1.includes('📍') && l.id !== window.targetCompletato);
                     const banner = document.getElementById('target-banner');
                     const btnCentraTarget = document.getElementById('btn-centra-target');
