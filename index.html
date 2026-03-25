@@ -426,9 +426,9 @@
                             </div>
                         </div>
                         
-                        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50 mt-1">
+<div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50 mt-1 h-auto min-h-min">
                             <div class="text-[8px] text-slate-500 uppercase font-black tracking-widest mb-2">Abilitazioni e Patenti</div>
-                            <div id="profilo-spec" class="flex flex-col gap-1.5">
+                            <div id="profilo-spec" class="flex flex-wrap gap-2 h-auto overflow-visible pb-2">
                                 </div>
                         </div>
                     </div>
@@ -733,7 +733,7 @@
                         let gruppoSangue = trovato ? (trovato.sangue || 'N/D') : 'N/D';
                         document.getElementById('profilo-sangue').innerHTML = `${gruppoSangue}<br><span class="text-[6px] font-normal tracking-widest block mt-0.5">SANGUE</span>`;
                         
-                        // CORSI E PATENTI CORRETTI E IN COLONNA
+// CORSI E PATENTI CORRETTI E IN COLONNA
                         let specHtml = '';
                         if(trovato && trovato.patenti) {
                             trovato.patenti.forEach(p => specHtml += `<span class="bg-amber-900/40 text-amber-400 border border-amber-500/50 px-2 py-1 rounded text-[9px] font-black shadow-sm flex items-center gap-1 w-full"><span class="text-sm">🚙</span> ${p.toUpperCase()}</span>`);
@@ -743,7 +743,6 @@
                             tutteLeSpecs.forEach(s => specHtml += `<span class="bg-blue-900/40 text-blue-400 border border-blue-500/50 px-2 py-1 rounded text-[9px] font-black shadow-sm flex items-center gap-1 w-full"><span class="text-sm">🎖️</span> ${s.toUpperCase()}</span>`);
                         }
                         document.getElementById('profilo-spec').innerHTML = specHtml || '<span class="text-[10px] text-slate-500 italic">Nessuna registrazione</span>';
-
                         avviaAppTattica();
                         caricaEventiEDotazioni();
                     });
@@ -775,7 +774,8 @@
         // ==========================================
         // 2. COSTRUZIONE INTERFACCIA E MAPPA
         // ==========================================
-        function avviaAppTattica() {
+function avviaAppTattica() {
+            document.getElementById('loading-screen').style.display = 'none';
             document.getElementById('app-wrapper').style.display = 'flex';
             
             if(window.authMode === 'TERMINAL') {
@@ -786,32 +786,37 @@
                 document.getElementById('bottom-nav').classList.remove('hidden');
                 document.getElementById('bottom-nav').classList.add('flex');
                 document.getElementById('header-logo').src = 'logoPCthiene.png';
-                switchTab('tab-profilo', document.getElementById('btn-nav-profilo')); // Avvio su Profilo
+                switchTab('tab-profilo', document.getElementById('btn-nav-profilo')); 
             }
 
             aggiornaStatoBloccoTattico(); 
 
-            // Mappa
+            // INIZIALIZZA LA MAPPA E CREA IL MOTORE ANTI-SCHERMO GRIGIO
             if (!map) {
                 map = L.map('map', { zoomControl: false, attributionControl: false }).setView([45.707, 11.465], 13);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-                new ResizeObserver(() => { map.invalidateSize(); }).observe(document.getElementById('map-wrapper'));
+                
+                // Questo loop ripara la mappa grigia forzando le dimensioni se la scheda è aperta
+                setInterval(() => {
+                    if(map && document.getElementById('tab-tattico').classList.contains('active-tab')) {
+                        map.invalidateSize(true);
+                    }
+                }, 1000);
             }
             
-            setTimeout(() => { window.dispatchEvent(new Event('resize')); if(map) map.invalidateSize(); }, 500);
             updateGpsBadge();
         }
 
-        // ==========================================
-        // 3. CARICAMENTO EVENTI E DOTAZIONI
-        // ==========================================
-        function caricaEventiEDotazioni() {
+function caricaEventiEDotazioni() {
+            // EVENTI E STATISTICHE
             db.ref('impostazioni/calendario_eventi').on('value', snap => {
                 const cont = document.getElementById('lista-eventi-app');
+                if(!cont) return;
+                
                 if(snap.exists()) {
                     let html = ''; let eventiArray = [];
                     snap.forEach(c => { eventiArray.push({...c.val(), key: c.key}); });
-                    eventiArray.sort((a,b) => new Date(b.data||0) - new Date(a.data||0)); // Più recenti prima
+                    eventiArray.sort((a,b) => new Date(b.data||0) - new Date(a.data||0)); // Ordine decrescente
 
                     let countEventiPassati = 0; let oggiStr = new Date().toISOString().split('T')[0];
 
@@ -847,16 +852,18 @@
                     });
                     
                     cont.innerHTML = html;
-                    document.getElementById('stat-eventi').innerText = countEventiPassati;
-                    document.getElementById('stat-ore').innerText = (countEventiPassati * 5) + 'h'; 
+                    
+                    let stE = document.getElementById('stat-eventi'); if(stE) stE.innerText = countEventiPassati;
+                    let stO = document.getElementById('stat-ore'); if(stO) stO.innerText = (countEventiPassati * 5) + 'h'; 
 
                 } else { cont.innerHTML = '<div class="text-center p-6 border border-dashed border-slate-700 rounded-2xl"><p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Nessun evento in programma</p></div>'; }
             });
 
-            // DPI: Entrambe le schede
+            // DPI (Caricamento DOPPIO su Profilo e Magazzino)
             if(window.myVolId) {
                 db.ref(`impostazioni/rubrica_volontari/${window.myVolId}/dpi`).on('value', snap => {
                     const contMag = document.getElementById('lista-dotazioni-magazzino');
+                    const contProf = document.getElementById('lista-dotazioni');
                     if(snap.exists() && snap.val().length > 0) {
                         let html = '';
                         snap.val().forEach(dot => {
@@ -879,9 +886,11 @@
                             </div>`;
                         });
                         if(contMag) contMag.innerHTML = html;
+                        if(contProf) contProf.innerHTML = html;
                     } else {
-                        let emptyHtml = '<div class="text-center p-4 border border-dashed border-slate-700 rounded-xl"><p class="text-slate-500 text-[9px] uppercase tracking-widest font-bold">Nessuna dotazione in carico</p></div>';
+                        let emptyHtml = '<div class="text-center p-4 border border-dashed border-slate-700 rounded-xl"><p class="text-slate-500 text-[9px] uppercase tracking-widest font-bold">Nessuna dotazione D.P.I. in carico</p></div>';
                         if(contMag) contMag.innerHTML = emptyHtml;
+                        if(contProf) contProf.innerHTML = emptyHtml;
                     }
                 });
             }
