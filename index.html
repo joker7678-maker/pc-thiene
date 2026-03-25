@@ -189,7 +189,7 @@
             animation: fadeInScale 0.3s ease-out; 
         }
         
-        /* Mappa più chiara */
+        /* Mappa Chiara */
         #map { 
             height: 100%; 
             width: 100%; 
@@ -198,7 +198,7 @@
             border-radius: 12px; 
         }
 
-        /* Toggles e Interruttori */
+        /* Toggles Switch */
         .switch { 
             position: relative; 
             display: inline-block; 
@@ -243,6 +243,23 @@
             transform: translateX(18px); 
             background-color: #fff; 
         }
+
+        /* Input Custom nel SweetAlert per non rompere la grafica */
+        .swal-input-custom {
+            width: 100%;
+            padding: 12px;
+            background: #1e293b;
+            color: #fff;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            text-align: center;
+            outline: none;
+            font-weight: bold;
+        }
+        .swal-input-custom:focus {
+            box-shadow: 0 0 10px rgba(59,130,246,0.4);
+        }
     </style>
 </head>
 <body>
@@ -252,28 +269,89 @@
         <div class="text-blue-400 font-black uppercase tracking-[0.2em] text-xs animate-pulse">Avvio Sistemi...</div>
     </div>
 
-    <div id="login-personal-screen" style="display: none;">
-        <div class="relative h-36 w-36 shrink-0 mb-6 mx-auto rounded-full logo-container shadow-[0_0_30px_rgba(59,130,246,0.4)]">
+    <div id="landing-screen" style="display: none;">
+        <div class="relative h-40 w-40 shrink-0 mb-6 mx-auto rounded-full logo-container shadow-[0_0_30px_rgba(59,130,246,0.4)]">
             <div class="chasing-border-blue"></div>
             <div class="inner-circle p-0 bg-white">
                 <img src="logosala.png" class="w-full h-full object-contain scale-[1.2] relative z-20">
             </div>
         </div>
-        <h1 class="font-black text-2xl mb-1 text-white tracking-tight uppercase leading-none text-center">Protezione Civile Thiene</h1>
-        <h2 class="font-black text-[10px] mb-8 text-blue-400 tracking-[0.4em] uppercase drop-shadow">AREA PERSONALE</h2>
+        <h1 class="font-black text-2xl mb-1 text-white uppercase leading-none">PC Thiene</h1>
+        <h2 class="font-bold text-[10px] mb-8 text-slate-400 tracking-[0.3em] uppercase">Seleziona Ingresso</h2>
         
-        <div class="glass-panel p-6 w-full max-w-[320px] shadow-2xl flex flex-col screen-enter">
-            <input type="email" id="login-email" class="bg-slate-900/80 border border-slate-600 focus:border-blue-500 rounded-xl text-center text-sm text-white py-3.5 w-full mb-3 outline-none shadow-inner transition-colors" placeholder="Email Operatore">
-            <input type="password" id="login-password" class="bg-slate-900/80 border border-slate-600 focus:border-blue-500 rounded-xl text-center text-xl text-white py-3.5 w-full mb-5 tracking-[0.3em] outline-none shadow-inner transition-colors" placeholder="••••••">            
-            
-            <button onclick="eseguiLoginPersonale()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 py-3.5 rounded-xl font-black uppercase text-xs shadow-[0_0_15px_rgba(59,130,246,0.4)] active:scale-95 text-white transition-all border border-blue-400/50">
-                SBLOCCA TERMINALE
+        <div class="w-full max-w-[300px] flex flex-col gap-4 screen-enter">
+            <button onclick="selezionaModo('PERSONAL')" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 py-4 rounded-xl font-black uppercase text-xs shadow-[0_0_15px_rgba(59,130,246,0.3)] active:scale-95 text-white flex items-center justify-center gap-2 border border-blue-400/50">
+                <span class="text-lg">🪪</span> PROFILO PERSONALE
             </button>
-            <button onclick="richiediCambioPass()" class="mt-5 text-[10px] text-slate-400 hover:text-white underline tracking-widest transition-colors">
-                Password Dimenticata?
+            <button onclick="selezionaModo('TERMINAL')" class="w-full bg-slate-800 border border-slate-600 py-4 rounded-xl font-black uppercase text-xs shadow-lg active:scale-95 text-emerald-400 flex items-center justify-center gap-2">
+                <span class="text-lg">🚐</span> TERMINALE TATTICO
             </button>
         </div>
     </div>
+
+    <div id="login-personal-screen" style="display: none;">
+        <div class="relative h-32 w-32 shrink-0 mb-6 mx-auto rounded-full logo-container shadow-[0_0_30px_rgba(59,130,246,0.4)]">
+            <div class="chasing-border-blue"></div>
+            <div class="inner-circle p-0 bg-white">
+                <img src="logosala.png" class="w-full h-full object-contain scale-[1.2] relative z-20">
+            </div>
+        </div>
+        <h2 class="font-black text-lg mb-6 text-blue-400 tracking-[0.2em] uppercase drop-shadow">ACCESSO VOLONTARIO</h2>
+        
+        <div class="bg-slate-800/80 border border-slate-600/50 rounded-2xl p-5 w-full max-w-[300px] shadow-2xl flex flex-col screen-enter">
+            <input type="email" id="login-email" class="bg-slate-900 border border-slate-600 focus:border-blue-500 rounded-xl text-center text-sm text-white py-3 w-full mb-3 outline-none" placeholder="mario.rossi@...">
+            <input type="password" id="login-password" class="bg-slate-900 border border-slate-600 focus:border-blue-500 rounded-xl text-center text-xl text-white py-3 w-full mb-4 tracking-[0.3em] outline-none" placeholder="****">            
+            
+            <button onclick="eseguiLoginPersonale()" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-black uppercase text-xs shadow-lg active:scale-95 text-white">ACCEDI</button>
+            
+            <button onclick="annullaLogin()" class="mt-4 text-[9px] font-black text-slate-500 uppercase tracking-widest">🔙 TORNA INDIETRO</button>
+        </div>
+    </div>
+
+    <div id="team-select-screen" style="display: none;">
+        <div class="relative h-32 w-32 shrink-0 mb-6 mx-auto rounded-full logo-container shadow-[0_0_30px_rgba(16,185,129,0.4)]">
+            <div class="chasing-border-blue" style="background: conic-gradient(from 0deg, transparent 70%, #10b981 100%);"></div>
+            <div class="inner-circle p-0 bg-white">
+                <img src="logosala.png" class="w-full h-full object-contain scale-[1.2] relative z-20">
+            </div>
+        </div>
+        <h2 class="font-black text-lg mb-6 text-emerald-400 tracking-[0.2em] uppercase drop-shadow">TERMINALE SQUADRA</h2>
+        
+        <div class="bg-slate-800/80 border border-slate-600/50 rounded-2xl p-5 w-full max-w-[300px] shadow-2xl flex flex-col screen-enter">
+            <div id="qr-reader" class="w-full bg-black rounded-xl overflow-hidden mb-2 hidden"></div>
+            
+            <button onclick="startQRScanner()" id="btn-start-qr" class="w-full bg-slate-700 hover:bg-slate-600 border border-slate-500 py-3 rounded-xl font-bold uppercase text-xs mb-3 text-white flex items-center justify-center gap-2 active:scale-95">
+                <span class="text-lg">📷</span> INQUADRA QR
+            </button>
+            
+            <input type="text" id="team-input" class="bg-slate-900 border border-slate-600 focus:border-emerald-500 rounded-xl text-center text-2xl text-white py-3 w-full tracking-widest outline-none uppercase mb-4" placeholder="SQ1">            
+            
+            <button onclick="saveNewTeam()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-black uppercase text-xs shadow-lg active:scale-95 text-white">CONFERMA UNITÀ</button>
+            
+            <button onclick="annullaLogin()" class="mt-4 text-[9px] font-black text-slate-500 uppercase tracking-widest">🔙 TORNA INDIETRO</button>
+        </div>
+    </div>
+
+    <div id="login-screen-pin" style="display: none;">
+        <div class="relative h-32 w-32 shrink-0 mb-6 mx-auto rounded-full logo-container shadow-[0_0_30px_rgba(16,185,129,0.4)]">
+            <div class="chasing-border-blue" style="background: conic-gradient(from 0deg, transparent 70%, #10b981 100%);"></div>
+            <div class="inner-circle p-0 bg-white">
+                <img src="logosala.png" class="w-full h-full object-contain scale-[1.2] relative z-20">
+            </div>
+        </div>
+        <h2 class="font-black text-lg mb-6 text-emerald-400 tracking-[0.2em] uppercase drop-shadow">SBLOCCO PIN</h2>
+        
+        <div class="bg-slate-800/80 border border-slate-600/50 rounded-2xl p-5 w-full max-w-[300px] shadow-2xl flex flex-col screen-enter items-center">
+            <p class="text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-2">Unità: <b id="login-sq-name" class="text-white">...</b></p>
+            
+            <input type="password" id="pin-input" class="bg-slate-900 border border-slate-600 focus:border-emerald-500 rounded-xl text-center text-4xl text-white py-3 w-full mb-5 tracking-[0.4em] outline-none" placeholder="****" inputmode="numeric" maxlength="4">            
+            
+            <button onclick="checkPin()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-black uppercase text-xs shadow-lg active:scale-95 text-white mb-2">SBLOCCA</button>
+            
+            <button onclick="annullaLogin()" class="mt-2 text-[9px] font-black text-slate-500 uppercase tracking-widest">🔄 CAMBIA UNITÀ</button>
+        </div>
+    </div>
+
 
     <div id="app-wrapper" class="hidden flex-col h-full w-full relative z-10">
 
@@ -284,12 +362,14 @@
                 </div>
                 <div class="flex flex-col flex-1 justify-center min-w-0">
                     <div class="flex justify-between items-center mb-0.5">
-                        <div class="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none truncate">PC THIENE <span class="text-blue-500 font-black mx-1">•</span> APP OPERATIVA</div>
+                        <div class="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none truncate">
+                            PC THIENE <span class="text-blue-500 font-black mx-1">•</span> <span id="header-mode">APP PERSONALE</span>
+                        </div>
                     </div>
                     <div class="flex justify-between items-end mt-1">
                         <h1 id="display-sq" class="font-black text-2xl text-white leading-none truncate drop-shadow-md">---</h1>
                         <div class="flex gap-1.5 shrink-0">
-                            <div id="current-status" class="px-2 py-0.5 rounded text-[8px] font-black bg-emerald-900/80 text-emerald-400 border border-emerald-500/50 uppercase shadow-md">ATTESA</div>
+                            <div id="current-status" class="px-2 py-0.5 rounded text-[8px] font-black bg-slate-800 text-slate-400 border border-slate-600 uppercase shadow-md">ATTESA</div>
                             <div id="gps-badge" class="px-2 py-0.5 rounded text-[8px] font-black bg-slate-800 text-slate-400 border border-slate-600 uppercase shadow-md">GPS OFF</div>
                         </div>
                     </div>
@@ -299,18 +379,66 @@
 
         <main id="main-content" class="flex-1 flex flex-col w-full relative z-10 overflow-hidden">
             
-            <div id="tab-tattico" class="tab-content active-tab flex-1 flex-col w-full px-3 py-3 gap-2 overflow-y-auto">
-                
-                <div class="shrink-0 flex justify-between items-center bg-slate-800/50 border border-slate-700/50 p-2 rounded-xl mb-1">
-                    <div class="flex flex-col pl-1">
-                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Unità Attuale</span>
-                        <span id="tattico-team-name" class="text-xs text-slate-500 font-black uppercase">NON ASSEGNATO</span>
+            <div id="tab-profilo" class="tab-content flex-1 flex-col w-full px-4 py-5 overflow-y-auto pb-28">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]">🪪</span>
+                        <h2 class="text-xl font-black text-white uppercase tracking-tight">Area Personale</h2>
                     </div>
-                    <button onclick="uniscitiSquadra()" class="bg-blue-600 hover:bg-blue-500 text-white text-[9px] font-black uppercase px-3 py-2 rounded-lg shadow-md active:scale-95 transition-all border border-blue-400/50 flex items-center gap-1.5">
-                        <span class="text-sm">🤝</span> UNISCITI A SQUADRA
+                    <button onclick="logoutPersonale()" class="bg-red-900/40 hover:bg-red-800 text-red-400 text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-lg border border-red-500/50 shadow active:scale-95 transition-all">
+                        ESCI
                     </button>
                 </div>
+                
+                <div class="glass-panel p-0 overflow-hidden mb-5 border border-slate-600 shadow-xl">
+                    <div class="bg-gradient-to-r from-slate-800 to-slate-900 p-4 border-b border-slate-700/50 flex justify-between items-start relative">
+                        <div class="absolute -right-4 -top-4 text-7xl opacity-10">👤</div>
+                        <div>
+                            <h3 id="profilo-nome" class="text-xl font-black text-white uppercase leading-none drop-shadow">NOME COGNOME</h3>
+                            <div id="profilo-matricola" class="text-[10px] text-emerald-400 font-mono font-bold mt-1.5 tracking-widest">MATRICOLA: N/D</div>
+                        </div>
+                        <div id="profilo-sangue" class="bg-red-600 text-white border border-red-400 px-2 py-1 rounded text-[10px] font-black uppercase shadow-lg z-10">
+                            N/D
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 bg-slate-800/40">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <div class="text-[8px] text-slate-500 uppercase font-black tracking-widest mb-1">Ruolo Operativo</div>
+                                <div id="profilo-ruolo" class="text-[11px] text-purple-300 font-black uppercase drop-shadow">VOLONTARIO</div>
+                            </div>
+                            <div>
+                                <div class="text-[8px] text-slate-500 uppercase font-black tracking-widest mb-1">Contatto</div>
+                                <div id="profilo-tel" class="text-[11px] text-white font-mono uppercase drop-shadow">N/D</div>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-slate-700/50">
+                            <div class="text-[8px] text-slate-500 uppercase font-black tracking-widest mb-2">Abilitazioni e Patenti</div>
+                            <div id="profilo-spec" class="flex flex-wrap gap-1.5">
+                                </div>
+                        </div>
+                        <button onclick="richiediCambioPass()" class="w-full mt-5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-[9px] font-bold uppercase py-2.5 rounded-lg active:scale-95 transition-colors">
+                            🔑 RICHIEDI CAMBIO PASSWORD
+                        </button>
+                    </div>
+                </div>
 
+                <div class="glass-panel p-5 mb-5 relative overflow-hidden">
+                    <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-4 flex items-center gap-2 border-b border-slate-700/50 pb-2">
+                        <span class="text-lg">🎒</span> LE MIE DOTAZIONI ASSEGNATE
+                    </div>
+                    <div id="lista-dotazioni" class="flex flex-col gap-2.5 mb-4">
+                        </div>
+                    
+                    <button onclick="segnalaDPI()" class="w-full bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-black uppercase tracking-widest py-3.5 rounded-xl shadow-[0_0_15px_rgba(225,29,72,0.4)] mt-2 active:scale-95 transition-all flex items-center justify-center gap-2">
+                        <span class="text-lg">📦</span> SEGNALA ERRORE D.P.I. IN SALA
+                    </button>
+                </div>
+            </div>
+
+            <div id="tab-tattico" class="tab-content flex-1 flex-col w-full px-3 py-3 gap-2 overflow-y-auto pb-28">
+                
                 <div id="target-banner" class="glass-panel w-full p-2.5 shrink-0 flex justify-center text-center text-slate-500 text-[10px] uppercase font-bold tracking-widest min-h-[46px] items-center border-t-2 border-t-slate-600">
                     SISTEMA IN STANDBY
                 </div>
@@ -320,9 +448,9 @@
                     <div id="overlay-blocco" class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-50 rounded-xl border border-slate-700 flex flex-col items-center justify-center p-4">
                         <span class="text-5xl mb-2">🔒</span>
                         <h3 class="text-white font-black uppercase text-sm mb-1">Terminale Bloccato</h3>
-                        <p class="text-slate-400 text-[10px] text-center mb-4 uppercase tracking-widest font-bold">Unisciti a un'unità per attivare<br>comandi e messaggistica.</p>
-                        <button onclick="uniscitiSquadra()" class="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2.5 rounded-xl text-white font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 border border-blue-400/50">
-                            🤝 UNISCITI E SBLOCCA
+                        <p class="text-slate-400 text-[10px] text-center mb-4 uppercase tracking-widest font-bold">Unisciti a un'unità per attivare<br>i comandi e la messaggistica.</p>
+                        <button onclick="uniscitiSquadra()" class="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2.5 rounded-xl text-white font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 border border-blue-400/50 flex items-center gap-2">
+                            <span class="text-sm">🤝</span> UNISCITI E SBLOCCA
                         </button>
                     </div>
 
@@ -362,7 +490,7 @@
                 </div>
             </div>
 
-            <div id="tab-eventi" class="tab-content flex-1 flex-col w-full px-4 py-5 overflow-y-auto">
+            <div id="tab-eventi" class="tab-content flex-1 flex-col w-full px-4 py-5 overflow-y-auto pb-28">
                 <div class="flex items-center gap-3 mb-6">
                     <span class="text-3xl drop-shadow-[0_0_15px_rgba(59,130,246,0.4)]">📅</span>
                     <div>
@@ -375,77 +503,26 @@
                     </div>
             </div>
 
-            <div id="tab-profilo" class="tab-content flex-1 flex-col w-full px-4 py-5 overflow-y-auto">
-                <div class="flex items-center justify-between mb-5">
-                    <div class="flex items-center gap-3">
-                        <span class="text-3xl drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]">🪪</span>
-                        <h2 class="text-xl font-black text-white uppercase tracking-tight">Area Personale</h2>
-                    </div>
-                    <button onclick="logoutPersonale()" class="bg-red-900/40 hover:bg-red-800 text-red-400 text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-lg border border-red-500/50 shadow active:scale-95 transition-all">
-                        ESCI
-                    </button>
-                </div>
-                
-                <div class="glass-panel p-0 overflow-hidden mb-5 border border-slate-600 shadow-xl">
-                    <div class="bg-gradient-to-r from-slate-800 to-slate-900 p-4 border-b border-slate-700/50 flex justify-between items-start relative">
-                        <div class="absolute -right-4 -top-4 text-7xl opacity-10">👤</div>
-                        <div>
-                            <h3 id="profilo-nome" class="text-xl font-black text-white uppercase leading-none drop-shadow">NOME COGNOME</h3>
-                            <div id="profilo-matricola" class="text-[10px] text-emerald-400 font-mono font-bold mt-1.5 tracking-widest">MATRICOLA: N/D</div>
-                        </div>
-                        <div id="profilo-sangue" class="bg-red-600 text-white border border-red-400 px-2 py-1 rounded text-[10px] font-black uppercase shadow-lg z-10">
-                            N/D
-                        </div>
-                    </div>
-                    
-                    <div class="p-4 bg-slate-800/40">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <div class="text-[8px] text-slate-500 uppercase font-black tracking-widest mb-1">Ruolo Operativo</div>
-                                <div id="profilo-ruolo" class="text-[11px] text-purple-300 font-black uppercase drop-shadow">VOLONTARIO</div>
-                            </div>
-                            <div>
-                                <div class="text-[8px] text-slate-500 uppercase font-black tracking-widest mb-1">Contatto</div>
-                                <div id="profilo-tel" class="text-[11px] text-white font-mono uppercase drop-shadow">N/D</div>
-                            </div>
-                        </div>
-                        <div class="mt-4 pt-4 border-t border-slate-700/50">
-                            <div class="text-[8px] text-slate-500 uppercase font-black tracking-widest mb-2">Abilitazioni e Patenti</div>
-                            <div id="profilo-spec" class="flex flex-wrap gap-1.5"></div>
-                        </div>
-                        <button onclick="richiediCambioPass()" class="w-full mt-5 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white text-[9px] font-bold uppercase py-2.5 rounded-lg active:scale-95 transition-colors">
-                            🔑 RICHIEDI CAMBIO PASSWORD
-                        </button>
-                    </div>
-                </div>
-
-                <div class="glass-panel p-5 mb-5 relative overflow-hidden">
-                    <div class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-4 flex items-center gap-2 border-b border-slate-700/50 pb-2">
-                        <span class="text-lg">🎒</span> LE MIE DOTAZIONI (D.P.I.)
-                    </div>
-                    
-                    <div id="lista-dotazioni" class="flex flex-col gap-2.5 mb-4">
-                        </div>
-                    
-                    <button onclick="segnalaDPI()" class="w-full bg-rose-900/40 hover:bg-rose-800 border border-rose-500/50 text-rose-400 hover:text-white text-[10px] font-black uppercase tracking-widest py-3 rounded-xl active:scale-95 transition-all shadow-md flex items-center justify-center gap-2">
-                        <span class="text-sm">📦</span> SEGNALA ERRORE D.P.I. ALLA SALA
-                    </button>
-                </div>
-            </div>
-
         </main>
 
-        <nav id="bottom-nav" class="shrink-0 w-full bg-slate-900/95 backdrop-blur-xl border-t border-slate-700/50 flex justify-around items-end pb-6 pt-3 px-2 z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.8)]">
-            <button onclick="switchTab('tab-tattico', this)" class="nav-btn active flex flex-col items-center gap-1 w-1/3 text-emerald-400 transition-all duration-300 transform scale-110">
-                <span class="text-2xl drop-shadow-[0_0_8px_rgba(16,185,129,0.6)] icon-nav transition-all">🚨</span><span class="text-[9px] font-black uppercase tracking-widest">Tattico</span>
+        <nav id="bottom-nav" class="shrink-0 w-full bg-slate-900/95 backdrop-blur-xl border-t border-slate-700/50 flex justify-around items-end pb-6 pt-3 px-2 z-50 hidden shadow-[0_-10px_30px_rgba(0,0,0,0.8)]">
+            <button id="btn-nav-tattico" onclick="switchTab('tab-tattico', this)" class="nav-btn flex flex-col items-center gap-1 w-1/3 text-slate-500 transition-all duration-300">
+                <span class="text-2xl opacity-70 icon-nav transition-all">🚨</span><span class="text-[9px] font-black uppercase tracking-widest">Tattico</span>
             </button>
-            <button onclick="switchTab('tab-eventi', this)" class="nav-btn flex flex-col items-center gap-1 w-1/3 text-slate-500 hover:text-blue-400 transition-all duration-300">
+            <button id="btn-nav-eventi" onclick="switchTab('tab-eventi', this)" class="nav-btn flex flex-col items-center gap-1 w-1/3 text-slate-500 hover:text-blue-400 transition-all duration-300">
                 <span class="text-2xl opacity-70 icon-nav transition-all">📅</span><span class="text-[9px] font-bold uppercase tracking-widest">Eventi</span>
             </button>
-            <button onclick="switchTab('tab-profilo', this)" class="nav-btn flex flex-col items-center gap-1 w-1/3 text-slate-500 hover:text-purple-400 transition-all duration-300">
-                <span class="text-2xl opacity-70 icon-nav transition-all">🪪</span><span class="text-[9px] font-bold uppercase tracking-widest">Profilo</span>
+            <button id="btn-nav-profilo" onclick="switchTab('tab-profilo', this)" class="nav-btn active flex flex-col items-center gap-1 w-1/3 text-purple-400 transition-all duration-300 transform scale-110">
+                <span class="text-2xl drop-shadow-[0_0_8px_rgba(168,85,247,0.6)] icon-nav transition-all">🪪</span><span class="text-[9px] font-bold uppercase tracking-widest">Profilo</span>
             </button>
         </nav>
+
+        <footer id="footer-terminal" class="shrink-0 w-full bg-slate-900 border-t border-slate-700 p-3 hidden flex justify-between items-center z-50">
+            <span class="text-[10px] text-slate-500 font-bold uppercase">SISTEMA TERMINALE</span>
+            <button onclick="window.logoutTerminal()" class="bg-red-900/80 text-white font-bold py-1.5 px-3 rounded-lg text-[9px] uppercase border border-red-500">
+                🚪 CHIUDI TURNO
+            </button>
+        </footer>
     </div>
 
     <script>
@@ -464,41 +541,184 @@
             } 
         }
 
-        // Variabili Globali Operative
-        window.myTeamId = null; 
+        // Variabili Globali
+        window.authMode = localStorage.getItem('auth_mode'); // Può essere 'PERSONAL' o 'TERMINAL'
+        let sqId = null; 
         window.currentUserNome = "OPERATORE"; 
         window.currentUserEmailObj = "";
         window.myVolId = null; 
+        window.myTeamId = null; // Quello a cui ti unisci manualmente
         
         let map = null;
         let markerMe = null; 
         let gpsTrackerId = null; 
+        let isGpsActive = false;
         
-        // Impostazioni GPS dal localStorage
         window.gpsAutoEnabled = localStorage.getItem('app_gps_auto') !== 'false';
         window.liveTrackingEnabled = localStorage.getItem('app_live_track') === 'true';
-        window.liveTrackingInterval = parseInt(localStorage.getItem('app_live_interval') || '30000'); 
+        window.liveTrackingInterval = parseInt(localStorage.getItem('app_live_interval') || '30000');
         let liveTrackingTimer = null;
-
+        
         let idSalaAttivo = null; 
         let viaAttiva = ""; 
         let ultimaPos = { lat: null, lng: null };
 
         // ==========================================
-        // 1. GESTIONE AUTENTICAZIONE E AVVIO
+        // 1. ROUTING INIZIALE (Gestione delle Schermate di Ingresso)
         // ==========================================
         window.onload = () => {
-            checkPersonaleStatus(); 
+            document.getElementById('loading-screen').style.display = 'none';
+            
+            if (!window.authMode) { 
+                document.getElementById('landing-screen').style.display = 'flex'; 
+            } 
+            else if (window.authMode === 'TERMINAL') { 
+                checkTerminaleStatus(); 
+            } 
+            else if (window.authMode === 'PERSONAL') { 
+                checkPersonaleStatus(); 
+            }
         };
 
+        window.selezionaModo = (mode) => {
+            localStorage.setItem('auth_mode', mode); 
+            window.authMode = mode;
+            document.getElementById('landing-screen').style.display = 'none';
+            
+            if(mode === 'TERMINAL') {
+                checkTerminaleStatus(); 
+            } else {
+                checkPersonaleStatus();
+            }
+        };
+
+        window.annullaLogin = () => { 
+            localStorage.removeItem('auth_mode'); 
+            window.location.reload(); 
+        };
+
+        // ==========================================
+        // 2. FLUSSO TERMINALE (Login con QR / PIN)
+        // ==========================================
+        function checkTerminaleStatus() {
+            const savedSqId = localStorage.getItem('pc_app_saved_team');
+            
+            if (savedSqId) { 
+                sqId = savedSqId; 
+                if(localStorage.getItem('pc_app_auth') === 'true') { 
+                    window.myTeamId = sqId; // Nel terminale, la squadra è fissa
+                    avviaAppTattica(); 
+                    switchTab('tab-tattico', document.getElementById('btn-nav-tattico'));
+                } else { 
+                    document.getElementById('login-sq-name').innerText = sqId; 
+                    document.getElementById('login-screen-pin').style.display = 'flex'; 
+                }
+            } else { 
+                document.getElementById('team-select-screen').style.display = 'flex'; 
+            }
+        }
+
+        window.saveNewTeam = () => {
+            const val = document.getElementById('team-input').value.trim().toUpperCase();
+            if (val) { 
+                localStorage.setItem('pc_app_saved_team', val); 
+                localStorage.removeItem('pc_app_auth'); 
+                location.reload(); 
+            }
+        };
+
+        window.checkPin = async () => {
+            const pin = document.getElementById('pin-input').value.trim();
+            if(!pin) return;
+            
+            try {
+                const snap = await db.ref('configurazione/pin_volontari').once('value');
+                const pinCorretto = snap.exists() ? String(snap.val()) : "1234";
+                
+                if (pin === pinCorretto) {
+                    localStorage.setItem('pc_app_auth', 'true'); 
+                    document.getElementById('login-screen-pin').style.display = 'none';
+                    window.myTeamId = sqId; // Associa la squadra
+                    avviaAppTattica();
+                    switchTab('tab-tattico', document.getElementById('btn-nav-tattico'));
+                } else { 
+                    Swal.fire('Errore', 'PIN Errato', 'error'); 
+                    document.getElementById('pin-input').value = ''; 
+                }
+            } catch(e) {
+                Swal.fire('Errore', 'Connessione al Server Assente', 'error');
+            }
+        };
+
+        window.logoutTerminal = () => {
+            Swal.fire({ 
+                title: 'Chiudi Turno?', 
+                icon: 'warning', 
+                showCancelButton: true, 
+                confirmButtonText: 'SÌ' 
+            }).then(r => {
+                if(r.isConfirmed) { 
+                    localStorage.removeItem('pc_app_auth'); 
+                    location.reload(); 
+                }
+            });
+        };
+
+        // QR Code per Terminale
+        let html5QrCode = null;
+        window.startQRScanner = () => {
+            document.getElementById('btn-start-qr').style.display = 'none'; 
+            document.getElementById('qr-reader').style.display = 'block';
+            
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("qr-reader");
+            }
+            
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                { fps: 10, qrbox: 250 },
+                (decodedText) => { 
+                    if (html5QrCode.isScanning) {
+                        html5QrCode.stop().then(() => elaborateQR(decodedText)); 
+                    } else {
+                        elaborateQR(decodedText);
+                    }
+                },
+                (err) => { /* Ignora errori di scansione continui */ }
+            ).catch((err) => { 
+                Swal.fire({ icon: 'error', title: 'FOTOCAMERA BLOCCATA' }); 
+            });
+        };
+
+        function elaborateQR(text) {
+            let extractedId = text.trim();
+            try {
+                if (text.includes('?sq=')) {
+                    extractedId = text.split('?sq=')[1].split('&')[0]; 
+                } else if (text.includes('?id=')) {
+                    extractedId = text.split('?id=')[1].split('&')[0];
+                }
+            } catch(e) {}
+            
+            if(extractedId) { 
+                document.getElementById('team-input').value = extractedId.toUpperCase(); 
+                window.saveNewTeam(); 
+            }
+        }
+
+        // ==========================================
+        // 3. FLUSSO PERSONALE (Login con Email e Password)
+        // ==========================================
         function checkPersonaleStatus() {
             auth.onAuthStateChanged((user) => {
                 if (user) {
                     window.currentUserEmailObj = user.email;
                     document.getElementById('login-personal-screen').style.display = 'none';
                     
+                    // Cerca l'utente in anagrafica per recuperare l'ID, nome, matricola e ruolo
                     db.ref('impostazioni/rubrica_volontari').once('value').then(snap => {
                         let trovato = null;
+                        
                         if(snap.exists()) {
                             snap.forEach(child => { 
                                 if(child.val().email && child.val().email.toLowerCase() === user.email.toLowerCase()) {
@@ -514,15 +734,16 @@
                             return;
                         }
 
+                        // Dati Utente
                         window.currentUserNome = trovato ? trovato.nome.toUpperCase() : user.email.split('@')[0].toUpperCase();
+                        sqId = window.currentUserNome; // L'identificativo principale per l'app personale è il proprio nome
 
-                        // Compila la scheda anagrafica
+                        // Grafica Profilo Personale
                         document.getElementById('profilo-nome').innerText = window.currentUserNome;
                         document.getElementById('display-sq').innerText = window.currentUserNome;
                         document.getElementById('profilo-matricola').innerText = "MATRICOLA: " + (trovato ? (trovato.matricola || 'N/D') : 'N/D');
                         document.getElementById('profilo-ruolo').innerText = (trovato ? (trovato.ruolo || 'VOLONTARIO') : 'VOLONTARIO').toUpperCase();
                         document.getElementById('profilo-sangue').innerText = trovato ? (trovato.sangue || 'N/D') : 'N/D';
-                        document.getElementById('profilo-tel').innerText = trovato ? (trovato.tel || 'N/D') : 'N/D';
                         
                         let specHtml = '';
                         if(trovato && trovato.patenti) {
@@ -535,6 +756,9 @@
 
                         avviaAppTattica();
                         caricaEventiEDotazioni();
+                        
+                        // AVVIA SEMPRE DAL PROFILO PER L'APP PERSONALE
+                        switchTab('tab-profilo', document.getElementById('btn-nav-profilo'));
                     });
                 } else {
                     document.getElementById('loading-screen').style.display = 'none';
@@ -555,7 +779,7 @@
             
             auth.signInWithEmailAndPassword(e, p)
                 .then(()=> Swal.close())
-                .catch(err => Swal.fire({icon:'error', title:'Errore', text:'Credenziali errate', background: '#0f172a', color: '#fff'}));
+                .catch(err => Swal.fire({icon:'error', title:'Errore', text:'Credenziali errate o account non esistente', background: '#0f172a', color: '#fff'}));
         };
 
         window.richiediCambioPass = () => {
@@ -586,7 +810,7 @@
         };
 
         // ==========================================
-        // 2. COSTRUZIONE INTERFACCIA E MAPPA TATTICA
+        // 4. COSTRUZIONE INTERFACCIA E MAPPA TATTICA
         // ==========================================
         function avviaAppTattica() {
             document.getElementById('loading-screen').style.display = 'none';
@@ -600,7 +824,7 @@
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
             }
             
-            // Forza Resize per Evitare Mappa Nera
+            // Forza Resize Iniziale (anche se in tab nascosto)
             setTimeout(() => { 
                 window.dispatchEvent(new Event('resize'));
                 if(map) map.invalidateSize(); 
@@ -608,7 +832,22 @@
             
             updateGpsBadge();
 
-            // Ascolta Brogliaccio per eventuali Target assegnati alla Squadra Unita
+            // Ascolta lo stato della squadra a cui sono connesso (se esiste)
+            db.ref('anagrafica_squadre').on('value', (snap) => {
+                if(snap.exists() && window.myTeamId && snap.val()[window.myTeamId]) {
+                    const dataSq = snap.val()[window.myTeamId];
+                    if(dataSq.stato) {
+                        const sts = dataSq.stato.toUpperCase();
+                        document.getElementById('current-status').innerText = sts;
+                        document.getElementById('current-status').className = `px-2 py-0.5 rounded text-[8px] font-black uppercase shadow-md border ${sts==='SUL POSTO'?'bg-red-900/80 text-red-400 border-red-500/50':'bg-emerald-900/80 text-emerald-400 border-emerald-500/50'}`;
+                    }
+                } else {
+                    document.getElementById('current-status').innerText = "IN ATTESA";
+                    document.getElementById('current-status').className = `px-2 py-0.5 rounded text-[8px] font-black uppercase shadow-md border bg-slate-800 text-slate-400 border-slate-600`;
+                }
+            });
+
+            // Ascolta Brogliaccio per Target (solo per la mia squadra)
             db.ref('brogliaccio').limitToLast(20).on('value', (snap) => {
                 if(!snap.exists() || !window.myTeamId) return;
                 
@@ -644,7 +883,7 @@
         }
 
         // ==========================================
-        // 3. CARICAMENTO EVENTI E DOTAZIONI
+        // 5. CARICAMENTO DATI AGGIUNTIVI (Eventi e Dotazioni)
         // ==========================================
         function caricaEventiEDotazioni() {
             
@@ -706,7 +945,7 @@
                 }
             });
 
-            // DPI: Legge dal fascicolo operatore
+            // DPI: Legge direttamente dal fascicolo operatore
             if(window.myVolId) {
                 db.ref(`impostazioni/rubrica_volontari/${window.myVolId}/dpi`).on('value', snap => {
                     const cont = document.getElementById('lista-dotazioni');
@@ -724,7 +963,7 @@
                                     <span class="text-[11px] font-black text-white uppercase">🦺 ${dot.nome}</span>
                                     <span class="text-[8px] ${coloreUsura} mt-1 uppercase tracking-widest font-bold">Stato: ${dot.stato} | Scad: ${dataScadenza}</span>
                                 </div>
-                                <span class="text-[10px] bg-blue-900/40 text-blue-400 px-2 py-1 rounded-lg font-black border border-blue-800/50">Q.tà: ${dot.qta || 1}</span>
+                                <span class="text-[10px] bg-blue-900/40 text-blue-400 px-2 py-1 rounded-lg font-black border border-blue-800/50 shadow">Q.tà: ${dot.qta || 1}</span>
                             </div>`;
                         });
                         cont.innerHTML = html;
@@ -736,38 +975,69 @@
         }
 
         // ==========================================
-        // 4. FUNZIONI OPERATIVE E LUCCHETTO
+        // 6. FUNZIONI OPERATIVE E TABS
         // ==========================================
 
+        window.switchTab = (tabId, btn) => {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
+            document.getElementById(tabId).classList.add('active-tab');
+            
+            document.querySelectorAll('.nav-btn').forEach(b => { 
+                b.classList.remove('text-emerald-400', 'text-blue-400', 'text-purple-400', 'scale-110'); 
+                b.classList.add('text-slate-500'); 
+                b.querySelector('.icon-nav').className = b.querySelector('.icon-nav').className.replace(/drop-shadow-\[[^\]]+\]/g, '');
+            });
+            
+            btn.classList.remove('text-slate-500'); 
+            btn.classList.add('scale-110');
+            
+            if(tabId === 'tab-tattico') { 
+                btn.classList.add('text-emerald-400'); 
+                btn.querySelector('.icon-nav').classList.add('drop-shadow-[0_0_8px_rgba(16,185,129,0.6)]');
+                // Forza la mappa a ricalcolare le dimensioni
+                setTimeout(()=> { window.dispatchEvent(new Event('resize')); if(map) map.invalidateSize(); }, 300); 
+            } 
+            else if(tabId === 'tab-eventi') {
+                btn.classList.add('text-blue-400'); 
+                btn.querySelector('.icon-nav').classList.add('drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]');
+            } 
+            else if(tabId === 'tab-profilo') {
+                btn.classList.add('text-purple-400');
+                btn.querySelector('.icon-nav').classList.add('drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]');
+            }
+        };
+
+        // ==========================================
+        // 7. LUCCHETTO E AZIONI TATTICHE (Sicurezza Squadra)
+        // ==========================================
         window.uniscitiSquadra = () => {
             Swal.fire({
                 title: 'UNISCITI A SQUADRA',
                 html: `
-                    <div class="text-[10px] text-slate-400 mb-3 uppercase tracking-widest font-bold">Inserisci credenziali dell'Unità</div>
-                    <input id="swal-sq-id" class="swal2-input bg-slate-800 text-white border-slate-600 focus:border-blue-500 uppercase text-center font-black tracking-widest" placeholder="SIGLA (Es. SQ1)">
-                    <input id="swal-sq-pass" type="password" class="swal2-input bg-slate-800 text-white border-slate-600 focus:border-blue-500 text-center tracking-[0.3em]" placeholder="Password">
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <input id="swal-sq-id" type="text" style="width:100%; padding:12px; background:#1e293b; color:#fff; border:1px solid #3b82f6; border-radius:8px; text-transform:uppercase; text-align:center; font-weight:bold; letter-spacing:2px; outline:none;" placeholder="SIGLA UNITÀ (Es. SQ1)">
+                        <input id="swal-sq-pass" type="password" style="width:100%; padding:12px; background:#1e293b; color:#fff; border:1px solid #3b82f6; border-radius:8px; text-align:center; letter-spacing:4px; outline:none;" placeholder="PASSWORD SQUADRA">
+                    </div>
                 `,
-                background: '#0f172a', 
-                color: '#fff',
-                showCancelButton: true, 
-                confirmButtonText: 'UNISCITI', 
-                confirmButtonColor: '#2563eb',
+                background: '#0f172a', color: '#fff',
+                showCancelButton: true, confirmButtonText: 'UNISCITI', confirmButtonColor: '#2563eb',
                 preConfirm: () => {
-                    return {
-                        id: document.getElementById('swal-sq-id').value.trim().toUpperCase(),
-                        pass: document.getElementById('swal-sq-pass').value.trim()
-                    }
+                    const idVal = document.getElementById('swal-sq-id').value.trim().toUpperCase();
+                    const passVal = document.getElementById('swal-sq-pass').value.trim();
+                    if(!idVal || !passVal) { Swal.showValidationMessage('Inserisci Sigla e Password'); return false; }
+                    return { id: idVal, pass: passVal };
                 }
             }).then(async (res) => {
                 if(res.isConfirmed && res.value.id && res.value.pass) {
                     
-                    // Verifica la squadra e la password nel database
+                    // Verifica su Firebase 'impostazioni/rubrica_squadre'
                     const snapImpostazioni = await db.ref(`impostazioni/rubrica_squadre`).once('value');
                     let passwordCorretta = false;
                     
                     if(snapImpostazioni.exists()) {
                         snapImpostazioni.forEach(child => {
-                            if(child.val().nome === res.value.id && child.val().password === res.value.pass) {
+                            const dataSq = child.val();
+                            if(dataSq.nome && dataSq.nome.toUpperCase() === res.value.id && String(dataSq.password).trim() === res.value.pass) {
                                 passwordCorretta = true;
                             }
                         });
@@ -775,21 +1045,19 @@
 
                     if(passwordCorretta) {
                         window.myTeamId = res.value.id;
-                        document.getElementById('tattico-team-name').innerText = "UNITÀ: " + window.myTeamId;
-                        document.getElementById('tattico-team-name').className = "text-xs text-blue-400 font-black uppercase";
                         
-                        // Avvisa il brogliaccio
+                        // Avvisa il brogliaccio che l'operatore è salito a bordo
                         db.ref('brogliaccio').push({
                             ora: new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}),
                             data: new Date().toLocaleDateString('it-IT'),
                             squadra: window.myTeamId, 
                             utente: window.currentUserNome,
-                            m1: `🙋‍♂️ OPERATORE AGGIUNTO ALLA SQUADRA`, 
+                            m1: `🙋‍♂️ OPERATORE A BORDO DEL MEZZO`, 
                             dir: 'SQ'
                         });
                         
                         Swal.fire({icon:'success', title:'Collegato a ' + window.myTeamId, background:'#0f172a', color:'#fff', timer: 2000, showConfirmButton: false});
-                        aggiornaStatoBloccoTattico(); // Sblocca la tastiera!
+                        aggiornaStatoBloccoTattico(); // Togli il lucchetto!
                     } else {
                         Swal.fire({icon:'error', title:'Dati Errati', text:'Sigla o Password non valide', background:'#0f172a', color:'#fff'});
                     }
@@ -799,73 +1067,27 @@
 
         function aggiornaStatoBloccoTattico() {
             const overlay = document.getElementById('overlay-blocco');
-            if(window.myTeamId) {
-                overlay.style.display = 'none'; // Nasconde il lucchetto
-                
-                // Ascolta lo stato della squadra per tenerlo aggiornato
-                db.ref(`anagrafica_squadre/${window.myTeamId}`).on('value', (snap) => {
-                    if(snap.exists() && snap.val().stato) {
-                        const sts = snap.val().stato.toUpperCase();
-                        document.getElementById('current-status').innerText = sts;
-                        document.getElementById('current-status').className = `px-2 py-0.5 rounded text-[8px] font-black uppercase shadow-md border ${sts==='SUL POSTO'?'bg-red-900/80 text-red-400 border-red-500/50':'bg-emerald-900/80 text-emerald-400 border-emerald-500/50'}`;
-                    }
-                });
+            if(window.authMode === 'TERMINAL') {
+                overlay.style.display = 'none'; // Il terminale non ha bisogno di lucchetto
             } else {
-                overlay.style.display = 'flex'; // Mostra il lucchetto
-                document.getElementById('current-status').innerText = "DISCONNESSO";
+                if(window.myTeamId) {
+                    overlay.style.display = 'none'; // Nasconde il lucchetto
+                } else {
+                    overlay.style.display = 'flex'; // Mostra il lucchetto
+                }
             }
         }
 
-        // ==========================================
-        // 5. GESTIONE TABS (Navigazione Base)
-        // ==========================================
-        window.switchTab = (tabId, btn) => {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
-            document.getElementById(tabId).classList.add('active-tab');
-            
-            document.querySelectorAll('.nav-btn').forEach(b => { 
-                b.classList.remove('text-emerald-400', 'text-blue-400', 'text-purple-400', 'scale-110'); 
-                b.classList.add('text-slate-500'); 
-            });
-            
-            btn.classList.add('scale-110');
-            
-            if(tabId === 'tab-tattico') { 
-                btn.classList.add('text-emerald-400'); 
-                // Assicura che la mappa si ridimensioni
-                setTimeout(()=> { 
-                    window.dispatchEvent(new Event('resize'));
-                    if(map) map.invalidateSize(); 
-                }, 300); 
-            } 
-            else if(tabId === 'tab-eventi') {
-                btn.classList.add('text-blue-400'); 
-            } 
-            else if(tabId === 'tab-profilo') {
-                btn.classList.add('text-purple-400');
-            }
-        };
-
-        // ==========================================
-        // 6. AZIONI TATTICHE (Ora blindate dal lucchetto)
-        // ==========================================
         window.askStatus = (s, icon) => { 
-            if(!window.myTeamId) return; // Sicurezza extra
+            if(!window.myTeamId) return; // Sicurezza extra (il lucchetto c'è già)
 
             Swal.fire({ 
                 title: `CONFERMI STATO?`, 
                 html: `<span class="text-4xl block mb-2">${icon}</span><b class="text-lg text-emerald-400">${s.toUpperCase()}</b>`, 
-                showCancelButton: true, 
-                confirmButtonText: 'SÌ, AGGIORNA', 
-                confirmButtonColor: '#10b981', 
-                background: '#0f172a', 
-                color: '#fff' 
+                showCancelButton: true, confirmButtonText: 'SÌ, AGGIORNA', confirmButtonColor: '#10b981', background: '#0f172a', color: '#fff' 
             }).then((r) => { 
                 if(r.isConfirmed) { 
-                    // Aggiorna lo stato della squadra sul DB
                     db.ref(`anagrafica_squadre/${window.myTeamId}`).update({ stato: s, ultimo_contatto: Date.now() });
-                    
-                    // Manda log nel brogliaccio
                     db.ref('brogliaccio').push({ 
                         ora: new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}), 
                         data: new Date().toLocaleDateString('it-IT'),
@@ -874,34 +1096,40 @@
                         m1: `CAMBIO STATO: ${s.toUpperCase()}`, 
                         dir:'SQ' 
                     }); 
-                    
                     Swal.fire({toast:true, position:'top', title:'Stato Aggiornato a ' + s, icon:'success', timer:1500, showConfirmButton:false, background:'#0f172a', color:'#fff'}); 
                 } 
             }); 
         };
 
         window.askFreeMsg = () => { 
-            if(!window.myTeamId) return; // Sicurezza extra
+            if(!window.myTeamId) return; 
 
             const t = document.getElementById('msg-input').value.trim(); 
             if(t) { 
-                db.ref('brogliaccio').push({ 
-                    ora: new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}), 
-                    data: new Date().toLocaleDateString(), 
-                    squadra: window.myTeamId, 
-                    utente: window.currentUserNome,
-                    m1: t.toUpperCase(), 
-                    dir:'SQ' 
-                }).then(() => {
-                    Swal.fire({toast:true, position:'top', title:'Inviato in Sala', icon:'success', timer:1000, showConfirmButton:false, background:'#0f172a', color:'#fff'});
-                }); 
-                document.getElementById('msg-input').value=''; 
+                Swal.fire({ 
+                    title: 'INVIARE MESSAGGIO?', 
+                    text: `"${t}"`, 
+                    showCancelButton: true, confirmButtonText: 'INVIA ALLA SALA', confirmButtonColor: '#2563eb', background: '#0f172a', color: '#fff' 
+                }).then((r) => { 
+                    if(r.isConfirmed) {
+                        db.ref('brogliaccio').push({ 
+                            ora: new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}), 
+                            data: new Date().toLocaleDateString(), 
+                            squadra: window.myTeamId, 
+                            utente: window.currentUserNome,
+                            m1: t.toUpperCase(), 
+                            dir:'SQ' 
+                        }).then(() => {
+                            Swal.fire({toast:true, position:'top', title:'Inviato in Sala', icon:'success', timer:1000, showConfirmButton:false, background:'#0f172a', color:'#fff'});
+                        }); 
+                        document.getElementById('msg-input').value=''; 
+                    }
+                });
             } 
         };
 
         window.upFoto = (f) => { 
-            if(!window.myTeamId) return; // Sicurezza extra
-
+            if(!window.myTeamId) return; 
             if (!f) return; 
             const reader = new FileReader(); 
             
@@ -909,11 +1137,7 @@
                 Swal.fire({ 
                     title: 'INVIARE FOTO?', 
                     html: `<img src="${e.target.result}" class="w-full rounded-xl mt-2 border-2 border-slate-600 shadow-lg">`, 
-                    showCancelButton: true, 
-                    confirmButtonText: '🚀 INVIA', 
-                    confirmButtonColor: '#2563eb', 
-                    background: '#0f172a', 
-                    color: '#fff' 
+                    showCancelButton: true, confirmButtonText: '🚀 INVIA ALLA SALA', confirmButtonColor: '#2563eb', background: '#0f172a', color: '#fff' 
                 }).then((r) => { 
                     if(r.isConfirmed) {
                         db.ref('brogliaccio').push({ 
@@ -921,7 +1145,7 @@
                             data: new Date().toLocaleDateString(),
                             squadra: window.myTeamId, 
                             utente: window.currentUserNome,
-                            m1: `📷 FOTO INVIATA`, 
+                            m1: `📷 FOTO INVIATA DAL DISPOSITIVO`, 
                             dir:'SQ', 
                             mediaUrl: e.target.result, 
                             mediaType: 'IMG' 
@@ -949,7 +1173,7 @@
         };
 
         // ==========================================
-        // 7. FUNZIONI EXTRA (Eventi, Segnalazione DPI)
+        // 8. FUNZIONI EXTRA (Eventi, Segnalazione DPI)
         // ==========================================
         window.segnalaDPI = () => {
             Swal.fire({
@@ -957,14 +1181,14 @@
                 input: 'textarea',
                 inputPlaceholder: 'Es: Manca un pantalone, oppure la taglia della giacca consegnata è errata...',
                 background: '#0f172a', color: '#fff',
-                showCancelButton: true, confirmButtonText: 'INVIA ALLA SALA', confirmButtonColor: '#e11d48',
+                showCancelButton: true, confirmButtonText: 'INVIA ALLA LOGISTICA', confirmButtonColor: '#e11d48',
                 inputValidator: (value) => { if (!value) return 'Devi scrivere il problema!' }
             }).then((res) => {
                 if(res.isConfirmed) {
                     db.ref('brogliaccio').push({
                         ora: new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}),
                         data: new Date().toLocaleDateString('it-IT'),
-                        squadra: window.myTeamId || window.currentUserNome, // Usa la squadra se connesso, altrimenti il proprio nome
+                        squadra: window.myTeamId || window.currentUserNome, 
                         utente: window.currentUserNome,
                         m1: `📦 SEGNALAZIONE MAGAZZINO/DPI: ${res.value.toUpperCase()}`, 
                         dir: 'SQ'
@@ -982,21 +1206,17 @@
             Swal.fire({ 
                 title: 'CONFERMA', 
                 text: `Confermi la tua risposta?`, 
-                showCancelButton: true, 
-                confirmButtonText: 'SÌ, INVIA', 
-                confirmButtonColor: risposta === 'CONFERMATO' ? '#10b981' : '#ef4444', 
-                background: '#0f172a', 
-                color: '#fff' 
+                showCancelButton: true, confirmButtonText: 'SÌ, INVIA', confirmButtonColor: risposta === 'CONFERMATO' ? '#10b981' : '#ef4444', background: '#0f172a', color: '#fff' 
             }).then((res) => {
                 if(res.isConfirmed) { 
                     db.ref(`impostazioni/calendario_eventi/${idEv}/adesioni/${window.myVolId}`).set(risposta)
-                    .then(() => Swal.fire({toast: true, position: 'top', title: 'Risposta Inviata!', icon: 'success', timer: 1500, showConfirmButton: false})); 
+                    .then(() => Swal.fire({toast: true, position: 'top', title: 'Risposta Inviata!', icon: 'success', timer: 1500, showConfirmButton: false, background: '#0f172a', color: '#fff'})); 
                 }
             });
         };
 
         // ==========================================
-        // 8. GESTIONE E CONTROLLO GPS / MAPPA (Pannello Avanzato)
+        // 9. GESTIONE E CONTROLLO GPS COMPLETA (Pannello Avanzato)
         // ==========================================
         function updateGpsBadge() { 
             const badge = document.getElementById('gps-badge');
@@ -1015,7 +1235,7 @@
                     <div style="background: rgba(15,23,42,0.8); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
                         <div style="display: flex; flex-direction: column;">
                             <span style="font-size: 13px; font-weight: 900; color: white; text-transform: uppercase;">GPS nei Messaggi</span>
-                            <span style="font-size: 9px; color: #94a3b8; font-weight: bold;">Allega posizione ai log</span>
+                            <span style="font-size: 9px; color: #94a3b8; font-weight: bold;">Allega posizione ai log manuali</span>
                         </div>
                         <label class="switch">
                             <input type="checkbox" id="gps-toggle" ${window.gpsAutoEnabled ? 'checked' : ''} onchange="window.toggleGpsApp(this.checked)">
@@ -1026,7 +1246,7 @@
                     <div style="background: rgba(15,23,42,0.8); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
                         <div style="display: flex; flex-direction: column;">
                             <span style="font-size: 13px; font-weight: 900; color: #ef4444; text-transform: uppercase;">Live Tracking 🔴</span>
-                            <span style="font-size: 9px; color: #94a3b8; font-weight: bold;">Tracciamento su Mappa Sala</span>
+                            <span style="font-size: 9px; color: #94a3b8; font-weight: bold;">Tracciamento Auto in Background</span>
                         </div>
                         <label class="switch">
                             <input type="checkbox" id="live-toggle" ${window.liveTrackingEnabled ? 'checked' : ''} onchange="window.toggleLiveTrack(this.checked)">
@@ -1036,7 +1256,7 @@
 
                     <div style="background: rgba(15,23,42,0.8); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
                         <span style="font-size: 11px; color: #cbd5e1; font-weight: 600;">Frequenza invio:</span>
-                        <select onchange="window.changeLiveInterval(this.value)" style="background: #020617; color: white; border: 1px solid #475569; padding: 4px; border-radius: 6px; font-size: 11px; outline: none;">
+                        <select onchange="window.changeLiveInterval(this.value)" style="background: #020617; color: white; border: 1px solid #475569; padding: 6px; border-radius: 6px; font-size: 11px; outline: none; font-weight:bold;">
                             <option value="5000" ${window.liveTrackingInterval == 5000 ? 'selected' : ''}>🚀 5 Sec (Emergenza)</option>
                             <option value="10000" ${window.liveTrackingInterval == 10000 ? 'selected' : ''}>🏃 10 Sec (Azione)</option>
                             <option value="30000" ${window.liveTrackingInterval == 30000 ? 'selected' : ''}>⏱️ 30 Sec (Pattugliamento)</option>
@@ -1045,11 +1265,7 @@
                     </div>
 
                 </div>`,
-                showConfirmButton: true, 
-                confirmButtonText: 'CHIUDI PANNELLO', 
-                confirmButtonColor: '#3b82f6', 
-                background: '#0f172a', 
-                color: '#fff'
+                showConfirmButton: true, confirmButtonText: 'CHIUDI PANNELLO', confirmButtonColor: '#3b82f6', background: '#0f172a', color: '#fff'
             }); 
         };
 
@@ -1062,13 +1278,14 @@
         window.toggleLiveTrack = (val) => { 
             window.liveTrackingEnabled = val; 
             localStorage.setItem('app_live_track', val); 
-            updateGpsBadge(); 
             
             if (val) {
                 window.startLiveTracking(); 
+                Swal.fire({toast:true, position:'top', title: 'Live Tracking Attivato', icon:'success', timer:1500, showConfirmButton:false, background:'#0f172a', color:'#fff'});
             } else {
                 if (liveTrackingTimer) clearInterval(liveTrackingTimer); 
             }
+            updateGpsBadge();
         };
 
         window.changeLiveInterval = (val) => { 
@@ -1092,21 +1309,18 @@
         window.startLiveTracking = () => { 
             if (liveTrackingTimer) clearInterval(liveTrackingTimer); 
             if (window.liveTrackingEnabled) { 
-                window.sendSilentGPS(); 
+                window.sendSilentGPS(); // Manda subito una posizione
                 liveTrackingTimer = setInterval(window.sendSilentGPS, window.liveTrackingInterval); 
             } 
         };
 
-        // Pulsante rapido sulla mappa
+        // Pulsante rapido sulla mappa (Geolocalizzazione Manuale)
         window.toggleGPS = () => {
             const btn = document.getElementById('btn-toggle-gps'); 
             const ind = document.getElementById('gps-status-indicator');
             
             if (isGpsActive) {
-                if(gpsTrackerId) {
-                    navigator.geolocation.clearWatch(gpsTrackerId); 
-                    gpsTrackerId = null; 
-                }
+                if(gpsTrackerId) { navigator.geolocation.clearWatch(gpsTrackerId); gpsTrackerId = null; }
                 isGpsActive = false;
                 btn.classList.remove('border-emerald-500'); 
                 ind.className = 'absolute top-1 right-1 w-2 h-2 bg-slate-500 rounded-full';
@@ -1134,7 +1348,7 @@
                         markerMe.setLatLng([latitude, longitude]); 
                     }
                     
-                    // Se il Live Tracking è attivo, aggiorna la squadra
+                    // Se il Live Tracking manuale (tasto sulla mappa) è attivo e c'è la squadra, aggiorna
                     if(window.liveTrackingEnabled && window.myTeamId) {
                         db.ref(`anagrafica_squadre/${window.myTeamId}`).update({ lat: latitude.toFixed(6), lng: longitude.toFixed(6), ultimo_contatto: Date.now() });
                     }
@@ -1145,6 +1359,8 @@
         window.centraMappaSuGPS = () => { 
             if(markerMe && map) {
                 map.setView(markerMe.getLatLng(), 17); 
+            } else {
+                Swal.fire({toast:true, position:'top', title: 'Attiva prima il GPS', timer:1500, showConfirmButton:false, background:'#0f172a', color:'#fff'});
             }
         };
 
