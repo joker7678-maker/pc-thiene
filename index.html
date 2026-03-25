@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PC THIENE - APP PERSONALE</title>
+    <title>PC THIENE - APP PERSONALE E TATTICA</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
@@ -26,7 +26,7 @@
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap');
         
         .swal2-container { 
-            z-index: 99999 !important; 
+            z-index: 999999 !important; 
         }
         
         body { 
@@ -42,8 +42,13 @@
             margin: 0; 
         }
 
-        /* SCHERMATE DI INGRESSO */
+        /* ========================================== */
+        /* SCHERMATE DI INGRESSO (FULL SCREEN)        */
+        /* ========================================== */
         #login-personal-screen, 
+        #landing-screen,
+        #login-screen-pin,
+        #team-select-screen,
         #loading-screen { 
             position: fixed; 
             inset: 0; 
@@ -58,9 +63,7 @@
             overflow: hidden; 
         }
         
-        #loading-screen { 
-            z-index: 99999; 
-        }
+        #loading-screen { z-index: 99999; }
 
         .screen-enter { 
             animation: fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
@@ -71,46 +74,27 @@
             100% { opacity: 1; transform: scale(1) translateY(0); } 
         }
         
-        .logo-container { 
-            animation: soft-pulse 3s ease-in-out infinite; 
-        }
-        
-        @keyframes soft-pulse { 
-            0%, 100% { transform: scale(1); } 
-            50% { transform: scale(1.03); } 
-        }
+        .logo-container { animation: soft-pulse 3s ease-in-out infinite; }
+        @keyframes soft-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
 
         .chasing-border-blue { 
-            position: absolute; 
-            inset: 0; 
-            border-radius: 50%; 
+            position: absolute; inset: 0; border-radius: 50%; 
             background: conic-gradient(from 0deg, transparent 70%, #3b82f6 100%); 
             animation: spin-chase 2s linear infinite; 
         }
-        
-        @keyframes spin-chase { 
-            from { transform: rotate(0deg); } 
-            to { transform: rotate(360deg); } 
-        }
+        @keyframes spin-chase { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         .inner-circle { 
-            position: absolute; 
-            inset: 4px; 
-            background-color: #0f172a; 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            z-index: 10; 
-            box-shadow: inset 0px 0px 20px rgba(0,0,0,0.9); 
-            overflow: hidden; 
+            position: absolute; inset: 4px; background-color: #0f172a; border-radius: 50%; display: flex; 
+            align-items: center; justify-content: center; z-index: 10; box-shadow: inset 0px 0px 20px rgba(0,0,0,0.9); overflow: hidden; 
         }
 
-        /* GRAFICA MODERNA GLASSMORPHISM */
+        /* ========================================== */
+        /* COMPONENTI GRAFICI (PANNELLI E BOTTONI)    */
+        /* ========================================== */
         .glass-panel { 
             background: rgba(15, 23, 42, 0.6); 
-            backdrop-filter: blur(16px); 
-            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.05); 
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.05); 
             border-radius: 16px; 
@@ -121,129 +105,42 @@
             border: 1px solid rgba(255, 255, 255, 0.05); 
             border-radius: 12px; 
             height: 55px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            transition: 0.2s; 
-            position: relative; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            transition: 0.2s; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
         }
         
-        .btn-status:active { 
-            transform: scale(0.95); 
-            filter: brightness(1.2); 
-        }
-        
-        .btn-status::after { 
-            content: ''; 
-            position: absolute; 
-            bottom: 0; 
-            left: 0; 
-            right: 0; 
-            height: 3px; 
-            border-radius: 0 0 12px 12px; 
-        }
+        .btn-status:active { transform: scale(0.95); filter: brightness(1.2); }
+        .btn-status::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; border-radius: 0 0 12px 12px; }
         
         .btn-status .icon-box { 
-            background: rgba(0,0,0,0.3); 
-            border-radius: 50%; 
-            width: 24px; 
-            height: 24px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            margin-bottom: 2px; 
-            font-size: 12px; 
+            background: rgba(0,0,0,0.3); border-radius: 50%; width: 24px; height: 24px; 
+            display: flex; align-items: center; justify-content: center; margin-bottom: 2px; font-size: 12px; 
         }
         
-        .btn-status span.txt { 
-            font-size: 9px; 
-            font-weight: 800; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px; 
-        }
+        .btn-status span.txt { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        .btn-sede::after { background-color: #10b981; } 
-        .btn-sede { color: #6ee7b7; }
-        
-        .btn-uscita::after { background-color: #f59e0b; } 
-        .btn-uscita { color: #fcd34d; }
-        
-        .btn-trasf::after { background-color: #8b5cf6; } 
-        .btn-trasf { color: #c4b5fd; }
-        
-        .btn-posto::after { background-color: #ef4444; } 
-        .btn-posto { color: #fca5a5; }
-        
-        .btn-rientro::after { background-color: #0ea5e9; } 
-        .btn-rientro { color: #7dd3fc; }
+        .btn-sede::after { background-color: #10b981; } .btn-sede { color: #6ee7b7; }
+        .btn-uscita::after { background-color: #f59e0b; } .btn-uscita { color: #fcd34d; }
+        .btn-trasf::after { background-color: #8b5cf6; } .btn-trasf { color: #c4b5fd; }
+        .btn-posto::after { background-color: #ef4444; } .btn-posto { color: #fca5a5; }
+        .btn-rientro::after { background-color: #0ea5e9; } .btn-rientro { color: #7dd3fc; }
 
-        /* TABS */
-        .tab-content { 
-            display: none; 
-        }
-        
-        .active-tab { 
-            display: flex !important; 
-            animation: fadeInScale 0.3s ease-out; 
-        }
+        /* ========================================== */
+        /* TABS, MAPPA E CONTROLLI                    */
+        /* ========================================== */
+        .tab-content { display: none; }
+        .active-tab { display: flex !important; animation: fadeInScale 0.3s ease-out; }
         
         /* Mappa Chiara */
-        #map { 
-            height: 100%; 
-            width: 100%; 
-            background: #e5e7eb; 
-            z-index: 1; 
-            border-radius: 12px; 
-        }
+        #map { height: 100%; width: 100%; background: #e5e7eb; z-index: 1; border-radius: 12px; }
 
-        /* Toggles Switch */
-        .switch { 
-            position: relative; 
-            display: inline-block; 
-            width: 40px; 
-            height: 22px; 
-        }
-        
-        .switch input { 
-            opacity: 0; 
-            width: 0; 
-            height: 0; 
-        }
-        
-        .slider { 
-            position: absolute; 
-            cursor: pointer; 
-            inset: 0; 
-            background-color: #334155; 
-            transition: .4s; 
-            border-radius: 34px; 
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); 
-        }
-        
-        .slider:before { 
-            position: absolute; 
-            content: ""; 
-            height: 16px; 
-            width: 16px; 
-            left: 3px; 
-            bottom: 3px; 
-            background-color: #94a3b8; 
-            transition: .4s; 
-            border-radius: 50%; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.5); 
-        }
-        
-        input:checked + .slider { 
-            background-color: #10b981; 
-        }
-        
-        input:checked + .slider:before { 
-            transform: translateX(18px); 
-            background-color: #fff; 
-        }
-
+        /* Interruttori (Toggle) Pannello GPS */
+        .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background-color: #334155; transition: .4s; border-radius: 34px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: #94a3b8; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        input:checked + .slider { background-color: #10b981; }
+        input:checked + .slider:before { transform: translateX(18px); background-color: #fff; }
     </style>
 </head>
 <body>
@@ -287,8 +184,7 @@
             <input type="password" id="login-password" class="bg-slate-900 border border-slate-600 focus:border-blue-500 rounded-xl text-center text-xl text-white py-3 w-full mb-4 tracking-[0.3em] outline-none" placeholder="****">            
             
             <button onclick="eseguiLoginPersonale()" class="w-full bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-black uppercase text-xs shadow-lg active:scale-95 text-white">ACCEDI</button>
-            
-            <button onclick="annullaLogin()" class="mt-4 text-[9px] font-black text-slate-500 uppercase tracking-widest">🔙 TORNA INDIETRO</button>
+            <button onclick="annullaLogin()" class="mt-4 text-[9px] font-black text-slate-500 uppercase tracking-widest hover:text-white transition-colors">🔙 TORNA INDIETRO</button>
         </div>
     </div>
 
@@ -311,8 +207,7 @@
             <input type="text" id="team-input" class="bg-slate-900 border border-slate-600 focus:border-emerald-500 rounded-xl text-center text-2xl text-white py-3 w-full tracking-widest outline-none uppercase mb-4" placeholder="SQ1">            
             
             <button onclick="saveNewTeam()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-black uppercase text-xs shadow-lg active:scale-95 text-white">CONFERMA UNITÀ</button>
-            
-            <button onclick="annullaLogin()" class="mt-4 text-[9px] font-black text-slate-500 uppercase tracking-widest">🔙 TORNA INDIETRO</button>
+            <button onclick="annullaLogin()" class="mt-4 text-[9px] font-black text-slate-500 uppercase tracking-widest hover:text-white transition-colors">🔙 TORNA INDIETRO</button>
         </div>
     </div>
 
@@ -331,8 +226,7 @@
             <input type="password" id="pin-input" class="bg-slate-900 border border-slate-600 focus:border-emerald-500 rounded-xl text-center text-4xl text-white py-3 w-full mb-5 tracking-[0.4em] outline-none" placeholder="****" inputmode="numeric" maxlength="4">            
             
             <button onclick="checkPin()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-black uppercase text-xs shadow-lg active:scale-95 text-white mb-2">SBLOCCA</button>
-            
-            <button onclick="annullaLogin()" class="mt-2 text-[9px] font-black text-slate-500 uppercase tracking-widest">🔄 CAMBIA UNITÀ</button>
+            <button onclick="annullaLogin()" class="mt-2 text-[9px] font-black text-slate-500 uppercase tracking-widest hover:text-white transition-colors">🔄 CAMBIA UNITÀ</button>
         </div>
     </div>
 
@@ -341,36 +235,37 @@
 
         <header class="px-4 py-3 bg-slate-900/90 backdrop-blur-xl border-b border-slate-700/50 flex justify-between items-center shrink-0 shadow-lg relative z-20">
             <div class="flex items-center gap-3.5 w-full">
+                
                 <div class="h-14 w-14 flex shrink-0 items-center justify-center rounded-full bg-white border-2 border-slate-400 shadow-[0_0_15px_rgba(255,255,255,0.1)]">
                     <img src="logosala.png" class="w-full h-full object-contain scale-[1.3] mt-1">
                 </div>
                 
-                <div class="flex flex-col flex-1 justify-center min-w-0">
-                    <div class="flex justify-between items-center mb-0.5">
-                        <div class="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none truncate">
-                            PC THIENE <span class="text-blue-500 font-black mx-1">•</span> <span id="header-mode">APP OPERATIVA</span>
-                        </div>
+                <div class="flex flex-col flex-1 justify-center min-w-0 pr-2">
+                    <div class="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
+                        PC THIENE <span class="text-blue-500 font-black mx-1">•</span> <span id="header-mode">APP OPERATIVA</span>
                     </div>
-                    <div class="flex justify-between items-center mt-1">
-                        <h1 id="display-sq" class="font-black text-[18px] sm:text-xl text-white leading-tight drop-shadow-md w-full whitespace-normal">---</h1>
+                    
+                    <h1 id="display-sq" class="font-black text-[18px] sm:text-[22px] text-white leading-tight drop-shadow-md w-full whitespace-normal">
+                        NOME COGNOME LUNGO
+                    </h1>
+                </div>
+
+                <div class="flex flex-col items-end gap-1.5 shrink-0 pl-3 border-l border-slate-700/50">
+                    <button onclick="openGPSPanel()" class="text-[24px] text-slate-300 hover:text-white active:scale-95 active:rotate-90 transition-all drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]">
+                        ⚙️
+                    </button>
+                    <div class="flex flex-col items-end gap-1">
+                        <div id="current-status" class="px-1.5 py-0.5 rounded text-[7px] font-black bg-slate-800 text-slate-400 border border-slate-600 uppercase shadow-md text-center">ATTESA</div>
+                        <div id="gps-badge" class="px-1.5 py-0.5 rounded text-[7px] font-black bg-slate-800 text-slate-400 border border-slate-600 uppercase shadow-md text-center w-full">GPS OFF</div>
                     </div>
                 </div>
 
-                <div class="flex flex-col items-end gap-1.5 shrink-0 pl-2 border-l border-slate-700/50">
-                    <button onclick="openGPSPanel()" class="text-[26px] text-slate-300 hover:text-white active:rotate-90 transition-transform drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
-                        ⚙️
-                    </button>
-                    <div class="flex gap-1">
-                        <div id="current-status" class="px-1.5 py-0.5 rounded text-[7px] font-black bg-slate-800 text-slate-400 border border-slate-600 uppercase shadow-md">ATTESA</div>
-                        <div id="gps-badge" class="px-1.5 py-0.5 rounded text-[7px] font-black bg-slate-800 text-slate-400 border border-slate-600 uppercase shadow-md">GPS OFF</div>
-                    </div>
-                </div>
             </div>
         </header>
 
         <main id="main-content" class="flex-1 flex flex-col w-full relative z-10 overflow-hidden">
             
-            <div id="tab-profilo" class="tab-content flex-1 flex-col w-full px-4 py-5 overflow-y-auto pb-28">
+            <div id="tab-profilo" class="tab-content flex-1 flex-col w-full px-4 py-5 overflow-y-auto relative">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center gap-3">
                         <span class="text-3xl drop-shadow-[0_0_15px_rgba(168,85,247,0.4)]">🪪</span>
@@ -385,10 +280,10 @@
                     <div class="bg-gradient-to-r from-slate-800 to-slate-900 p-4 border-b border-slate-700/50 flex justify-between items-start relative">
                         <div class="absolute -right-4 -top-4 text-7xl opacity-10">👤</div>
                         <div>
-                            <h3 id="profilo-nome" class="text-lg sm:text-xl font-black text-white uppercase leading-tight drop-shadow whitespace-normal">NOME COGNOME</h3>
+                            <h3 id="profilo-nome" class="text-xl font-black text-white uppercase leading-none drop-shadow">NOME COGNOME</h3>
                             <div id="profilo-matricola" class="text-[10px] text-emerald-400 font-mono font-bold mt-1.5 tracking-widest">MATRICOLA: N/D</div>
                         </div>
-                        <div id="profilo-sangue" class="bg-red-600 text-white border border-red-400 px-2 py-1 rounded text-[10px] font-black uppercase shadow-lg z-10 mt-1 shrink-0 ml-2">
+                        <div id="profilo-sangue" class="bg-red-600 text-white border border-red-400 px-2 py-1 rounded text-[10px] font-black uppercase shadow-lg z-10">
                             N/D
                         </div>
                     </div>
@@ -422,13 +317,15 @@
                     <div id="lista-dotazioni" class="flex flex-col gap-2.5 mb-4">
                         </div>
                     
-                    <button onclick="segnalaDPI()" class="w-full bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-black uppercase tracking-widest py-3.5 rounded-xl shadow-[0_0_15px_rgba(225,29,72,0.4)] mt-2 active:scale-95 transition-all flex items-center justify-center gap-2 border border-rose-400/50">
-                        <span class="text-lg">📦</span> SEGNALA ERRORE D.P.I. IN SALA
+                    <button onclick="segnalaDPI()" class="w-full bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-black uppercase tracking-widest py-3.5 rounded-xl shadow-[0_0_15px_rgba(225,29,72,0.4)] mt-2 mb-2 active:scale-95 transition-all flex items-center justify-center gap-2 border border-rose-400/50 shrink-0">
+                        <span class="text-lg">📦</span> SEGNALA ERRORE D.P.I.
                     </button>
                 </div>
+
+                <div class="h-28 w-full shrink-0"></div>
             </div>
 
-            <div id="tab-tattico" class="tab-content flex-1 flex-col w-full px-3 py-3 gap-2 overflow-y-auto pb-28">
+            <div id="tab-tattico" class="tab-content flex-1 flex-col w-full px-3 py-3 gap-2 overflow-y-auto relative">
                 
                 <div id="target-banner" class="glass-panel w-full p-2.5 shrink-0 flex justify-center text-center text-slate-500 text-[10px] uppercase font-bold tracking-widest min-h-[46px] items-center border-t-2 border-t-slate-600">
                     SISTEMA IN STANDBY
@@ -458,10 +355,10 @@
                     </div>
 
                     <div class="grid grid-cols-2 gap-2 shrink-0 my-1.5">
-                        <button onclick="document.getElementById('file-foto').click()" class="btn-status bg-slate-800 border-blue-900/50">
+                        <button onclick="document.getElementById('file-foto').click()" class="btn-status bg-slate-800 border border-blue-900/50">
                             <div class="icon-box text-white">📷</div><span class="txt text-white">FOTOGRAFIA</span>
                         </button>
-                        <button id="btn-voc" class="btn-status bg-slate-800 border-rose-900/50">
+                        <button id="btn-voc" class="btn-status bg-slate-800 border border-rose-900/50">
                             <div id="voc-icon" class="icon-box text-white">🎤</div><span id="voc-txt" class="txt text-white">AUDIO VOCALE</span>
                         </button>
                         <input type="file" id="file-foto" accept="image/*" capture="camera" class="hidden" onchange="upFoto(this.files[0])">
@@ -479,9 +376,11 @@
                         </button>
                     </div>
                 </div>
+
+                <div class="h-28 w-full shrink-0"></div>
             </div>
 
-            <div id="tab-eventi" class="tab-content flex-1 flex-col w-full px-4 py-5 overflow-y-auto pb-28">
+            <div id="tab-eventi" class="tab-content flex-1 flex-col w-full px-4 py-5 overflow-y-auto relative">
                 <div class="flex items-center gap-3 mb-6">
                     <span class="text-3xl drop-shadow-[0_0_15px_rgba(59,130,246,0.4)]">📅</span>
                     <div>
@@ -492,11 +391,13 @@
                 
                 <div id="lista-eventi-app" class="flex flex-col gap-4">
                     </div>
+
+                <div class="h-28 w-full shrink-0"></div>
             </div>
 
         </main>
 
-        <nav id="bottom-nav" class="shrink-0 w-full bg-slate-900/95 backdrop-blur-xl border-t border-slate-700/50 flex justify-around items-end pb-6 pt-3 px-2 z-50 hidden shadow-[0_-10px_30px_rgba(0,0,0,0.8)]">
+        <nav id="bottom-nav" class="shrink-0 w-full bg-slate-900/95 backdrop-blur-xl border-t border-slate-700/50 flex justify-around items-end pb-6 pt-3 px-2 z-50 hidden shadow-[0_-10px_30px_rgba(0,0,0,0.8)] fixed bottom-0">
             <button id="btn-nav-tattico" onclick="switchTab('tab-tattico', this)" class="nav-btn flex flex-col items-center gap-1 w-1/3 text-slate-500 transition-all duration-300">
                 <span class="text-2xl opacity-70 icon-nav transition-all">🚨</span><span class="text-[9px] font-black uppercase tracking-widest">Tattico</span>
             </button>
@@ -508,7 +409,7 @@
             </button>
         </nav>
 
-        <footer id="footer-terminal" class="shrink-0 w-full bg-slate-900 border-t border-slate-700 p-3 hidden flex justify-between items-center z-50">
+        <footer id="footer-terminal" class="shrink-0 w-full bg-slate-900 border-t border-slate-700 p-3 hidden flex justify-between items-center z-50 fixed bottom-0">
             <span class="text-[10px] text-slate-500 font-bold uppercase">SISTEMA TERMINALE</span>
             <button onclick="window.logoutTerminal()" class="bg-red-900/80 text-white font-bold py-1.5 px-3 rounded-lg text-[9px] uppercase border border-red-500">
                 🚪 CHIUDI TURNO
@@ -533,7 +434,7 @@
         }
 
         // Variabili Globali Operative
-        window.myTeamId = null; // La squadra a cui ci si unisce dal lucchetto
+        window.myTeamId = null; // Squadra associata dal lucchetto
         window.currentUserNome = "OPERATORE"; 
         window.currentUserEmailObj = "";
         window.myVolId = null; 
@@ -583,13 +484,14 @@
                             return;
                         }
 
-                        // Assegna il NOME PER INTERO in base a quello trovato sul DB
+                        // Nome Per Intero
                         window.currentUserNome = trovato ? trovato.nome.toUpperCase() : user.email.split('@')[0].toUpperCase();
 
-                        // Compila la scheda anagrafica e l'Header
-                        document.getElementById('profilo-nome').innerText = window.currentUserNome;
+                        // Compila Grafica Header Superiore
                         document.getElementById('display-sq').innerText = window.currentUserNome;
-                        
+
+                        // Compila la scheda anagrafica
+                        document.getElementById('profilo-nome').innerText = window.currentUserNome;
                         document.getElementById('profilo-matricola').innerText = "MATRICOLA: " + (trovato ? (trovato.matricola || 'N/D') : 'N/D');
                         document.getElementById('profilo-ruolo').innerText = (trovato ? (trovato.ruolo || 'VOLONTARIO') : 'VOLONTARIO').toUpperCase();
                         document.getElementById('profilo-sangue').innerText = trovato ? (trovato.sangue || 'N/D') : 'N/D';
@@ -744,7 +646,7 @@
                 }
             });
 
-            // DPI: Legge dal fascicolo operatore
+            // DPI: Legge direttamente dal fascicolo operatore
             if(window.myVolId) {
                 db.ref(`impostazioni/rubrica_volontari/${window.myVolId}/dpi`).on('value', snap => {
                     const cont = document.getElementById('lista-dotazioni');
@@ -779,15 +681,15 @@
 
         window.uniscitiSquadra = () => {
             Swal.fire({
-                title: 'UNISCITI A SQUADRA',
+                title: 'UNISCITI A UNITÀ TATTICA',
                 html: `
                     <div style="display:flex; flex-direction:column; gap:10px;">
                         <input id="swal-sq-id" type="text" style="width:100%; padding:12px; background:#1e293b; color:#fff; border:1px solid #3b82f6; border-radius:8px; text-transform:uppercase; text-align:center; font-weight:bold; letter-spacing:2px; outline:none;" placeholder="SIGLA UNITÀ (Es. SQ1)">
-                        <input id="swal-sq-pass" type="password" style="width:100%; padding:12px; background:#1e293b; color:#fff; border:1px solid #3b82f6; border-radius:8px; text-align:center; letter-spacing:4px; outline:none;" placeholder="PASSWORD SQUADRA">
+                        <input id="swal-sq-pass" type="password" style="width:100%; padding:12px; background:#1e293b; color:#fff; border:1px solid #3b82f6; border-radius:8px; text-align:center; letter-spacing:4px; outline:none;" placeholder="PASSWORD DELLA SQUADRA">
                     </div>
                 `,
                 background: '#0f172a', color: '#fff',
-                showCancelButton: true, confirmButtonText: 'UNISCITI', confirmButtonColor: '#2563eb',
+                showCancelButton: true, confirmButtonText: 'UNISCITI ORA', confirmButtonColor: '#2563eb',
                 preConfirm: () => {
                     const idVal = document.getElementById('swal-sq-id').value.trim().toUpperCase();
                     const passVal = document.getElementById('swal-sq-pass').value.trim();
@@ -826,7 +728,7 @@
                         Swal.fire({icon:'success', title:'Collegato a ' + window.myTeamId, background:'#0f172a', color:'#fff', timer: 2000, showConfirmButton: false});
                         aggiornaStatoBloccoTattico(); // Togli il lucchetto!
                     } else {
-                        Swal.fire({icon:'error', title:'Dati Errati', text:'Sigla o Password non valide', background:'#0f172a', color:'#fff'});
+                        Swal.fire({icon:'error', title:'Dati Errati', text:'Sigla o Password non valide nel sistema.', background:'#0f172a', color:'#fff'});
                     }
                 }
             });
@@ -834,6 +736,7 @@
 
         function aggiornaStatoBloccoTattico() {
             const overlay = document.getElementById('overlay-blocco');
+            
             if(window.myTeamId) {
                 overlay.style.display = 'none'; // Nasconde il lucchetto
                 
@@ -879,7 +782,7 @@
 
             } else {
                 overlay.style.display = 'flex'; // Mostra il lucchetto
-                document.getElementById('current-status').innerText = "DISCONNESSO";
+                document.getElementById('current-status').innerText = "BLOCCATO";
                 document.getElementById('current-status').className = `px-2 py-0.5 rounded text-[8px] font-black uppercase shadow-md border bg-slate-800 text-slate-400 border-slate-600`;
             }
         }
@@ -945,7 +848,7 @@
                         dir:'SQ' 
                     }); 
                     
-                    Swal.fire({toast:true, position:'top', title:'Stato Aggiornato a ' + s, icon:'success', timer:1500, showConfirmButton:false, background:'#0f172a', color:'#fff'}); 
+                    Swal.fire({toast:true, position:'top', title:'Stato Aggiornato', icon:'success', timer:1500, showConfirmButton:false, background:'#0f172a', color:'#fff'}); 
                 } 
             }); 
         };
@@ -1020,7 +923,6 @@
                 }); 
                 idSalaAttivo = null; 
                 document.getElementById('target-banner').innerHTML = 'SISTEMA IN STANDBY';
-                document.getElementById('target-banner').className = "glass-panel w-full p-2.5 shrink-0 flex justify-center text-center text-slate-500 text-[10px] uppercase font-bold tracking-widest min-h-[46px] items-center border-t-2 border-t-slate-600";
             } 
         };
 
@@ -1068,7 +970,7 @@
         };
 
         // ==========================================
-        // 8. GESTIONE E CONTROLLO GPS COMPLETA (Pannello Avanzato)
+        // 8. GESTIONE E CONTROLLO GPS COMPLETA (Rotellino Alto)
         // ==========================================
         function updateGpsBadge() { 
             const badge = document.getElementById('gps-badge');
@@ -1087,7 +989,7 @@
                     <div style="background: rgba(15,23,42,0.8); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
                         <div style="display: flex; flex-direction: column;">
                             <span style="font-size: 13px; font-weight: 900; color: white; text-transform: uppercase;">GPS nei Messaggi</span>
-                            <span style="font-size: 9px; color: #94a3b8; font-weight: bold;">Allega posizione ai log manuali</span>
+                            <span style="font-size: 9px; color: #94a3b8; font-weight: bold;">Allega coordinate ai messaggi</span>
                         </div>
                         <label class="switch">
                             <input type="checkbox" id="gps-toggle" ${window.gpsAutoEnabled ? 'checked' : ''} onchange="window.toggleGpsApp(this.checked)">
@@ -1098,7 +1000,7 @@
                     <div style="background: rgba(15,23,42,0.8); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
                         <div style="display: flex; flex-direction: column;">
                             <span style="font-size: 13px; font-weight: 900; color: #ef4444; text-transform: uppercase;">Live Tracking 🔴</span>
-                            <span style="font-size: 9px; color: #94a3b8; font-weight: bold;">Tracciamento Auto in Background</span>
+                            <span style="font-size: 9px; color: #94a3b8; font-weight: bold;">Traccia il telefono in background</span>
                         </div>
                         <label class="switch">
                             <input type="checkbox" id="live-toggle" ${window.liveTrackingEnabled ? 'checked' : ''} onchange="window.toggleLiveTrack(this.checked)">
@@ -1166,9 +1068,32 @@
             } 
         };
 
-        // Modalità Mappa per fissare/togliere il punto blu "ME"
-        window.toggleGPS = () => {
-            // Niente bottoni esterni, gestiamo tutto da Config GPS Panel
+        // Geocalizzazione Manuale con Bottone sulla Mappa
+        window.centraMappaSuGPS = () => { 
+            if (!navigator.geolocation) {
+                Swal.fire({toast:true, position:'top', title: 'GPS non supportato', timer:1500, showConfirmButton:false, background:'#0f172a', color:'#fff'});
+                return;
+            }
+            
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const { latitude, longitude } = pos.coords; 
+                ultimaPos = { lat: latitude, lng: longitude };
+                
+                if (!markerMe) { 
+                    markerMe = L.marker([latitude, longitude], { 
+                        icon: L.divIcon({ 
+                            className: 'bg-transparent', 
+                            html: '<div class="w-6 h-6 bg-blue-500 border-2 border-white rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-lg">ME</div>', 
+                            iconSize: [24,24] 
+                        }) 
+                    }).addTo(map); 
+                } else { 
+                    markerMe.setLatLng([latitude, longitude]); 
+                }
+                
+                if(map) map.setView([latitude, longitude], 17); 
+                
+            }, null, { enableHighAccuracy: true });
         };
 
     </script>
